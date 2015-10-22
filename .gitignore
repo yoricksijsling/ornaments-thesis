@@ -1,2 +1,6 @@
-*.agdai
 .projectile
+*.agdai
+agda-stdlib
+proposal/auto
+proposal/out
+lagda-out

@@ -1,0 +1,77 @@
+\documentclass[a4paper]{article}
+
+\usepackage[english]{babel}
+
+\usepackage{graphicx}
+\usepackage{hyperref}
+
+%--------------------------------------------------
+
+%  Agda mess
+
+\usepackage{agda}
+\usepackage{catchfilebetweentags}
+\newcommand{\AK}{\AgdaKeyword}
+\newcommand{\AS}{\AgdaString}
+\newcommand{\AY}{\AgdaSymbol}
+\newcommand{\AN}{\AgdaNumber}
+\newcommand{\AB}{\AgdaBound}
+\newcommand{\AO}{\AgdaOperator}
+\newcommand{\AI}{\AgdaInductiveConstructor}
+\newcommand{\AC}{\AgdaCoinductiveConstructor}
+\newcommand{\AD}{\AgdaDatatype}
+\newcommand{\AF}{\AgdaFunction}
+\newcommand{\AM}{\AgdaModule}
+\newcommand{\AL}{\AgdaField}
+\newcommand{\AR}{\AgdaArgument}
+\newcommand{\AT}{\AgdaIndent}
+\newcommand{\ARR}{\AgdaRecord}
+\newcommand{\AP}{\AgdaPostulate}
+
+\newcommand{\InsertCodeInline}[2][Proposal.tex]{\codeinlinetrue\ExecuteMetaData[../lagda-out/#1]{#2}}
+\newcommand{\InsertCode}[2][Proposal.tex]{
+  \codeinlinefalse
+  \medskip
+  \ExecuteMetaData[../lagda-out/#1]{#2}
+
+  \medskip}
+
+
+%--------------------------------------------------
+
+\setmainfont[ItalicFont = xits-italic.otf]{xits-regular.otf}
+\setmathfont{xits-math.otf}
+\setsansfont[Scale=MatchLowercase]{DejaVuSans.ttf}
+
+\newfontfamily{\xitsfont}[Scale=MatchLowercase]{xits-regular.otf}
+
+\DeclareTextFontCommand{\textxits}{\xitsfont}
+
+\usepackage{newunicodechar}
+
+% \newunicodechar{●}{\textxits{•}}
+% \newunicodechar{⌷}{\textxits{$\vrectangle$}}
+% \newunicodechar{▱}{\textxits{\rotatebox[origin=c]{105}{▱}}}
+
+%--------------------------------------------------
+
+\title{Implementing Ornaments - Thesis Proposal}
+\date{\today}
+\author{Yorick Sijsling}
+
+\begin{document}
+
+\maketitle
+
+\begin{flushright}
+\emph{Supervised by} Wouter Swierstra\\
+\emph{Second examiner} Johan Jeuring
+\end{flushright}
+
+
+\input{body.tex}
+
+\bibliographystyle{plain}
+\bibliography{main}
+
+\end{document}
