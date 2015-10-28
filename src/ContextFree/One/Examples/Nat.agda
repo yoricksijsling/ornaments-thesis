@@ -14,19 +14,19 @@ isContextFree-ℕ = record { desc = desc ; to = to ; from = from
                          ; to-from = to-from ; from-to = from-to }
   where
   desc : Desc
-  desc = `1 `+ (`var `* `1)
+  desc = `1 `+ `var
   to : ℕ → μ desc
   to zero = ⟨ inj₁ tt ⟩
-  to (suc n) = ⟨ inj₂ (to n , tt) ⟩
+  to (suc n) = ⟨ inj₂ (to n) ⟩
   from : μ desc → ℕ
   from ⟨ inj₁ tt ⟩ = zero
-  from ⟨ inj₂ (n , tt) ⟩ = suc (from n)
+  from ⟨ inj₂ n ⟩ = suc (from n)
   to-from : ∀ x → from (to x) ≡ x
   to-from zero = refl
   to-from (suc x) = cong suc (to-from x)
   from-to : ∀ x → to (from x) ≡ x
   from-to ⟨ inj₁ tt ⟩ = refl
-  from-to ⟨ inj₂ (n , tt) ⟩ = cong (λ v → ⟨ inj₂ (v , tt) ⟩) (from-to n)
+  from-to ⟨ inj₂ n ⟩ = cong (λ v → ⟨ inj₂ v ⟩) (from-to n)
 
 open IsContextFree isContextFree-ℕ
 

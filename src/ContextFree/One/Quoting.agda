@@ -4,6 +4,7 @@ open import Data.Error using (Error; ok; fail; fromMaybe; isOk?; fromOk)
 open import Data.String
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Maybe using (Maybe; just; nothing; maybe)
+open import Data.Product
 open import Data.List using (List; []; _∷_; map)
 open import Data.Unit
 open import Function
@@ -45,45 +46,39 @@ checkArginfovr : Arg-info → Error ⊤
 checkArginfovr (arg-info visible relevant) = ok tt
 checkArginfovr (arg-info _ _) = fail "Arg is not visible and relevant"
 
-constructorToDesc : Name → Type → Error Desc
-constructorToDesc self = constructorToDesc′
+extractArgs : Type → Error (List (Sort × Arg Type) × Type)
+extractArgs (el s (pi argt t₂)) = extractArgs t₂ >>= λ { (args , target) →
+                                  return ((s , argt) ∷ args , target) }
+extractArgs t = return ([] , t)
+
+constructorDesc : Name → Type → Error Desc
+constructorDesc self = constructorDesc′
   where
-  argterm : Term → Error Desc
-  argterm (def f args) with f ≟-Name self
-  argterm (def .self []) | yes refl = ok `var
-  argterm (def .self (_ ∷ _)) | yes refl = fail "Constructor argument: self-reference has arguments"
-  argterm (def f args) | no _ = fail "Invalid constructor argument"
+  argTermDesc : Term → Error Desc
+  argTermDesc (def f args) with f ≟-Name self
+  argTermDesc (def f [])      | yes p = return `var
+  argTermDesc (def f (_ ∷ _)) | yes p = fail "argTermDesc: self-reference has arguments"
+  argTermDesc (def f args)    | no ¬p = fail "argTermDesc: Invalid argument in constructor"
+  argTermDesc otherwise = fail "argTermDesc: Invalid argument in constructor"
 
-  argterm (var x args) = fail "Invalid constructor argument"
-  argterm (con c args) = fail "Invalid constructor argument"
-  argterm (lam v t) = fail "Invalid constructor argument"
-  argterm (pat-lam cs args) = fail "Invalid constructor argument"
-  argterm (pi t₁ t₂) = fail "Invalid constructor argument"
-  argterm (sort x) = fail "Invalid constructor argument"
-  argterm (lit x) = fail "Invalid constructor argument"
-  argterm unknown = fail "Invalid constructor argument"
+  argDesc : Sort → Arg Type → Error Desc
+  argDesc s (arg i (el sarg t)) = checkSort0 s >>
+                                  checkArginfovr i >>
+                                  checkSort0 sarg >>
+                                  argTermDesc t
 
-  mutual
-    term : Term → Error Desc
-    term (def f args) with f ≟-Name self
-    term (def .self []) | yes refl = ok `1
-    term (def .self (_ ∷ _)) | yes refl = fail "Constructor target has arguments"
-    term (def f args) | no _ = fail "Constructor target is not self"
-    term (pi (arg i (el s t)) rest) = checkArginfovr i >>
-                                      checkSort0 s >>
-                                      argterm t >>= λ argdesc →
-                                      constructorToDesc′ rest >>= λ restdesc →
-                                      return (argdesc `* restdesc)
-    term (lam v t₁) = fail "Constructor term is `lam v t`"
-    term (pat-lam cs args) = fail "Constructor term is `pat-lam cs args`"
-    term (var x args) = fail "Constructor term is `var x args`"
-    term (con c args) = fail "Constructor term is `con c args`"
-    term (sort x) = fail "Constructor term is `sort x`"
-    term (lit x) = fail "Constructor term is `lit x`"
-    term unknown = fail "Constructor term is `unknown`"
+  checkTarget : Type → Error ⊤
+  checkTarget (el s (def f args)) with f ≟-Name self
+  checkTarget (el s (def f []))      | yes p = checkSort0 s >> return tt
+  checkTarget (el s (def f (_ ∷ _))) | yes p = fail "checkTarget: Indices in constructor target are not supported"
+  checkTarget (el s (def f args))    | no ¬p = fail "checkTarget: Invalid constructor target"
+  checkTarget otherwise = fail "checkTarget: Invalid constructor target"
 
-    constructorToDesc′ : Type → Error Desc
-    constructorToDesc′ (el s t) = checkSort0 s >> term t
+  constructorDesc′ : Type → Error Desc
+  constructorDesc′ t = extractArgs t >>= λ { (args , target) →
+                       checkTarget target >>
+                       (mapM (uncurry′ argDesc) args) >>=
+                       return ∘′ foldrWithDefault `1 _`*_ }
 
 
 module TestConstructorToDesc where
@@ -96,12 +91,12 @@ module TestConstructorToDesc where
   data Dummy : Set where
 
   -- Dummy
-  testZero : ok `1 ≡ constructorToDesc (quote Dummy)
+  testZero : ok `1 ≡ constructorDesc (quote Dummy)
     (el0 (def (quote Dummy) []))
   testZero = refl
 
   -- Dummy → Dummy
-  testSuc : ok (`var `* `1) ≡ constructorToDesc (quote Dummy)
+  testSuc : ok `var ≡ constructorDesc (quote Dummy)
     (el0 (pi (argvr (el0 (def (quote Dummy) [])))
              (el0 (def (quote Dummy) []))))
   testSuc = refl
@@ -116,7 +111,7 @@ module TestConstructorToDesc where
 quoteDesc : Name → Error Desc
 quoteDesc n = getDatatype n >>=
               getConstructors >>=
-              mapM (constructorToDesc n ∘′ type) >>=
+              mapM (constructorDesc n ∘′ type) >>=
               return ∘′ foldrWithDefault `0 _`+_
 
 quoteDesc! : (n : Name){isOk : True (isOk? (quoteDesc n))} → Desc
