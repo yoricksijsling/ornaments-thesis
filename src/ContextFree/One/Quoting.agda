@@ -6,7 +6,7 @@ open import Data.String
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Maybe using (Maybe; just; nothing; maybe)
 open import Data.Product
-open import Data.List using (List; []; _∷_; map; length)
+open import Data.List using (List; []; _∷_; map; length; drop)
 open import Data.Unit
 open import Function
 open import Level renaming (zero to lzero; suc to lsuc)
@@ -77,14 +77,15 @@ extractArgs t = [] , t
 argCount : Type → ℕ
 argCount = length ∘′ proj₁ ∘′ extractArgs
 
-constructorDesc : Name → Type → Error QDesc
-constructorDesc self = constructorDesc′
+constructorDesc : Name → ℕ → Type → Error QDesc
+constructorDesc self p = constructorDesc′
   where
   argTermDesc : Term → Error QDesc
-  argTermDesc (def f args) with f ≟-Name self
-  argTermDesc (def f [])      | yes p = return Qvar
-  argTermDesc (def f (_ ∷ _)) | yes p = fail "argTermDesc: self-reference has arguments"
-  argTermDesc (def f args)    | no ¬p = fail "argTermDesc: Invalid argument in constructor"
+  argTermDesc (def f args) with f ≟-Name self | drop p args
+  argTermDesc (def f _) | yes p | []    = return Qvar
+  argTermDesc (def f _) | yes p | _ ∷ _ = fail "argTermDesc: self-reference has arguments"
+  argTermDesc (def f _) | no ¬p | _     = fail "argTermDesc: Invalid argument in constructor  aa"
+  argTermDesc (var x args) = return (QK (var x args)) -- TODO: Check that the debruijn index does not change
   argTermDesc otherwise = fail "argTermDesc: Invalid argument in constructor"
 
   argDesc : Sort → Arg Type → Error QDesc
@@ -94,16 +95,16 @@ constructorDesc self = constructorDesc′
                                   argTermDesc t
 
   checkTarget : Type → Error ⊤
-  checkTarget (el s (def f args)) with f ≟-Name self
-  checkTarget (el s (def f []))      | yes p = checkSort0 s >> return tt
-  checkTarget (el s (def f (_ ∷ _))) | yes p = fail "checkTarget: Indices in constructor target are not supported"
-  checkTarget (el s (def f args))    | no ¬p = fail "checkTarget: Invalid constructor target"
+  checkTarget (el s (def f args)) with f ≟-Name self | drop p args
+  checkTarget (el s (def f _)) | yes p | []    = checkSort0 s >> return tt
+  checkTarget (el s (def f _)) | yes p | _ ∷ _ = fail "checkTarget: Indices in constructor target are not supported"
+  checkTarget (el s (def f _)) | no ¬p | _     = fail "checkTarget: Invalid constructor target"
   checkTarget otherwise = fail "checkTarget: Invalid constructor target"
 
   constructorDesc′ : Type → Error QDesc
   constructorDesc′ t = let (args , target) = extractArgs t in
                        checkTarget target >>
-                       (mapM (uncurry′ argDesc) args) >>=
+                       (mapM (uncurry′ argDesc) (drop p args)) >>=
                        return ∘′ foldrWithDefault Q1 _Q*_
 
 
@@ -114,25 +115,25 @@ module TestConstructorToDesc where
   data Dummy : Set where
 
   -- Dummy
-  testZero : ok Q1 ≡ constructorDesc (quote Dummy)
+  testZero : ok Q1 ≡ constructorDesc (quote Dummy) 0
     (el0 (def (quote Dummy) []))
   testZero = refl
 
   -- Dummy → Dummy
-  testSuc : ok Qvar ≡ constructorDesc (quote Dummy)
+  testSuc : ok Qvar ≡ constructorDesc (quote Dummy) 0
     (el0 (pi (argvr (el0 (def (quote Dummy) [])))
              (el0 (def (quote Dummy) []))))
   testSuc = refl
 
-quoteQDesc : Name → Error QDesc
-quoteQDesc n = getDatatype n >>=
-               getConstructors >>=
-               mapM (constructorDesc n ∘′ type) >>=
-               return ∘′ foldrWithDefault Q0 _Q+_
+quoteQDesc : Name → ℕ → Error QDesc
+quoteQDesc n p = getDatatype n >>=
+                 getConstructors >>=
+                 mapM (constructorDesc n p ∘′ type) >>=
+                 return ∘′ foldrWithDefault Q0 _Q+_
 
-quoteDesc : Name → Error Term
-quoteDesc n = quoteQDesc n >>= return ∘′ ⟦_⟧QDesc
+quoteDesc : Name → ℕ → Error Term
+quoteDesc n p = quoteQDesc n p >>= return ∘′ ⟦_⟧QDesc
 
-quoteDesc! : (n : Name){isOk : True (isOk? (quoteDesc n))} → Term
-quoteDesc! n {isOk} = fromOk (quoteDesc n) {isOk}
+quoteDesc! : (n : Name)(p : ℕ){isOk : True (isOk? (quoteDesc n p))} → Term
+quoteDesc! n p {isOk} = fromOk (quoteDesc n p) {isOk}
 

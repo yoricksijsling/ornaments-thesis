@@ -1,23 +1,27 @@
 module ContextFree.One.Examples.List where
 
-open import Data.List
+open import ContextFree.One.Desc
+open import ContextFree.One.Quoting
+-- open import Data.List
 open import Data.Unit.Base
 open import Data.Product
 open import Data.Sum
 open import Relation.Binary.PropositionalEquality
 
-open import ContextFree.One.Desc
+data ListP (A : Set) : Set where
+  [] : ListP A
+  _∷_ : A → ListP A → ListP A
 
-isContextFree-List : ∀ A → IsContextFree (List A)
-isContextFree-List A = record { desc = desc ; to = to ; from = from
+isContextFree-ListP : ∀ A → IsContextFree (ListP A)
+isContextFree-ListP A = record { desc = desc ; to = to ; from = from
                               ; to-from = to-from ; from-to = from-to }
   where
   desc : Desc
   desc = `1 `+ (`K A `* `var)
-  to : List A → μ desc
+  to : ListP A → μ desc
   to [] = ⟨ inj₁ tt ⟩
   to (x ∷ xs) = ⟨ inj₂ (x , to xs) ⟩
-  from : μ desc → List A
+  from : μ desc → ListP A
   from ⟨ inj₁ tt ⟩ = []
   from ⟨ inj₂ (x , xs) ⟩ = x ∷ from xs
   to-from : ∀ x → from (to x) ≡ x
@@ -26,3 +30,8 @@ isContextFree-List A = record { desc = desc ; to = to ; from = from
   from-to : ∀ x → to (from x) ≡ x
   from-to ⟨ inj₁ tt ⟩ = refl
   from-to ⟨ inj₂ (x , xs) ⟩ = cong (λ v → ⟨ inj₂ (x , v) ⟩) (from-to xs)
+
+open module Foo (A : Set) = IsContextFree (isContextFree-ListP A)
+
+testDesc : ∀{A : Set} → unquote (quoteDesc! (quote ListP) 1) ≡ desc A
+testDesc = refl
