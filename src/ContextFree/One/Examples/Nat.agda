@@ -30,6 +30,6 @@ isContextFree-ℕ = record { desc = desc ; to = to ; from = from
 
 open IsContextFree isContextFree-ℕ
 
-testDesc : quoteDesc! (quote ℕ) ≡ desc
+testDesc : unquote (quoteDesc! (quote ℕ)) ≡ desc
 testDesc = refl
 

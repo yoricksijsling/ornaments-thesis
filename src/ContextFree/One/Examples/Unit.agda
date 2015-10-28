@@ -28,6 +28,6 @@ isContextFree-Unit = record { desc = desc ; to = to ; from = from
 
 open IsContextFree isContextFree-Unit
 
-testDesc : quoteDesc! (quote Unit) ≡ desc
+testDesc : unquote (quoteDesc! (quote Unit)) ≡ desc
 testDesc = refl
 
