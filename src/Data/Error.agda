@@ -27,9 +27,13 @@ isOk? : ∀{α}{A : Set α}(e : Error A) → Dec (IsOk e)
 isOk? (ok x) = yes (ok x)
 isOk? (fail s) = no λ { () }
 
-fromOk : ∀{α}{A : Set α}(e : Error A){isOk : True (isOk? e)} → A
-fromOk (ok x) {tt} = x
-fromOk (fail s) {()}
+fromOk : ∀{α}{A : Set α}{e : Error A}(isOk : True (isOk? e)) → A
+fromOk {e = ok x} tt = x
+fromOk {e = fail s} ()
+
+decToError : ∀{α}{A : Set α}(s : String) → Dec A → Error A
+decToError s (yes p) = ok p
+decToError s (no ¬p) = fail s
 
 module Monad where
   -- We can't use a monad record because we want to use it at different levels.
@@ -45,8 +49,21 @@ module Monad where
   _>>_ : ∀{α β}{A : Set α}{B : Set β} → Error A → Error B → Error B
   a >> b = a >>= (const b)
 
+
+  infixl 4 _<$>_ _<*>_
+
+  _<$>_ : ∀{α β}{A : Set α}{B : Set β} → (f : A → B) → Error A → Error B
+  f <$> a = a >>= return ∘′ f
+
+  _<*>_ : ∀{α β}{A : Set α}{B : Set β} → (f : Error (A → B)) → Error A → Error B
+  f <*> a = f >>= λ f′ →
+            a >>= λ a′ →
+            return (f′ a′)
+
+  sequenceM : ∀{α}{A : Set α} → List (Error A) → Error (List A)
+  sequenceM [] = ok []
+  sequenceM (a ∷ as) = _∷_ <$> a <*> sequenceM as
+
   mapM : ∀{α β}{A : Set α}{B : Set β} → (A → Error B) → List A → Error (List B)
   mapM f [] = ok []
-  mapM f (a ∷ as) = f a >>= λ b →
-                    mapM f as >>= λ bs →
-                    return (b ∷ bs)
+  mapM f (a ∷ as) = _∷_ <$> f a <*> mapM f as

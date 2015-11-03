@@ -33,5 +33,5 @@ isContextFree-ListP A = record { desc = desc ; to = to ; from = from
 
 open module Foo (A : Set) = IsContextFree (isContextFree-ListP A)
 
-testDesc : ∀{A : Set} → unquote (quoteDesc! (quote ListP) 1) ≡ desc A
+testDesc : ∀{A : Set}{Foo : Set} → unquote (quoteDesc! (quote ListP) 1) A ≡ desc A
 testDesc = refl

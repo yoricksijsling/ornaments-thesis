@@ -1,23 +1,26 @@
 module ContextFree.One.Quoting where
 
-open import Data.Empty
-open import Data.Error using (Error; ok; fail; fromMaybe; isOk?; fromOk)
-open import Data.String
-open import Data.Nat using (ℕ; zero; suc)
+open import Data.Empty using (⊥)
+open import Data.Fin using (Fin; toℕ; #_)
+open import Data.Nat using (ℕ; zero; suc; _≤_; _≤?_; s≤s)
 open import Data.Maybe using (Maybe; just; nothing; maybe)
-open import Data.Product
+open import Data.Product using (_×_; _,_; uncurry′; ∃; proj₁; proj₂)
 open import Data.List using (List; []; _∷_; map; length; drop)
-open import Data.Unit
+open import Data.List.All using (all)
+open import Data.Vec using (Vec; []; _∷_)
+open import Data.String
+open import Data.Unit using (⊤; tt)
 open import Function
-open import Level renaming (zero to lzero; suc to lsuc)
 open import Reflection
-open import Relation.Binary.PropositionalEquality using (_≡_; refl)
-open import Relation.Nullary using (yes; no)
+open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
+open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
 
 open import ContextFree.One.Desc
-
+open import Data.Error
 open Data.Error.Monad
+open import TypeArgs
+open import Stuff
 
 argvr : ∀{A : Set} → A → Arg A
 argvr = arg (arg-info visible relevant)
@@ -40,11 +43,7 @@ Q1 = QK (quoteTerm ⊤)
 ⟦ A Q* B ⟧QDesc = con (quote _`*_) (argvr ⟦ A ⟧QDesc ∷ argvr ⟦ B ⟧QDesc ∷ [])
 ⟦ Qvar ⟧QDesc = con (quote `var) []
 
-
-foldrWithDefault : ∀ {a} {A : Set a} → A → (A → A → A) → List A → A
-foldrWithDefault d f [] = d
-foldrWithDefault d f (x ∷ []) = x
-foldrWithDefault d f (x ∷ y ∷ ys) = f x (foldrWithDefault d f (y ∷ ys))
+--------------------
 
 getDatatype : Name → Error Data-type
 getDatatype n = fromMaybe (showName n ++ " is not a data type")
@@ -69,19 +68,11 @@ checkArginfovr : Arg-info → Error ⊤
 checkArginfovr (arg-info visible relevant) = ok tt
 checkArginfovr (arg-info _ _) = fail "Arg is not visible and relevant"
 
-extractArgs : Type → List (Sort × Arg Type) × Type
-extractArgs (el s (pi argt t₂)) = let (args , target) = extractArgs t₂ in
-                                  (s , argt) ∷ args , target
-extractArgs t = [] , t
-
-argCount : Type → ℕ
-argCount = length ∘′ proj₁ ∘′ extractArgs
-
-constructorDesc : Name → ℕ → Type → Error QDesc
-constructorDesc self p = constructorDesc′
+constructorDesc : Name → (t : Type) → Fin (suc (argCount t)) → Error QDesc
+constructorDesc self ct p = constructorDesc′
   where
   argTermDesc : Term → Error QDesc
-  argTermDesc (def f args) with f ≟-Name self | drop p args
+  argTermDesc (def f args) with f ≟-Name self | drop (toℕ p) args -- drop p args
   argTermDesc (def f _) | yes p | []    = return Qvar
   argTermDesc (def f _) | yes p | _ ∷ _ = fail "argTermDesc: self-reference has arguments"
   argTermDesc (def f _) | no ¬p | _     = fail "argTermDesc: Invalid argument in constructor  aa"
@@ -95,17 +86,18 @@ constructorDesc self p = constructorDesc′
                                   argTermDesc t
 
   checkTarget : Type → Error ⊤
-  checkTarget (el s (def f args)) with f ≟-Name self | drop p args
+  checkTarget (el s (def f args)) with f ≟-Name self | drop (toℕ p) args
   checkTarget (el s (def f _)) | yes p | []    = checkSort0 s >> return tt
   checkTarget (el s (def f _)) | yes p | _ ∷ _ = fail "checkTarget: Indices in constructor target are not supported"
   checkTarget (el s (def f _)) | no ¬p | _     = fail "checkTarget: Invalid constructor target"
   checkTarget otherwise = fail "checkTarget: Invalid constructor target"
 
-  constructorDesc′ : Type → Error QDesc
-  constructorDesc′ t = let (args , target) = extractArgs t in
-                       checkTarget target >>
-                       (mapM (uncurry′ argDesc) (drop p args)) >>=
-                       return ∘′ foldrWithDefault Q1 _Q*_
+  constructorDesc′ : Error QDesc
+  constructorDesc′ = let (pargs , ptarget) = takeArgs ct p in
+                     let (args , target) = getArgs ptarget in
+                     checkTarget target >>
+                     (mapM (uncurry′ argDesc) (Data.Vec.toList args)) >>=
+                     return ∘′ foldrWithDefault Q1 _Q*_
 
 
 module TestConstructorToDesc where
@@ -115,25 +107,42 @@ module TestConstructorToDesc where
   data Dummy : Set where
 
   -- Dummy
-  testZero : ok Q1 ≡ constructorDesc (quote Dummy) 0
+  testZero : ok Q1 ≡ constructorDesc (quote Dummy)
     (el0 (def (quote Dummy) []))
+    (# 0)
   testZero = refl
 
   -- Dummy → Dummy
-  testSuc : ok Qvar ≡ constructorDesc (quote Dummy) 0
+  testSuc : ok Qvar ≡ constructorDesc (quote Dummy)
     (el0 (pi (argvr (el0 (def (quote Dummy) [])))
              (el0 (def (quote Dummy) []))))
+    (# 0)
   testSuc = refl
 
-quoteQDesc : Name → ℕ → Error QDesc
-quoteQDesc n p = getDatatype n >>=
-                 getConstructors >>=
-                 mapM (constructorDesc n p ∘′ type) >>=
-                 return ∘′ foldrWithDefault Q0 _Q+_
+Params : Set
+Params = ℕ
+
+_fits_ : Params → Name → Set
+_fits_ p n = p ≤ argCount (type n)
+
+_fits?_ : ∀ p n → Dec (p fits n)
+p fits? n = p ≤? argCount (type n)
+
+quoteQDesc : (n : Name) (p : ℕ) →
+  Error QDesc
+quoteQDesc n p =
+  getDatatype n >>= λ dt →
+  getConstructors dt >>= λ cs →
+  decToError "Too many params for datatype" (p fits? n) >>
+  -- TODO: extract params and check that constructors fit exactly
+  decToError "Too many params for some constructors" (all (_fits?_ p) cs) >>= λ pfitscs →
+  sequenceM (mapAllToList (λ {c} pfitsc → constructorDesc n (type c) (Data.Fin.fromℕ≤ (s≤s pfitsc)))
+                          pfitscs) >>= λ cdescs →
+  return (foldrWithDefault Q0 _Q+_ cdescs)
 
 quoteDesc : Name → ℕ → Error Term
 quoteDesc n p = quoteQDesc n p >>= return ∘′ ⟦_⟧QDesc
 
 quoteDesc! : (n : Name)(p : ℕ){isOk : True (isOk? (quoteDesc n p))} → Term
-quoteDesc! n p {isOk} = fromOk (quoteDesc n p) {isOk}
+quoteDesc! n p {isOk} = fromOk isOk
 
