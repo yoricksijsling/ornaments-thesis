@@ -50,17 +50,14 @@ open RawFunctor
                                                               (_<$>_ (⟦⟧-functor B) f) }
 ⟦⟧-functor `var = record { _<$>_ = λ f → f }
 
-module Test where
-  `nat : Desc
-  `nat = `1 `+ `var
-  `list : Set → Desc
-  `list A = `1 `+ (`K A `* `var)
-
-  natval : μ `nat
-  natval = ⟨ inj₂ ⟨ inj₂ ⟨ inj₁ tt ⟩ ⟩ ⟩
-
 
 open import Relation.Binary.PropositionalEquality using (_≡_)
+
+record RawIsContextFree (A : Set) : Set₁ where
+  field
+    desc : Desc
+    to : A → μ desc
+    from : μ desc → A
 
 record IsContextFree (A : Set) : Set₁ where
   field

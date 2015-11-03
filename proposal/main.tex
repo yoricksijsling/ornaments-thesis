@@ -5,6 +5,9 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 
+\usepackage{framed,color}
+\definecolor{shadecolor}{rgb}{1,0.8,0.3}
+
 %--------------------------------------------------
 
 %  Agda mess
@@ -35,6 +38,15 @@
   \ExecuteMetaData[../lagda-out/#1]{#2}
 
   \medskip}
+\newcommand{\InsertCodeN}[2][Proposal.tex]{
+  \codeinlinefalse
+  \medskip
+  \ExecuteMetaData[../lagda-out/#1]{#2}\refstepcounter{codeblock}\begin{center}Listing \thecodeblock\end{center}\label{code:#2}%
+
+  \medskip}
+
+\newcounter{codeblock}
+\newcommand{\labelcodeblock}[2]{\refstepcounter{codeblock}\label{#1}\begin{center}Listing \thecodeblock\end{center}}
 
 
 %--------------------------------------------------

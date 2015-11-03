@@ -38,7 +38,8 @@ lagda-out/%.tex: $(SRC)/%.lagda
 
 proposal/main.pdf: $(MODULES:%=lagda-out/%.tex) proposal/agda.sty proposal/main.tex proposal/body.tex proposal/main.bib
 	cd proposal; latexmk -xelatex -outdir=out main.tex
-	mv proposal/out/main.pdf proposal/main.pdf
+	cp proposal/out/main.pdf proposal/main.pdf
+	rm proposal/out/main.pdf
 
 cleanproposal:
 	rm -rf lagda-out
