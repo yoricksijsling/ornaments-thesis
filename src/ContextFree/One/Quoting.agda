@@ -31,6 +31,9 @@ data QDesc : Set where
   _Q*_ : (A B : QDesc) → QDesc
   Qvar : QDesc
 
+QDescP : Set
+QDescP = List (Sort × Arg Type) × QDesc
+
 Q0 : QDesc
 Q0 = QK (quoteTerm ⊥)
 
@@ -42,6 +45,9 @@ Q1 = QK (quoteTerm ⊤)
 ⟦ A Q+ B ⟧QDesc = con (quote _`+_) (argvr ⟦ A ⟧QDesc ∷ argvr ⟦ B ⟧QDesc ∷ [])
 ⟦ A Q* B ⟧QDesc = con (quote _`*_) (argvr ⟦ A ⟧QDesc ∷ argvr ⟦ B ⟧QDesc ∷ [])
 ⟦ Qvar ⟧QDesc = con (quote `var) []
+
+⟦_⟧QDescP : QDescP → Term
+⟦ ps , d ⟧QDescP = addArgsTm ps ⟦ d ⟧QDesc
 
 --------------------
 
@@ -129,19 +135,20 @@ _fits?_ : ∀ p n → Dec (p fits n)
 p fits? n = p ≤? argCount (type n)
 
 quoteQDesc : (n : Name) (p : ℕ) →
-  Error QDesc
+  Error QDescP
 quoteQDesc n p =
   getDatatype n >>= λ dt →
   getConstructors dt >>= λ cs →
-  decToError "Too many params for datatype" (p fits? n) >>
+  decToError "Too many params for datatype" (p ≤? argCount (type n)) >>= λ pfitsn →
+  let params = proj₁ (takeArgs (type n) (Data.Fin.fromℕ≤ (s≤s pfitsn))) in
   -- TODO: extract params and check that constructors fit exactly
   decToError "Too many params for some constructors" (all (_fits?_ p) cs) >>= λ pfitscs →
   sequenceM (mapAllToList (λ {c} pfitsc → constructorDesc n (type c) (Data.Fin.fromℕ≤ (s≤s pfitsc)))
                           pfitscs) >>= λ cdescs →
-  return (foldrWithDefault Q0 _Q+_ cdescs)
+  return (Data.Vec.toList params , (foldrWithDefault Q0 _Q+_ cdescs))
 
 quoteDesc : Name → ℕ → Error Term
-quoteDesc n p = quoteQDesc n p >>= return ∘′ ⟦_⟧QDesc
+quoteDesc n p = quoteQDesc n p >>= return ∘′ ⟦_⟧QDescP
 
 quoteDesc! : (n : Name)(p : ℕ){isOk : True (isOk? (quoteDesc n p))} → Term
 quoteDesc! n p {isOk} = fromOk isOk

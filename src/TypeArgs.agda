@@ -18,6 +18,11 @@ addArgs : List (Sort × Arg Type) → Type → Type
 addArgs [] target = target
 addArgs ((s , argt) ∷ args) target = el s (pi argt (addArgs args target))
 
+addArgsTm : List (Sort × Arg Type) → Term → Term
+addArgsTm [] target = target
+addArgsTm ((_ , arg (arg-info v _) _) ∷ args) target = lam v (addArgsTm args target)
+
+
 takeArgs : (t : Type) → (k : Fin (suc (argCount t))) → Vec (Sort × Arg Type) (toℕ k) × Type
 takeArgs t zero = [] , t
 takeArgs (el s (pi argt t₂)) (suc k) = let args , target = takeArgs t₂ k in
