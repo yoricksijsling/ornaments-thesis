@@ -6,33 +6,19 @@ open import Data.Sum
 open import Data.Product
 open import Data.Nat
 
--- Internal fixpoints in context free types can be extracted to create a separate
--- description. Given for example:
-
---   List Nat ≡ μX. 1 + (μY. 1 + Y) * X
-
--- We can extract the fixpoint, giving us two types (separated by a ,).
-
---   μX. 1 + Y * X , μY. 1 + Y
-
--- A bunch of types which may be mutually recursive can be encoded using an
--- indexed fixpoint, a slight generalization of MultiRec.
-
 -- One variable, not dependently typed
 data Desc : Set₁ where
   `K : (S : Set) → Desc
+  `0 : Desc
+  `1 : Desc
   _`+_ : (A B : Desc) → Desc
   _`*_ : (A B : Desc) → Desc
   `var : Desc
 
-`0 : Desc
-`0 = `K ⊥
-
-`1 : Desc
-`1 = `K ⊤
-
 ⟦_⟧ : Desc → Set → Set
 ⟦_⟧ (`K S) X = S
+⟦_⟧ `0 X = ⊥
+⟦_⟧ `1 X = ⊤
 ⟦_⟧ (A `+ B) X = ⟦ A ⟧ X ⊎ ⟦ B ⟧ X
 ⟦_⟧ (A `* B) X = ⟦ A ⟧ X × ⟦ B ⟧ X
 ⟦_⟧ `var X = X
@@ -43,6 +29,8 @@ data μ (D : Desc) : Set where
 open import Category.Functor
 open RawFunctor
 ⟦⟧-functor : ∀ D → RawFunctor ⟦ D ⟧
+⟦⟧-functor `0 = record { _<$>_ = λ f x → x }
+⟦⟧-functor `1 = record { _<$>_ = λ f x → x }
 ⟦⟧-functor (`K S) = record { _<$>_ = λ f x → x }
 ⟦⟧-functor (A `+ B) = record { _<$>_ = λ f → Data.Sum.map (_<$>_ (⟦⟧-functor A) f)
                                                           (_<$>_ (⟦⟧-functor B) f) }

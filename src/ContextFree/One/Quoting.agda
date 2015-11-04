@@ -27,6 +27,8 @@ argvr = arg (arg-info visible relevant)
 
 data QDesc : Set where
   QK : (S : Term) → QDesc
+  Q0 : QDesc
+  Q1 : QDesc
   _Q+_ : (A B : QDesc) → QDesc
   _Q*_ : (A B : QDesc) → QDesc
   Qvar : QDesc
@@ -34,14 +36,10 @@ data QDesc : Set where
 QDescP : Set
 QDescP = List (Sort × Arg Type) × QDesc
 
-Q0 : QDesc
-Q0 = QK (quoteTerm ⊥)
-
-Q1 : QDesc
-Q1 = QK (quoteTerm ⊤)
-
 ⟦_⟧QDesc : QDesc → Term
 ⟦ QK S ⟧QDesc = con (quote `K) (argvr S ∷ [])
+⟦ Q0 ⟧QDesc = con (quote `0) []
+⟦ Q1 ⟧QDesc = con (quote `1) []
 ⟦ A Q+ B ⟧QDesc = con (quote _`+_) (argvr ⟦ A ⟧QDesc ∷ argvr ⟦ B ⟧QDesc ∷ [])
 ⟦ A Q* B ⟧QDesc = con (quote _`*_) (argvr ⟦ A ⟧QDesc ∷ argvr ⟦ B ⟧QDesc ∷ [])
 ⟦ Qvar ⟧QDesc = con (quote `var) []
@@ -68,7 +66,7 @@ getConstructors dt = ok (constructors dt)
 
 checkSort0 : Sort → Error ⊤
 checkSort0 (lit zero) = ok tt
-checkSort0 _ = fail "Sort is not `lit 0`"
+checkSort0 s = log "Sort is not `lit 0`" >> fail s
 
 checkArginfovr : Arg-info → Error ⊤
 checkArginfovr (arg-info visible relevant) = ok tt
@@ -79,21 +77,24 @@ constructorDesc self ct p = constructorDesc′
   where
   argTermDesc : Term → Error QDesc
   argTermDesc (def f args) with f ≟-Name self | drop (toℕ p) args -- drop p args
-  argTermDesc (def f _) | yes p | []    = return Qvar
-  argTermDesc (def f _) | yes p | _ ∷ _ = fail "argTermDesc: self-reference has arguments"
-  argTermDesc (def f _) | no ¬p | _     = fail "argTermDesc: Invalid argument in constructor  aa"
+  argTermDesc (def f args) | yes p | []    = return Qvar
+  argTermDesc (def f args) | yes p | _ ∷ _ = fail "argTermDesc: self-reference has arguments"
+  argTermDesc (def f args) | no ¬p | _     = log "argTermDesc: Invalid argument in constructor" >>
+                                             fail (def f args)
   argTermDesc (var x args) = return (QK (var x args)) -- TODO: Check that the debruijn index does not change
-  argTermDesc otherwise = fail "argTermDesc: Invalid argument in constructor"
+  argTermDesc (sort s) = return (QK (sort s))
+  argTermDesc otherwise = log "argTermDesc: Invalid argument in constructor" >> fail otherwise
 
   argDesc : Sort → Arg Type → Error QDesc
-  argDesc s (arg i (el sarg t)) = checkSort0 s >>
+  argDesc s (arg i (el sarg t)) = -- checkSort0 s >>
                                   checkArginfovr i >>
-                                  checkSort0 sarg >>
+                                  -- checkSort0 sarg >>
                                   argTermDesc t
 
   checkTarget : Type → Error ⊤
   checkTarget (el s (def f args)) with f ≟-Name self | drop (toℕ p) args
-  checkTarget (el s (def f _)) | yes p | []    = checkSort0 s >> return tt
+  checkTarget (el s (def f _)) | yes p | []    = -- checkSort0 s >>
+                                                 return tt
   checkTarget (el s (def f _)) | yes p | _ ∷ _ = fail "checkTarget: Indices in constructor target are not supported"
   checkTarget (el s (def f _)) | no ¬p | _     = fail "checkTarget: Invalid constructor target"
   checkTarget otherwise = fail "checkTarget: Invalid constructor target"

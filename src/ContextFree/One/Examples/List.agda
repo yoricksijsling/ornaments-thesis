@@ -2,7 +2,6 @@ module ContextFree.One.Examples.List where
 
 open import ContextFree.One.Desc
 open import ContextFree.One.Quoting
--- open import Data.List
 open import Data.Unit.Base
 open import Data.Product
 open import Data.Sum
@@ -35,3 +34,12 @@ open module Foo (A : Set) = IsContextFree (isContextFree-ListP A)
 
 testDesc : ∀{A : Set}{Foo : Set} → unquote (quoteDesc! (quote ListP) 1) A ≡ desc A
 testDesc = refl
+
+module RealLists where
+  open import Data.List using (List)
+  open import Level using (zero)
+
+  -- Desc can not describe universe polymorphic types.
+  -- The quoter does allow it, but you have to instantiate it to the level forced by Desc.
+  testDescL : (A : Set) → unquote (quoteDesc! (quote List) 2) {zero} A ≡ `1 `+ (`K A `* `var)
+  testDescL A = refl
