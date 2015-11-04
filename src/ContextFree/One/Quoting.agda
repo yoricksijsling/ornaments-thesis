@@ -22,32 +22,7 @@ open Data.Error.Monad
 open import TypeArgs
 open import Stuff
 
-argvr : ∀{A : Set} → A → Arg A
-argvr = arg (arg-info visible relevant)
-
-data QDesc : Set where
-  QK : (S : Term) → QDesc
-  Q0 : QDesc
-  Q1 : QDesc
-  _Q+_ : (A B : QDesc) → QDesc
-  _Q*_ : (A B : QDesc) → QDesc
-  Qvar : QDesc
-
-QDescP : Set
-QDescP = List (Sort × Arg Type) × QDesc
-
-⟦_⟧QDesc : QDesc → Term
-⟦ QK S ⟧QDesc = con (quote `K) (argvr S ∷ [])
-⟦ Q0 ⟧QDesc = con (quote `0) []
-⟦ Q1 ⟧QDesc = con (quote `1) []
-⟦ A Q+ B ⟧QDesc = con (quote _`+_) (argvr ⟦ A ⟧QDesc ∷ argvr ⟦ B ⟧QDesc ∷ [])
-⟦ A Q* B ⟧QDesc = con (quote _`*_) (argvr ⟦ A ⟧QDesc ∷ argvr ⟦ B ⟧QDesc ∷ [])
-⟦ Qvar ⟧QDesc = con (quote `var) []
-
-⟦_⟧QDescP : QDescP → Term
-⟦ ps , d ⟧QDescP = addArgsTm ps ⟦ d ⟧QDesc
-
---------------------
+open import ContextFree.One.Quoting.Safe
 
 getDatatype : Name → Error Data-type
 getDatatype n = fromMaybe (showName n ++ " is not a data type")
@@ -72,20 +47,20 @@ checkArginfovr : Arg-info → Error ⊤
 checkArginfovr (arg-info visible relevant) = ok tt
 checkArginfovr (arg-info _ _) = fail "Arg is not visible and relevant"
 
-constructorDesc : Name → (t : Type) → Fin (suc (argCount t)) → Error QDesc
+constructorDesc : Name → (t : Type) → Fin (suc (argCount t)) → Error SafeProduct
 constructorDesc self ct p = constructorDesc′
   where
-  argTermDesc : Term → Error QDesc
+  argTermDesc : Term → Error SafeArg
   argTermDesc (def f args) with f ≟-Name self | drop (toℕ p) args -- drop p args
-  argTermDesc (def f args) | yes p | []    = return Qvar
+  argTermDesc (def f args) | yes p | []    = return Svar
   argTermDesc (def f args) | yes p | _ ∷ _ = fail "argTermDesc: self-reference has arguments"
   argTermDesc (def f args) | no ¬p | _     = log "argTermDesc: Invalid argument in constructor" >>
                                              fail (def f args)
-  argTermDesc (var x args) = return (QK (var x args)) -- TODO: Check that the debruijn index does not change
-  argTermDesc (sort s) = return (QK (sort s))
+  argTermDesc (var x args) = return (SK (var x args)) -- TODO: Check that the debruijn index does not change
+  argTermDesc (sort s) = return (SK (sort s))
   argTermDesc otherwise = log "argTermDesc: Invalid argument in constructor" >> fail otherwise
 
-  argDesc : Sort → Arg Type → Error QDesc
+  argDesc : Sort → Arg Type → Error SafeArg
   argDesc s (arg i (el sarg t)) = -- checkSort0 s >>
                                   checkArginfovr i >>
                                   -- checkSort0 sarg >>
@@ -99,28 +74,29 @@ constructorDesc self ct p = constructorDesc′
   checkTarget (el s (def f _)) | no ¬p | _     = fail "checkTarget: Invalid constructor target"
   checkTarget otherwise = fail "checkTarget: Invalid constructor target"
 
-  constructorDesc′ : Error QDesc
+  constructorDesc′ : Error SafeProduct
   constructorDesc′ = let (pargs , ptarget) = takeArgs ct p in
                      let (args , target) = getArgs ptarget in
                      checkTarget target >>
-                     (mapM (uncurry′ argDesc) (Data.Vec.toList args)) >>=
-                     return ∘′ foldrWithDefault Q1 _Q*_
-
+                     (mapM (uncurry′ argDesc) (Data.Vec.toList args))
 
 module TestConstructorToDesc where
   el0 : Term → Type
   el0 = el (lit 0)
 
+  argvr : Type → Arg Type
+  argvr = arg (arg-info visible relevant)
+
   data Dummy : Set where
 
   -- Dummy
-  testZero : ok Q1 ≡ constructorDesc (quote Dummy)
+  testZero : ok [] ≡ constructorDesc (quote Dummy)
     (el0 (def (quote Dummy) []))
     (# 0)
   testZero = refl
 
   -- Dummy → Dummy
-  testSuc : ok Qvar ≡ constructorDesc (quote Dummy)
+  testSuc : ok (Svar ∷ []) ≡ constructorDesc (quote Dummy)
     (el0 (pi (argvr (el0 (def (quote Dummy) [])))
              (el0 (def (quote Dummy) []))))
     (# 0)
@@ -135,8 +111,7 @@ _fits_ p n = p ≤ argCount (type n)
 _fits?_ : ∀ p n → Dec (p fits n)
 p fits? n = p ≤? argCount (type n)
 
-quoteQDesc : (n : Name) (p : ℕ) →
-  Error QDescP
+quoteQDesc : (n : Name) (p : ℕ) → Error SafeDatatype
 quoteQDesc n p =
   getDatatype n >>= λ dt →
   getConstructors dt >>= λ cs →
