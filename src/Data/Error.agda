@@ -2,38 +2,63 @@ module Data.Error where
 
 open import Data.List using (List; []; _∷_)
 open import Data.Maybe
-open import Data.String
+open import Data.Product
+open import Data.String using (String)
+open import Data.Unit
 open import Function
 open import Relation.Nullary using (Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
+open import Level using (_⊔_) renaming (zero to lzero; suc to lsuc)
 
-data Error {α}(A : Set α) : Set α where
-  ok : (x : A) → Error A
-  fail : (s : String) → Error A
+module MessagesModule where
+  infixr 5 _∷_
 
-error : ∀{α β}{A : Set α}{B : Error A → Set β} →
-        ((x : A) → B (ok x)) → ((s : String) → B (fail s)) → (x : Error A) → B x
-error o f (ok x) = o x
-error o f (fail s) = f s
+  data Messages : Set₁ where
+    [] : Messages
+    _∷_ : {S : Set}(s : S) → Messages → Messages
+
+  [_] : {S : Set}(s : S) → Messages
+  [ s ] = s ∷ []
+
+  infixr 5 _++_
+
+  _++_ : Messages → Messages → Messages
+  [] ++ ys = ys
+  (x ∷ xs) ++ ys = x ∷ xs ++ ys
+
+open MessagesModule using (Messages; []; _∷_) public
+open MessagesModule
+
+Error : ∀{α}(A : Set α) → Set (lsuc lzero ⊔ α)
+Error A = Messages × Maybe A
+
+ok : ∀{α}{A : Set α}(x : A) → Error A
+ok x = [] , just x
+
+fail : ∀{α}{A : Set α}{S : Set}(s : S) → Error A
+fail s = [ s ] , nothing
 
 fromMaybe : ∀{α}{A : Set α} → String → Maybe A → Error A
 fromMaybe s (just x) = ok x
 fromMaybe s nothing = fail s
 
-data IsOk {α}{A : Set α} : Error A → Set α where
-  ok : (a : A) → IsOk (ok a)
+IsOk : ∀{α}{A : Set α} → Error A → Set α
+IsOk = Is-just ∘′ proj₂
 
 isOk? : ∀{α}{A : Set α}(e : Error A) → Dec (IsOk e)
-isOk? (ok x) = yes (ok x)
-isOk? (fail s) = no λ { () }
+isOk? (ms , just x) = yes (just tt)
+isOk? (ms , nothing) = no λ { () }
 
 fromOk : ∀{α}{A : Set α}{e : Error A}(isOk : True (isOk? e)) → A
-fromOk {e = ok x} tt = x
-fromOk {e = fail s} ()
+fromOk {e = ms , just x} tt = x
+fromOk {e = ms , nothing} ()
 
-decToError : ∀{α}{A : Set α}(s : String) → Dec A → Error A
+decToError : ∀{α}{A : Set α}{S : Set}(s : S) → Dec A → Error A
 decToError s (yes p) = ok p
 decToError s (no ¬p) = fail s
+
+log : {S : Set}(s : S) → Error ⊤
+log s = [ s ] , just tt
 
 module Monad where
   -- We can't use a monad record because we want to use it at different levels.
@@ -43,8 +68,8 @@ module Monad where
   infixl 1 _>>=_ _>>_
 
   _>>=_ : ∀{α β}{A : Set α}{B : Set β} → Error A → (A → Error B) → Error B
-  ok a >>= f = f a
-  fail s >>= f = fail s
+  ms , just x >>= f = let fms , b = f x in ms ++ fms , b
+  ms , nothing >>= f = ms , nothing
 
   _>>_ : ∀{α β}{A : Set α}{B : Set β} → Error A → Error B → Error B
   a >> b = a >>= (const b)
