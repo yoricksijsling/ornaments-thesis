@@ -16,7 +16,7 @@ data SafeArg : Set where
   Svar : SafeArg
 
 SafeProduct : Set
-SafeProduct = List SafeArg
+SafeProduct = (Name × List SafeArg)
 
 SafeSum : Set
 SafeSum = List SafeProduct
@@ -59,8 +59,8 @@ module ToDesc where
   ⟦ Svar ⟧arg = ccon₀ (quote `var)
 
   ⟦_⟧product : SafeProduct → Term
-  ⟦_⟧product = foldrWithDefault (ccon₀ (quote `1))
-                                (ccon₂ (quote _`*_)) ∘′ map ⟦_⟧arg 
+  ⟦ n , as ⟧product = (foldrWithDefault (ccon₀ (quote `1))
+                                        (ccon₂ (quote _`*_)) ∘′ map ⟦_⟧arg) as
 
   ⟦_⟧sum : SafeSum → Term
   ⟦_⟧sum = (foldrWithDefault (ccon₀ (quote `0))
@@ -68,3 +68,42 @@ module ToDesc where
 
   ⟦_⟧datatype : SafeDatatype → Term
   ⟦ mk params sop ⟧datatype = addArgsTm params ⟦ sop ⟧sum
+
+module ToTo where
+  VarTerm : Set
+  VarTerm = (toᵢ : ℕ)(meᵢ : ℕ) → Term × ℕ
+
+  ⟦_⟧arg-pat : SafeArg → Pattern
+  ⟦ SK S ⟧arg-pat = var
+  ⟦ Svar ⟧arg-pat = var
+
+  -- De Bruijn index depends on the number of var patterns _after_ this arg
+  ⟦_⟧arg-vt : SafeArg → VarTerm
+  ⟦ SK S ⟧arg-vt toᵢ meᵢ = cvar₀ meᵢ , suc meᵢ
+  ⟦ Svar ⟧arg-vt toᵢ meᵢ = cvar₁ toᵢ (cvar₀ meᵢ) , suc meᵢ
+
+  ⟦_⟧product-pat : SafeProduct → Pattern
+  ⟦ n , as ⟧product-pat = con n (map (argvr ∘′ ⟦_⟧arg-pat) as)
+
+  ⟦_⟧product-term : SafeProduct → Term
+  ⟦ n , as ⟧product-term = proj₁ (foldrWithDefault t1 t* (map ⟦_⟧arg-vt as) (length as) 0)
+    where
+    t1 : VarTerm
+    t1 toᵢ meᵢ = ccon₀ (quote tt) , meᵢ
+    t* : VarTerm → VarTerm → VarTerm
+    t* x xs toᵢ meᵢ = let xs_tm , xs_meᵢ = xs toᵢ meᵢ in
+                      let x_tm , x_meᵢ = x toᵢ xs_meᵢ in
+                      ccon₂ (quote _,_) x_tm xs_tm , x_meᵢ
+
+  ⟦_⟧sum : SafeSum → List Clause
+  ⟦ ps ⟧sum = map (λ { (p , w) → cclause₂ var ⟦ p ⟧product-pat (w ⟦ p ⟧product-term) })
+                  (zipWithWrappers ps id)
+    where
+    zipWithWrappers : {A : Set} → List A → (Term → Term) → List (A × (Term → Term))
+    zipWithWrappers [] w = []
+    zipWithWrappers (x ∷ []) w = [ x , ccon₁ (quote ⟨_⟩) ∘′ ccon₁ (quote inj₁) ]
+    zipWithWrappers (x ∷ xs) w = let nw = w ∘′ ccon₁ (quote inj₂) in
+                                 (x , nw) ∷ (zipWithWrappers xs nw)
+
+  ⟦_⟧datatype : SafeDatatype → Term
+  ⟦ mk params sop ⟧datatype = pat-lam ⟦ sop ⟧sum []
