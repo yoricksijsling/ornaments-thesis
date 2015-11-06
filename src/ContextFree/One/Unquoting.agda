@@ -5,7 +5,7 @@ module ContextFree.One.Unquoting (`Desc : Name)(`μ : Name) where
 open import Data.List using (List; []; _∷_; map; [_]; _++_; _∷ʳ_; length; foldr)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
-open import Data.Stream using (iterate)
+open import Data.Stream using (Stream; iterate)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Unit using (tt)
 open import Function
@@ -14,7 +14,7 @@ open import Reflection
 open import ContextFree.One.Desc
 open import ContextFree.One.Quoted
 open import TypeArgs
-open import Stuff using (zipStreamBackwards)
+open import Stuff using (zipStream; zipStreamBackwards)
 
 private
   argvr : ∀{A} → A → Arg A
@@ -96,17 +96,12 @@ module MakeTo (`desc : Name)(`to : Name) where
                              (ccon₂ (quote _,_) a_tm t) , a_meᵢ
 
     ⟦_⟧sum : SafeSum → List Clause
-    ⟦_⟧sum = map m ∘′ zipWithWrappers
-      where
-      m : SafeProduct × (Term → Term) → Clause
-      m (p , w) = clause (paramPats ∷ʳ argvr ⟦ p ⟧product-pat) (w ⟦ p ⟧product-term)
-
-      zipWithWrappers : {A : Set} → List A → List (A × (Term → Term))
-      zipWithWrappers {A} xs = foldr t+ (const []) xs id
-        where t+ : A → ((Term → Term) → List (A × (Term → Term))) →
-                        (Term → Term) → List (A × (Term → Term))
-              t+ a xs p = (a , (ccon₁ (quote ⟨_⟩) ∘′ p ∘′ ccon₁ (quote inj₁)))
-                          ∷ (xs (p ∘′ ccon₁ (quote inj₂)))
+    ⟦ ps ⟧sum = zipStream (λ p wrap → clause (paramPats ∷ʳ argvr ⟦ p ⟧product-pat)
+                                             (wrap ⟦ p ⟧product-term))
+                          ps wrappers
+      where wrappers : Stream (Term → Term)
+            wrappers = Data.Stream.map (λ w → ccon₁ (quote ⟨_⟩) ∘′ w ∘′ ccon₁ (quote inj₁))
+                                       (iterate (_∘′_ (ccon₁ (quote inj₂))) id)
 
   ⟦_⟧datatype : SafeDatatype → FunctionDef
   ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params base) ⟦ sop ⟧sum

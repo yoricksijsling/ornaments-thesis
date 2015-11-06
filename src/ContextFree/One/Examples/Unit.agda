@@ -35,7 +35,7 @@ qdt : SafeDatatype
 qdt = quoteDatatype! (quote Unit) 0
 
 unquoteDecl qdesc = makeDesc qdt
-unquoteDecl qto = makeTo qto qdt
+unquoteDecl qto = makeTo (quote qdesc) qto qdt
 
 testDesc : qdesc ≡ desc
 testDesc = refl
