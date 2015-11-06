@@ -12,24 +12,26 @@ open import Relation.Binary.PropositionalEquality
 data Unit : Set where
   u : Unit
 
+desc : Desc
+desc = `1 `+ `0
+
+to : Unit → μ desc
+to u = ⟨ inj₁ tt ⟩
+
+from : μ desc → Unit
+from ⟨ inj₁ tt ⟩ = u
+from ⟨ inj₂ () ⟩
+
+to-from : ∀ x → from (to x) ≡ x
+to-from u = refl
+
+from-to : ∀ x → to (from x) ≡ x
+from-to ⟨ inj₁ tt ⟩ = refl
+from-to ⟨ inj₂ () ⟩
+
 isContextFree-Unit : IsContextFree Unit
 isContextFree-Unit = record { desc = desc ; to = to ; from = from
                             ; to-from = to-from ; from-to = from-to }
-  where
-  desc : Desc
-  desc = `1 `+ `0
-  to : Unit → μ desc
-  to u = ⟨ inj₁ tt ⟩
-  from : μ desc → Unit
-  from ⟨ inj₁ tt ⟩ = u
-  from ⟨ inj₂ () ⟩
-  to-from : ∀ x → from (to x) ≡ x
-  to-from u = refl
-  from-to : ∀ x → to (from x) ≡ x
-  from-to ⟨ inj₁ tt ⟩ = refl
-  from-to ⟨ inj₂ () ⟩
-
-open IsContextFree isContextFree-Unit
 
 qdt : SafeDatatype
 qdt = quoteDatatype! (quote Unit) 0

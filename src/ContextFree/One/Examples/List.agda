@@ -13,28 +13,30 @@ data ListP (A : Set) : Set where
   [] : ListP A
   _∷_ : A → ListP A → ListP A
 
-isContextFree-ListP : ∀ A → IsContextFree (ListP A)
-isContextFree-ListP A = record { desc = desc ; to = to ; from = from
-                               ; to-from = to-from ; from-to = from-to }
-  where
-  desc : Desc
-  desc = `1 `+ (`K A `* `var `* `1) `+ `0
-  to : ListP A → μ desc
-  to [] = ⟨ inj₁ tt ⟩
-  to (x ∷ xs) = ⟨ inj₂ (inj₁ (x , to xs , tt)) ⟩
-  from : μ desc → ListP A
-  from ⟨ inj₁ tt ⟩ = []
-  from ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = x ∷ from xs
-  from ⟨ inj₂ (inj₂ ()) ⟩
-  to-from : ∀ x → from (to x) ≡ x
-  to-from [] = refl
-  to-from (x ∷ xs) = cong (_∷_ x) (to-from xs)
-  from-to : ∀ x → to (from x) ≡ x
-  from-to ⟨ inj₁ tt ⟩ = refl
-  from-to ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = cong (λ v → ⟨ inj₂ (inj₁ (x , v , tt)) ⟩) (from-to xs)
-  from-to ⟨ inj₂ (inj₂ ()) ⟩
+desc : (A : Set) → Desc
+desc A = `1 `+ (`K A `* `var `* `1) `+ `0
 
-open module Foo (A : Set) = IsContextFree (isContextFree-ListP A)
+to : (A : Set) → ListP A → μ (desc A)
+to A [] = ⟨ inj₁ tt ⟩
+to A (x ∷ xs) = ⟨ inj₂ (inj₁ (x , to A xs , tt)) ⟩
+
+from : (A : Set) → μ (desc A) → ListP A
+from A ⟨ inj₁ tt ⟩ = []
+from A ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = x ∷ from A xs
+from A ⟨ inj₂ (inj₂ ()) ⟩
+
+to-from : (A : Set) → ∀ x → from A (to A x) ≡ x
+to-from A [] = refl
+to-from A (x ∷ xs) = cong (_∷_ x) (to-from A xs)
+
+from-to : (A : Set) → ∀ x → to A (from A x) ≡ x
+from-to A ⟨ inj₁ tt ⟩ = refl
+from-to A ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = cong (λ v → ⟨ inj₂ (inj₁ (x , v , tt)) ⟩) (from-to A xs)
+from-to A ⟨ inj₂ (inj₂ ()) ⟩
+
+isContextFree-ListP : ∀ A → IsContextFree (ListP A)
+isContextFree-ListP A = record { desc = desc A ; to = to A ; from = from A
+                               ; to-from = to-from A ; from-to = from-to A }
 
 qdt : SafeDatatype
 qdt = quoteDatatype! (quote ListP) 1
