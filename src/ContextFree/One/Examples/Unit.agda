@@ -2,6 +2,8 @@ module ContextFree.One.Examples.Unit where
 
 open import ContextFree.One.Desc
 open import ContextFree.One.Quoting
+open import ContextFree.One.Quoted
+open import ContextFree.One.Unquoting (quote Desc) (quote μ)
 open import Data.Error
 open import Data.Unit.Base
 open import Data.Sum
@@ -15,19 +17,28 @@ isContextFree-Unit = record { desc = desc ; to = to ; from = from
                             ; to-from = to-from ; from-to = from-to }
   where
   desc : Desc
-  desc = `1
+  desc = `1 `+ `0
   to : Unit → μ desc
-  to u = ⟨ tt ⟩
+  to u = ⟨ inj₁ tt ⟩
   from : μ desc → Unit
-  from ⟨ tt ⟩ = u
+  from ⟨ inj₁ tt ⟩ = u
+  from ⟨ inj₂ () ⟩
   to-from : ∀ x → from (to x) ≡ x
   to-from u = refl
   from-to : ∀ x → to (from x) ≡ x
-  from-to ⟨ tt ⟩ = refl
-
+  from-to ⟨ inj₁ tt ⟩ = refl
+  from-to ⟨ inj₂ () ⟩
 
 open IsContextFree isContextFree-Unit
 
-testDesc : unquote (quoteDesc! (quote Unit) 0) ≡ desc
+qdt : SafeDatatype
+qdt = quoteDatatype! (quote Unit) 0
+
+unquoteDecl qdesc = makeDesc qdt
+unquoteDecl qto = makeTo qto qdt
+
+testDesc : qdesc ≡ desc
 testDesc = refl
 
+testTo : ∀ x → qto x ≡ to x
+testTo u = refl

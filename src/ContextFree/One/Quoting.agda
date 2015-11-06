@@ -17,12 +17,12 @@ open import Relation.Nullary using (¬_; Dec; yes; no)
 open import Relation.Nullary.Decidable using (True)
 
 open import ContextFree.One.Desc
+open import ContextFree.One.Quoting.Constructor
+open import ContextFree.One.Quoted
 open import Data.Error
 open Data.Error.Monad
 open import TypeArgs
 open import Stuff
-
-open import ContextFree.One.Quoting.Safe
 
 getDatatype : Name → Error Data-type
 getDatatype n = fromMaybe (showName n ++ " is not a data type")
@@ -39,69 +39,6 @@ getDatatype n = fromMaybe (showName n ++ " is not a data type")
 getConstructors : Data-type → Error (List Name)
 getConstructors dt = ok (constructors dt)
 
-checkSort0 : Sort → Error ⊤
-checkSort0 (lit zero) = ok tt
-checkSort0 s = log "Sort is not `lit 0`" >> fail s
-
-checkArginfovr : Arg-info → Error ⊤
-checkArginfovr (arg-info visible relevant) = ok tt
-checkArginfovr (arg-info _ _) = fail "Arg is not visible and relevant"
-
-constructorDesc : Name → (t : Type) → Fin (suc (argCount t)) → Error SafeProduct
-constructorDesc self ct p = constructorDesc′
-  where
-  argTermDesc : Term → Error SafeArg
-  argTermDesc (def f args) with f ≟-Name self | drop (toℕ p) args -- drop p args
-  argTermDesc (def f args) | yes p | []    = return Svar
-  argTermDesc (def f args) | yes p | _ ∷ _ = fail "argTermDesc: self-reference has arguments"
-  argTermDesc (def f args) | no ¬p | _     = log "argTermDesc: Invalid argument in constructor" >>
-                                             fail (def f args)
-  argTermDesc (var x args) = return (SK (var x args)) -- TODO: Check that the debruijn index does not change
-  argTermDesc (sort s) = return (SK (sort s))
-  argTermDesc otherwise = log "argTermDesc: Invalid argument in constructor" >> fail otherwise
-
-  argDesc : Sort → Arg Type → Error SafeArg
-  argDesc s (arg i (el sarg t)) = -- checkSort0 s >>
-                                  checkArginfovr i >>
-                                  -- checkSort0 sarg >>
-                                  argTermDesc t
-
-  checkTarget : Type → Error ⊤
-  checkTarget (el s (def f args)) with f ≟-Name self | drop (toℕ p) args
-  checkTarget (el s (def f _)) | yes p | []    = -- checkSort0 s >>
-                                                 return tt
-  checkTarget (el s (def f _)) | yes p | _ ∷ _ = fail "checkTarget: Indices in constructor target are not supported"
-  checkTarget (el s (def f _)) | no ¬p | _     = fail "checkTarget: Invalid constructor target"
-  checkTarget otherwise = fail "checkTarget: Invalid constructor target"
-
-  constructorDesc′ : Error SafeProduct
-  constructorDesc′ = let (pargs , ptarget) = takeArgs ct p in
-                     let (args , target) = getArgs ptarget in
-                     checkTarget target >>
-                     (mapM (uncurry′ argDesc) (Data.Vec.toList args))
-
-module TestConstructorToDesc where
-  el0 : Term → Type
-  el0 = el (lit 0)
-
-  argvr : Type → Arg Type
-  argvr = arg (arg-info visible relevant)
-
-  data Dummy : Set where
-
-  -- Dummy
-  testZero : ok [] ≡ constructorDesc (quote Dummy)
-    (el0 (def (quote Dummy) []))
-    (# 0)
-  testZero = refl
-
-  -- Dummy → Dummy
-  testSuc : ok (Svar ∷ []) ≡ constructorDesc (quote Dummy)
-    (el0 (pi (argvr (el0 (def (quote Dummy) [])))
-             (el0 (def (quote Dummy) []))))
-    (# 0)
-  testSuc = refl
-
 Params : Set
 Params = ℕ
 
@@ -111,21 +48,53 @@ _fits_ p n = p ≤ argCount (type n)
 _fits?_ : ∀ p n → Dec (p fits n)
 p fits? n = p ≤? argCount (type n)
 
-quoteQDesc : (n : Name) (p : ℕ) → Error SafeDatatype
-quoteQDesc n p =
-  getDatatype n >>= λ dt →
+quoteDatatype : (dtname : Name) (p : ℕ) → Error SafeDatatype
+quoteDatatype dtname p =
+  getDatatype dtname >>= λ dt →
   getConstructors dt >>= λ cs →
-  decToError "Too many params for datatype" (p ≤? argCount (type n)) >>= λ pfitsn →
-  let params = proj₁ (takeArgs (type n) (Data.Fin.fromℕ≤ (s≤s pfitsn))) in
+  decToError "Too many params for datatype" (p ≤? argCount (type dtname)) >>= λ pfitsn →
+  let params = proj₁ (takeArgs (type dtname) (Data.Fin.fromℕ≤ (s≤s pfitsn))) in
   -- TODO: extract params and check that constructors fit exactly
   decToError "Too many params for some constructors" (all (_fits?_ p) cs) >>= λ pfitscs →
-  sequenceM (mapAllToList (λ {c} pfitsc → constructorDesc n (type c) (Data.Fin.fromℕ≤ (s≤s pfitsc)))
+  sequenceM (mapAllToList (λ {c} pfitsc → quoteConstructor dtname c (Data.Fin.fromℕ≤ (s≤s pfitsc)))
                           pfitscs) >>= λ cdescs →
-  return (Data.Vec.toList params , (foldrWithDefault Q0 _Q+_ cdescs))
+  return (mk dtname (Data.Vec.toList params) cdescs)
 
-quoteDesc : Name → ℕ → Error Term
-quoteDesc n p = quoteQDesc n p >>= return ∘′ ⟦_⟧QDescP
+RunError : ∀{α}{A : Set α} → Error A → Set α
+RunError {A = A} e = {isOk : True (isOk? e)} → A
 
-quoteDesc! : (n : Name)(p : ℕ){isOk : True (isOk? (quoteDesc n p))} → Term
-quoteDesc! n p {isOk} = fromOk isOk
+quoteDatatype! : (n : Name) (p : ℕ) → RunError (quoteDatatype n p)
+quoteDatatype! n p {isOk} = fromOk isOk
 
+-- quoteDesc : Name → ℕ → Error Term
+-- quoteDesc n p = ToDesc.⟦_⟧datatype <$> quoteDatatype n p
+
+-- quoteDesc! : (n : Name)(p : ℕ){isOk : True (isOk? (quoteDesc n p))} → Term
+-- quoteDesc! n p {isOk} = fromOk isOk
+
+-- quoteTo : Name → ℕ → Error Term
+-- quoteTo n p = ToTo.⟦_⟧datatype <$> quoteDatatype n p
+
+-- quoteTo! : (n : Name)(p : ℕ){isOk : True (isOk? (quoteTo n p))} → Term
+-- quoteTo! n p {isOk} = fromOk isOk
+
+
+-- PARAMETERS / INDICES
+
+-- data ListP (A : Set) : Set where
+--   nilP : ListP A
+--   consP : A → ListP A → ListP A
+
+-- data ListI : (A : Set) → Set₁ where
+--   nilI : ∀{A} → ListI A
+--   consI : ∀{A} → A → ListI A → ListI A
+
+-- type (quote Dummy)  ≡ el₁ (sort (lit 0))
+-- type (quote ListP)  ≡ el₁ (pi (argvr (el₁ (sort (lit 0))))
+--                               (el₁ (sort (lit 0))))
+-- type (quote ListI)  ≡ el₂ (pi (argvr (el₁ (sort (lit 0))))
+--                               (el₂ (sort (lit 1))))
+-- type (quote nilP)   ≡ el₁ (pi (arghr (el₁ (sort (lit 0))))
+--                               (el₀ (def (quote ListP) (argvr (var 0 []) ∷ []))))
+-- type (quote nilI)   ≡ el₁ (pi (arghr (el₁ (sort (lit 0))))
+--                               (el₁ (def (quote ListI) (argvr (var 0 []) ∷ []))))

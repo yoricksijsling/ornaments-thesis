@@ -4,7 +4,9 @@ open import Data.Empty
 open import Data.Unit.Base
 open import Data.Sum
 open import Data.Product
-open import Data.Nat
+
+infixr 3 _`+_
+infixr 4 _`*_
 
 -- One variable, not dependently typed
 data Desc : Set₁ where
@@ -41,13 +43,8 @@ open RawFunctor
 
 open import Relation.Binary.PropositionalEquality using (_≡_)
 
-record RawIsContextFree (A : Set) : Set₁ where
-  field
-    desc : Desc
-    to : A → μ desc
-    from : μ desc → A
-
 record IsContextFree (A : Set) : Set₁ where
+  constructor mk
   field
     desc : Desc
     to : A → μ desc
