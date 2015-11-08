@@ -14,19 +14,19 @@ module ZipStream where
   open import Data.Product using (_×_; _,_; proj₁; proj₂)
   open import Data.List using (foldl; foldr)
 
-  zipStream : ∀{a c}{A : Set a}{B : Set}{C : Set c}(f : A → B → C) →
-              List A → Stream B → List C
-  zipStream {A = A} {B} {C} f xs ys = foldr op (λ _ → []) xs ys
+  zipStream : ∀{b c}{A : Set}{B : Set b}{C : Set c}(f : A → B → C) →
+              Stream A → List B → List C
+  zipStream {A = A} {B} {C} f xs ys = foldr op (λ _ → []) ys xs
     where
-    op : A → (Stream B → List C) → Stream B → List C
-    op x xs (y ∷ ys) = (f x y) ∷ xs (♭ ys)
+    op : B → (Stream A → List C) → Stream A → List C
+    op x xs (y ∷ ys) = f y x ∷ xs (♭ ys)
 
-  zipStreamBackwards : ∀{a c}{A : Set a}{B : Set}{C : Set c}(f : A → B → C) →
-              List A → Stream B → List C
-  zipStreamBackwards {A = A} {B} {C} f xs ys = proj₁ (foldr op ([] , ys) xs)
+  zipStreamBackwards : ∀{b c}{A : Set}{B : Set b}{C : Set c}(f : A → B → C) →
+              Stream A → List B → List C
+  zipStreamBackwards {A = A} {B} {C} f xs ys = proj₁ (foldr op ([] , xs) ys)
     where
-    op : A → List C × Stream B → List C × Stream B
-    op x (xs , y ∷ ys) = (f x y) ∷ xs , ♭ ys
+    op : B → List C × Stream A → List C × Stream A
+    op x (xs , y ∷ ys) = f y x ∷ xs , ♭ ys
 
 open ZipStream public
 

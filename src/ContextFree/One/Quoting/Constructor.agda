@@ -45,8 +45,8 @@ termToConstructor self ct p = termToConstructor′
   termToArg (def f args) | no ¬p | _     = return (SK (def f args))
   termToArg otherwise = return (SK otherwise)
 
-  quoteArg : Sort → Arg Type → ℕ → Error SafeArg
-  quoteArg s (arg i (el sarg t)) n = checkSort0 s >>
+  quoteArg : ℕ → Sort → Arg Type → Error SafeArg
+  quoteArg n s (arg i (el sarg t)) = checkSort0 s >>
                                      checkArginfovr i >>
                                      checkSort0 sarg >>
                                      termToArg t >>=
@@ -63,9 +63,8 @@ termToConstructor self ct p = termToConstructor′
   termToConstructor′ = let (pargs , ptarget) = takeArgs ct p in
                        let (args , target) = getArgs ptarget in
                        checkTarget target >>
-                       -- mapM (uncurry′ quoteArg) (toList args)
-                       mapM (uncurry′ (uncurry′ quoteArg))
-                            (zipStream _,_ (toList args) (iterate suc 0))
+                       sequenceM (zipStream (λ { n (s , a) → quoteArg n s a })
+                                            (iterate suc 0) (toList args))
 
 quoteConstructor : (self : Name)(c : Name) → Fin (suc (argCount (type c))) → Error SafeProduct
 quoteConstructor self c p = _,_ c <$> termToConstructor self (type c) p

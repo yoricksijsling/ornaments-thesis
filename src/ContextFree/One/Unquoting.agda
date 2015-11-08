@@ -62,8 +62,8 @@ private
   cabsurd-clause₂ p₁ p₂ = absurd-clause (argvr p₁ ∷ argvr p₂ ∷ [])
 
   paramArgs : ℕ → List (Sort × Arg Type) → List (Arg Term)
-  paramArgs n params = zipStreamBackwards (λ { (_ , arg i _) n → arg i (var n []) })
-                                          params (iterate suc n)
+  paramArgs n = zipStreamBackwards (λ { n (_ , arg i _) → arg i (cvar₀ n) })
+                                   (iterate suc n)
 
   paramPats : List (Sort × Arg Type) → List (Arg Pattern)
   paramPats params = map (λ { (_ , arg i _) → arg i var }) params
@@ -113,13 +113,13 @@ module MakeTo (`desc : Name)(`to : Name) where
 
     ⟦_⟧product-term : SafeProduct → Term
     ⟦ `con , as ⟧product-term = foldr (ccon₂ (quote _,_)) (ccon₀ (quote tt))
-                              $ zipStreamBackwards ⟦_⟧arg-term as (iterate suc 0)
+                              $ zipStreamBackwards (flip ⟦_⟧arg-term) (iterate suc 0) as
       where open WithProductLength (length as)
 
     ⟦_⟧sum : SafeSum → List Clause
-    ⟦ ps ⟧sum = zipStream (λ p wrap → clause (paramPats params ∷ʳ argvr ⟦ p ⟧product-pat)
-                                             (wrap ⟦ p ⟧product-term))
-                          ps wrappers
+    ⟦_⟧sum = zipStream makeclause wrappers
+      where makeclause = λ wrap p → clause (paramPats params ∷ʳ argvr ⟦ p ⟧product-pat)
+                                           (wrap ⟦ p ⟧product-term)
 
   ⟦_⟧datatype : SafeDatatype → FunctionDef
   ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params base) ⟦ sop ⟧sum
@@ -147,15 +147,15 @@ module MakeFrom (`desc : Name)(`from : Name) where
     ⟦_⟧product-term : SafeProduct → Term
     ⟦ `con , as ⟧product-term = con `con
                               $ map argvr
-                              $ zipStreamBackwards ⟦_⟧arg-term as (iterate suc 0)
+                              $ zipStreamBackwards (flip ⟦_⟧arg-term) (iterate suc 0) as
       where
       open WithProduct `con (length as)
 
     ⟦_⟧sum : SafeSum → List Clause
-    ⟦ ps ⟧sum = zipStream (λ p wrap → clause (paramPats params ∷ʳ argvr (wrap (⟦ p ⟧product-pat)))
-                                             ⟦ p ⟧product-term)
-                          ps wrappers
+    ⟦ ps ⟧sum = zipStream makeclause wrappers ps
               ∷ʳ absurd-clause (paramPats params ∷ʳ argvr (lastPattern (length ps)))
+      where makeclause = λ wrap p → clause (paramPats params ∷ʳ argvr (wrap (⟦ p ⟧product-pat)))
+                                           ⟦ p ⟧product-term
 
   ⟦_⟧datatype : SafeDatatype → FunctionDef
   ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params base) ⟦ sop ⟧sum
