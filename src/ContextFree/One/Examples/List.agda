@@ -43,6 +43,7 @@ qdt = quoteDatatype! (quote ListP) 1
 
 unquoteDecl qdesc = makeDesc qdt
 unquoteDecl qto = makeTo (quote qdesc) qto qdt
+unquoteDecl qfrom = makeFrom (quote qdesc) qfrom qdt
 
 testDesc : ∀{A} → qdesc A ≡ desc A
 testDesc = refl
@@ -50,3 +51,8 @@ testDesc = refl
 testTo : ∀{A} xs → qto A xs ≡ to A xs
 testTo [] = refl
 testTo (x ∷ xs) = cong (λ v → ⟨ inj₂ (inj₁ (x , v , tt)) ⟩) (testTo xs)
+
+testFrom : ∀{A} xs → qfrom A xs ≡ from A xs
+testFrom ⟨ inj₁ tt ⟩ = refl
+testFrom ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = cong (_∷_ x) (testFrom xs)
+testFrom ⟨ inj₂ (inj₂ ()) ⟩

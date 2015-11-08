@@ -38,9 +38,14 @@ qdt = quoteDatatype! (quote Unit) 0
 
 unquoteDecl qdesc = makeDesc qdt
 unquoteDecl qto = makeTo (quote qdesc) qto qdt
+unquoteDecl qfrom = makeFrom (quote qdesc) qfrom qdt
 
 testDesc : qdesc ≡ desc
 testDesc = refl
 
 testTo : ∀ x → qto x ≡ to x
 testTo u = refl
+
+testFrom : ∀ x → qfrom x ≡ from x
+testFrom ⟨ inj₁ tt ⟩ = refl
+testFrom ⟨ inj₂ () ⟩

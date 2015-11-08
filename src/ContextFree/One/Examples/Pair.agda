@@ -38,6 +38,7 @@ qdt = quoteDatatype! (quote Pair) 2
 
 unquoteDecl qdesc = makeDesc qdt
 unquoteDecl qto = makeTo (quote qdesc) qto qdt
+unquoteDecl qfrom = makeFrom (quote qdesc) qfrom qdt
 
 testDesc : ∀{A B} → qdesc A B ≡ desc A B
 testDesc = refl
@@ -45,3 +46,6 @@ testDesc = refl
 testTo : ∀{A B} x → qto A B x ≡ to A B x
 testTo (pair a b) = refl
 
+testFrom : ∀{A B} x → qfrom A B x ≡ from A B x
+testFrom ⟨ inj₁ x ⟩ = refl
+testFrom ⟨ inj₂ () ⟩

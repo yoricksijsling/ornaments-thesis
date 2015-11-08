@@ -40,6 +40,7 @@ qdt = quoteDatatype! (quote ℕ) 0
 
 unquoteDecl qdesc = makeDesc qdt
 unquoteDecl qto = makeTo (quote qdesc) qto qdt
+unquoteDecl qfrom = makeFrom (quote qdesc) qfrom qdt
 
 testDesc : qdesc ≡ desc
 testDesc = refl
@@ -47,3 +48,8 @@ testDesc = refl
 testTo : ∀ n → qto n ≡ to n
 testTo zero = refl
 testTo (suc n) = cong (λ v → ⟨ inj₂ (inj₁ (v , tt)) ⟩) (testTo n)
+
+testFrom : ∀ n → qfrom n ≡ from n
+testFrom ⟨ inj₁ tt ⟩ = refl
+testFrom ⟨ inj₂ (inj₁ (n , tt)) ⟩ = cong suc (testFrom n)
+testFrom ⟨ inj₂ (inj₂ ()) ⟩
