@@ -36,6 +36,13 @@ isContextFree-Unit = record { desc = desc ; to = to ; from = from
 qdt : SafeDatatype
 qdt = quoteDatatype! (quote Unit) 0
 
+module TestQdt where
+  open import Reflection
+  open import Data.List
+  open import Data.Product
+  testQdt : SafeDatatype.sop qdt ≡ (quote u , []) ∷ []
+  testQdt = refl
+
 unquoteDecl qdesc = makeDesc qdt
 unquoteDecl qto = makeTo (quote qdesc) qto qdt
 unquoteDecl qfrom = makeFrom (quote qdesc) qfrom qdt

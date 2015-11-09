@@ -36,6 +36,13 @@ isContextFree-Pair A B = record { desc = desc A B ; to = to A B ; from = from A 
 qdt : SafeDatatype
 qdt = quoteDatatype! (quote Pair) 2
 
+module TestQdt where
+  open import Reflection
+  open import Data.List
+  testQdt : SafeDatatype.sop qdt ≡ (quote pair , SK (var 1 []) ∷ SK (var 0 []) ∷ []) ∷
+                                   []
+  testQdt = refl
+
 unquoteDecl qdesc = makeDesc qdt
 unquoteDecl qto = makeTo (quote qdesc) qto qdt
 unquoteDecl qfrom = makeFrom (quote qdesc) qfrom qdt

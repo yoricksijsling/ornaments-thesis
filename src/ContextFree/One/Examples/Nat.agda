@@ -38,6 +38,14 @@ isContextFree-ℕ = record { desc = desc ; to = to ; from = from
 qdt : SafeDatatype
 qdt = quoteDatatype! (quote ℕ) 0
 
+module TestQdt where
+  open import Reflection
+  open import Data.List
+  testQdt : SafeDatatype.sop qdt ≡ (quote zero , []) ∷
+                                   (quote suc , Svar ∷ []) ∷
+                                   []
+  testQdt = refl
+
 unquoteDecl qdesc = makeDesc qdt
 unquoteDecl qto = makeTo (quote qdesc) qto qdt
 unquoteDecl qfrom = makeFrom (quote qdesc) qfrom qdt
