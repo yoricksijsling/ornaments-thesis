@@ -3,7 +3,7 @@ module ContextFree.One.Examples.Unit where
 open import ContextFree.One.Desc
 open import ContextFree.One.Quoting
 open import ContextFree.One.Quoted
-open import ContextFree.One.Unquoting (quote Desc) (quote μ)
+open import ContextFree.One.Unquoting (quote Desc) (quote μ) (quote RawIsContextFree)
 open import Data.Error
 open import Data.Unit.Base
 open import Data.Sum
@@ -44,8 +44,9 @@ module TestQdt where
   testQdt = refl
 
 unquoteDecl qdesc = makeDesc qdt
-unquoteDecl qto = makeTo (quote qdesc) qto qdt
-unquoteDecl qfrom = makeFrom (quote qdesc) qfrom qdt
+unquoteDecl qto = makeTo qto (quote qdesc) qdt
+unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
+unquoteDecl qcf = makeRecord (quote qdesc) (quote qto) (quote qfrom) qdt
 
 testDesc : qdesc ≡ desc
 testDesc = refl

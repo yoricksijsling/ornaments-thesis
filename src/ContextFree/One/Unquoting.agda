@@ -1,6 +1,6 @@
 open import Reflection
 
-module ContextFree.One.Unquoting (`Desc : Name)(`μ : Name) where
+module ContextFree.One.Unquoting (`Desc : Name)(`μ : Name)(`RawIsContextFree : Name) where
 
 open import Data.List using (List; []; _∷_; map; [_]; _++_; _∷ʳ_; length; foldr)
 open import Data.Nat using (ℕ; zero; suc)
@@ -40,6 +40,8 @@ private
   ccon₁ n t₁ = tpf (con n) (con n) (t₁ ∷ [])
   ccon₂ : ∀{tp} → Name → tpv tp → tpv tp → tpv tp
   ccon₂ n t₁ t₂ = tpf (con n) (con n) (t₁ ∷ t₂ ∷ [])
+  ccon₃ : ∀{tp} → Name → tpv tp → tpv tp → tpv tp → tpv tp
+  ccon₃ n t₁ t₂ t₃ = tpf (con n) (con n) (t₁ ∷ t₂ ∷ t₃ ∷ [])
 
   cvar₀ : ℕ → Term
   cvar₀ n = var n []
@@ -95,7 +97,7 @@ module MakeDesc where
   ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params (el (lit 1) (def `Desc [])))
                                              [ cclause₀ (addArgsTm params ⟦ sop ⟧sum) ]
 
-module MakeTo (`desc : Name)(`to : Name) where
+module MakeTo (`to : Name)(`desc : Name) where
 
   module WithParams (params : List (Sort × Arg Type)) where
     ⟦_⟧arg-pat : SafeArg → Pattern
@@ -129,7 +131,7 @@ module MakeTo (`desc : Name)(`to : Name) where
     base = el (lit 0) (pi (argvr (el (lit 0) (def dtname (paramArgs 0 params))))
                           (el (lit 0) (cdef₁ `μ (def `desc (paramArgs 1 params)))))
 
-module MakeFrom (`desc : Name)(`from : Name) where
+module MakeFrom (`from : Name)(`desc : Name) where
   module WithParams (params : List (Sort × Arg Type)) where
     ⟦_⟧arg-pat : SafeArg → Pattern
     ⟦ SK S ⟧arg-pat = var
@@ -165,11 +167,24 @@ module MakeFrom (`desc : Name)(`from : Name) where
     base = el (lit 0) (pi (argvr (el (lit 0) (cdef₁ `μ (def `desc (paramArgs 0 params)))))
                           (el (lit 0) (def dtname (paramArgs 1 params))))
 
+-- module MakeRecord
+
 makeDesc : SafeDatatype → FunctionDef
 makeDesc = MakeDesc.⟦_⟧datatype
 
-makeTo : Name → Name → SafeDatatype → FunctionDef
+makeTo : (`to : Name) → (`desc : Name) → SafeDatatype → FunctionDef
 makeTo = MakeTo.⟦_⟧datatype
 
-makeFrom : Name → Name → SafeDatatype → FunctionDef
+makeFrom : (`from : Name) → (`desc : Name) → SafeDatatype → FunctionDef
 makeFrom = MakeFrom.⟦_⟧datatype
+
+makeRecord : (`desc : Name) → (`to : Name) → (`from : Name) → SafeDatatype → FunctionDef
+makeRecord `desc `to `from (mk dtname params sop) = fun-def (addArgs params basetype)
+                                                            [ clause (paramPats params) term ]
+  where
+  basetype : Type
+  basetype = el (lit 1) (cdef₁ `RawIsContextFree (def dtname (paramArgs 0 params)))
+  term : Term
+  term = ccon₃ (quote RawIsContextFree.mk) (def `desc (paramArgs 0 params))
+                                           (def `to (paramArgs 0 params))
+                                           (def `from (paramArgs 0 params))

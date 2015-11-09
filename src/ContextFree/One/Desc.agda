@@ -43,6 +43,13 @@ open RawFunctor
 
 open import Relation.Binary.PropositionalEquality using (_≡_)
 
+record RawIsContextFree (A : Set) : Set₁ where
+  constructor mk
+  field
+    desc : Desc
+    to : A → μ desc
+    from : μ desc → A
+
 record IsContextFree (A : Set) : Set₁ where
   constructor mk
   field
