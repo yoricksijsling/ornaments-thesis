@@ -63,11 +63,11 @@ private
   cabsurd-clause₂ : Pattern → Pattern → Clause
   cabsurd-clause₂ p₁ p₂ = absurd-clause (argvr p₁ ∷ argvr p₂ ∷ [])
 
-  paramArgs : ℕ → List (Sort × Arg Type) → List (Arg Term)
+  paramArgs : ℕ → Params → List (Arg Term)
   paramArgs n = zipStreamBackwards (λ { n (_ , arg i _) → arg i (cvar₀ n) })
                                    (iterate suc n)
 
-  paramPats : List (Sort × Arg Type) → List (Arg Pattern)
+  paramPats : Params → List (Arg Pattern)
   paramPats params = map (λ { (_ , arg i _) → arg i var }) params
 
   wrappers : ∀{tp} → Stream (tpv tp → tpv tp)
@@ -99,7 +99,7 @@ module MakeDesc where
 
 module MakeTo (`to : Name)(`desc : Name) where
 
-  module WithParams (params : List (Sort × Arg Type)) where
+  module WithParams (params : Params) where
     ⟦_⟧arg-pat : SafeArg → Pattern
     ⟦ SK S ⟧arg-pat = var
     ⟦ Svar ⟧arg-pat = var
@@ -132,7 +132,7 @@ module MakeTo (`to : Name)(`desc : Name) where
                           (el (lit 0) (cdef₁ `μ (def `desc (paramArgs 1 params)))))
 
 module MakeFrom (`from : Name)(`desc : Name) where
-  module WithParams (params : List (Sort × Arg Type)) where
+  module WithParams (params : Params) where
     ⟦_⟧arg-pat : SafeArg → Pattern
     ⟦ SK S ⟧arg-pat = var
     ⟦ Svar ⟧arg-pat = var

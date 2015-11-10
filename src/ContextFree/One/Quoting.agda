@@ -39,10 +39,7 @@ getDatatype n = fromMaybe (showName n ++ " is not a data type")
 getConstructors : Data-type → Error (List Name)
 getConstructors dt = ok (constructors dt)
 
-Params : Set
-Params = ℕ
-
-_fits_ : Params → Name → Set
+_fits_ : ℕ → Name → Set
 _fits_ p n = p ≤ argCount (type n)
 
 _fits?_ : ∀ p n → Dec (p fits n)

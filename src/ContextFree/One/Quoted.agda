@@ -4,6 +4,9 @@ open import Reflection
 open import Data.List using (List)
 open import Data.Product using (_×_)
 
+Params : Set
+Params = List (Sort × Arg Type)
+
 data SafeArg : Set where
   SK : (S : Term) → SafeArg
   Svar : SafeArg
@@ -18,6 +21,6 @@ record SafeDatatype : Set where
   constructor mk
   field
     dtname : Name
-    params : List (Sort × Arg Type)
+    params : Params
     sop : SafeSum
 
