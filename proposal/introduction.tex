@@ -1,0 +1,30 @@
+\section{Introduction}\label{sec:introduction}
+
+Using indexed data types and dependent types it is possible to encode
+logic in algebraic data types to enforce invariants.
+Encoding invariants in data types allows us to write correct-by-construction
+software.
+However, it makes code reuse very hard.
+Functions which work on one data type do not work on a similar data
+type with added invariants.
+
+Algebraic ornaments capture the relationship between two data types
+with the same recursive structure.
+Ornaments can be used to transform a functions which work on the first
+data type to functions which work on the second.
+For instance to transform addition on natural numbers to append on lists.
+
+This topic has been explored and formalised in Agda.
+These implementations require you to describe your data types within a
+universe of descriptions.
+The descriptions can be interpreted as a data type, but this approach
+is not ideal for programming.
+
+In this project we will work towards a more practical way to use
+ornaments in Agda.
+We want to be able to define data types as usual and define ornaments
+on these data types.
+Ornamenting a data type should result in a newly defined data type.
+Additionally, it should be possible to transform functions using these
+ornaments.
+

@@ -6,7 +6,15 @@
 \usepackage{hyperref}
 
 \usepackage{framed,color}
-\definecolor{shadecolor}{rgb}{1,0.8,0.3}
+% \definecolor{shadecolor}{rgb}{1,0.8,0.3}
+\definecolor{shadecolor}{rgb}{1.0,0.9,0.7}
+
+\usepackage{multirow}
+
+\usepackage{amsthm}
+\newtheorem{theorem}{Theorem}
+\theoremstyle{definition}
+\newtheorem{definition}{Definition}
 
 %--------------------------------------------------
 
@@ -48,12 +56,12 @@
 \newcounter{codeblock}
 \newcommand{\labelcodeblock}[2]{\refstepcounter{codeblock}\label{#1}\begin{center}Listing \thecodeblock\end{center}}
 
-
 %--------------------------------------------------
 
 \setmainfont[ItalicFont = xits-italic.otf]{xits-regular.otf}
 \setmathfont{xits-math.otf}
 \setsansfont[Scale=MatchLowercase]{DejaVuSans.ttf}
+\setmonofont[Scale=MatchLowercase]{DejaVuSansMono.ttf}
 
 \newfontfamily{\xitsfont}[Scale=MatchLowercase]{xits-regular.otf}
 
@@ -80,8 +88,15 @@
 \emph{Second examiner} Johan Jeuring
 \end{flushright}
 
+\input{introduction.tex}
+\input{literature.tex}
+\input{prototype.tex}
+\input{overview.tex}
+\input{relevance.tex}
+\input{methodology.tex}
+\input{plan.tex}
 
-\input{body.tex}
+% \input{body.tex}
 
 \bibliographystyle{plain}
 \bibliography{main}

@@ -36,7 +36,7 @@ proposal: proposal/main.pdf
 lagda-out/%.tex: $(SRC)/%.lagda
 	agda $(AGDA_PARAMS) $<
 
-proposal/main.pdf: $(MODULES:%=lagda-out/%.tex) proposal/agda.sty proposal/main.tex proposal/body.tex proposal/main.bib
+proposal/main.pdf: $(MODULES:%=lagda-out/%.tex) proposal/agda.sty proposal/*.tex proposal/main.bib
 	cd proposal; latexmk -xelatex -outdir=out main.tex
 	cp proposal/out/main.pdf proposal/main.pdf
 	rm proposal/out/main.pdf

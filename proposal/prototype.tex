@@ -1,0 +1,239 @@
+\section{Quoting library prototype}\label{sec:prototype}
+
+For the thesis we will be using quoting in Agda.
+We know that the quoting mechanism can be hard to work with, and is
+incomplete in some ways.
+The quoting mechanism is not well documented and published literature
+does not teach us everything there is to know about it.
+For this reason, and to get some concrete experience with generic
+programming in Agda, we have built a prototype for a quoting library.
+
+The main goal of the prototype is to be able to fully automatically
+generate a description and embedding-projection pair for a given data
+type.
+
+\subsection{Context-free types with a single fix point}
+
+To keep things simple, we have chosen a fairly simple universe for
+context-free types with a single fix point.
+We described this universe in section \ref{sec:cft-single}.
+
+The code should generate three functions; one which gives the
+description within the universe, and two functions which convert
+values between the original data type and the interpretation of the
+description, commonly referred to as an embedding-projection pair.
+
+\begin{verbatim}
+desc : Desc
+to : A → μ desc
+from : μ desc → A
+\end{verbatim}
+
+The implementation is correct if \texttt{to} and \texttt{from} are
+inverses of each other.
+
+\begin{verbatim}
+to-from : ∀ x → from (to x) ≡ x
+from-to : ∀ x → to (from x) ≡ x
+\end{verbatim}
+
+\subsubsection{Example for natural numbers}
+
+We will first show how we can manually define \texttt{desc},
+\texttt{to} and \texttt{from} for some examples.
+The definitions are picked carefully to have a very predictable
+structure, so we can generate these automatically later on.
+
+Natural numbers have two constructors, zero and suc, the first has no
+arguments and the latter has one recursive position.
+In Agda we would define them with a data type:
+
+\begin{verbatim}
+data ℕ : Set where
+  zero : ℕ
+  suc : ℕ → ℕ
+\end{verbatim}
+
+We can also express them as $Nat = μX. 1 + x$.
+The products can be terminated with a $1$ and we the sums with $0$.
+Removing the $μ$, which is implicit in our universe, gives the
+following definition:
+
+\begin{verbatim}
+desc = `1 `+ (`var `* `1) `+ `0
+\end{verbatim}
+
+Some definitions will have more clauses, and we will have some
+additional unit (\texttt{⊤}) values due to the extra \texttt{`1}'s and
+\texttt{`0}'s, but the more regular structure makes the code
+generation much easier.
+
+The definitions of \texttt{to} and \texttt{from} are fairly
+straightforward:
+
+\begin{verbatim}
+to : ℕ → μ desc
+to zero = ⟨ inj₁ tt ⟩
+to (suc n) = ⟨ inj₂ (inj₁ (to n , tt)) ⟩
+
+from : μ desc → ℕ
+from ⟨ inj₁ tt ⟩ = zero
+from ⟨ inj₂ (inj₁ (n , tt)) ⟩ = suc (from n)
+from ⟨ inj₂ (inj₂ ()) ⟩
+\end{verbatim}
+
+It is easy to prove that \texttt{to} and \texttt{from} are inverses of
+each other.
+Those proofs are omitted here, as they are not very interesting.
+
+\subsubsection{Example for lists}
+
+We will take a look at how lists are embedded in our universe.
+They have a type parameter, which we have to take care of.
+
+\begin{verbatim}
+data List (A : Set) : Set where
+  [] : List A
+  _∷_ : A → List A → List A
+\end{verbatim}
+
+The type parameter \texttt{A} has to be available in every function so we change
+the types accordingly by adding \texttt{(A : Set) →}\ \ in front of the
+type of each.
+With the \texttt{`K} constructor we can add a spot for values of type \texttt{A} to
+the description.
+Values of this type are simply passed through in the definitions of
+the embedding-projection pair.
+
+\begin{verbatim}
+desc : (A : Set) → Desc
+desc A = `1 `+ (`K A `* `var `* `1) `+ `0
+
+to : (A : Set) → ListP A → μ (desc A)
+to A [] = ⟨ inj₁ tt ⟩
+to A (x ∷ xs) = ⟨ inj₂ (inj₁ (x , to A xs , tt)) ⟩
+
+from : (A : Set) → μ (desc A) → ListP A
+from A ⟨ inj₁ tt ⟩ = []
+from A ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = x ∷ from A xs
+from A ⟨ inj₂ (inj₂ ()) ⟩
+\end{verbatim}
+
+\subsubsection{Structure of desc}
+
+Given a data type in Agda, we want to mechanically derive the
+definition of \texttt{desc}.
+We will be using quoting to implement this, which is explained in
+section \ref{sec:prototype-quoting}.
+
+The descriptions as we have shown in the examples follow the
+conventional sum-of-products style where each constructor becomes a
+product and all the products are summed.
+Recursive arguments like \texttt{MyDatatype p₁⋯pₙ} become
+\texttt{`var}'s and parameter arguments like \texttt{A} become
+\texttt{`K A}.
+
+\subsubsection{Structure of embedding-projection pair}
+
+There is a pretty symmetry between the patterns and terms of the
+clauses in \texttt{from} and the terms and patterns (respectively) of
+the clauses in \texttt{to}.
+We will call this property \emph{to/from symmetry}.
+
+\begin{definition}
+An embedding-projection pair has \emph{to/from symmetry} when for each
+constructor of the datatype the functions have clauses with the
+following structure:
+
+\begin{verbatim}
+to p₁⋯pₙ (real x) = rep (to p₁⋯pₙ x)
+from p₁⋯pₙ (rep y) = real (from p₁⋯pₙ y)
+\end{verbatim}
+\end{definition}
+
+Here we use \texttt{real} and \texttt{rep} as code generation
+functions, which can be used both in patterns and in terms.
+In the remainder of this section we will omit the application of data
+type parameters \texttt{p₁⋯pₙ} for clarity.
+As an example, we can instantiate \texttt{real} and \texttt{rep} for
+the \texttt{suc} constructor:
+
+\begin{verbatim}
+to (suc x) = ⟨ inj₂ (inj₁ (to x , tt)) ⟩
+from ⟨ inj₂ (inj₁ (y , tt)) ⟩ = suc (from y)
+\end{verbatim}
+
+The to/from symmetry property has a degenerate case for constructors
+without recursive arguments:
+
+\begin{verbatim}
+to real = rep      -- for example: to zero = ⟨ inj₁ tt ⟩
+from rep = real    -- for example: from ⟨ inj₁ tt ⟩ = zero
+\end{verbatim}
+
+\begin{theorem}
+When an embedding-projection pair has to/from symmetry, \texttt{from}
+and \texttt{to} are each others inverses.
+\end{theorem}
+\begin{proof}
+The degenerate case is trivial:
+
+\begin{verbatim}
+to (from rep) ≡ to real ≡ rep
+\end{verbatim}
+
+To prove that \texttt{to (from (rep y)) ≡ rep y}, we can use induction
+on \texttt{y} because it is structurally smaller than \texttt{rep y}.
+
+\begin{verbatim} 
+to (from (rep y))
+  ≡ (definition of from)
+to (real (from y))
+  ≡ (definition of to)
+rep (to (from y))
+  ≡ (induction hypothesis: to (from y) ≡ y)
+rep y
+\end{verbatim}
+
+A similar argument can be used to show that
+\texttt{from (to (real x)) ≡ real x}.
+\end{proof}
+
+To fully define the embedding-projection pair, we only have to qive
+suitable definitions for \texttt{real} and \texttt{rep}, and the
+required properties of \texttt{to} and \texttt{from} will follow.
+
+We give an imprecise definition of the code generation functions,
+enough to convince the reader that mechanical construction is
+possible:
+
+\begin{verbatim}
+real x = constructorᵢ args x args
+rep x = ⟨ inj₂ⁱ (inj₁ (args , x , args , tt)) ⟩
+\end{verbatim}
+
+Where $i$ is a numerical identifier for the constructor, starting with
+$i = 0$ for the first one, \texttt{inj₂ⁱ} is exactly $i$ applications
+of \texttt{inj₂}.
+
+\subsubsection{Quoting}\label{sec:prototype-quoting}
+
+
+
+\subsubsection{Unquoting}
+
+\subsubsection{Results}
+
+% \begin{tabular}{ l l l }
+%  & Agda-code & \texttt{Desc} \\ \hline
+% \multirow{2}{*}{⟦\_⟧arg} & \texttt{Self p₁⋯pₙ} & \texttt{`var} \\
+% & \texttt{A} & \texttt{`K A} \\
+% ⟦\_⟧prod & \texttt{a₁ → ⋯ → aₙ → Self p₁⋯pₙ}
+%   & \texttt{⟦a₁⟧arg `* ⋯ `* ⟦aₙ⟧arg `* `1 } \\
+% ⟦\_⟧sum & \vtop{
+%   \hbox{\strut\texttt{data Self p₁⋯pₙ : Set where}}
+%   \hbox{\strut\texttt{\ \ Con₁ : t₁}}
+%   \hbox{\strut\texttt{\ \ \ \ }⋮}
+%   \hbox{\strut\texttt{\ \ Conₙ : tₙ}}
+% } & \texttt{⟦t₁⟧prod `+ ⋯ `+ ⟦tₙ⟧prod `+ `0}\\
+% \end{tabular}
