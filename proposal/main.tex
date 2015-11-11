@@ -5,6 +5,9 @@
 \usepackage{graphicx}
 \usepackage{hyperref}
 
+\usepackage[draft]{todonotes}
+% \usepackage[disable]{todonotes}
+
 \usepackage{framed,color}
 % \definecolor{shadecolor}{rgb}{1,0.8,0.3}
 \definecolor{shadecolor}{rgb}{1.0,0.9,0.7}
@@ -15,6 +18,8 @@
 \newtheorem{theorem}{Theorem}
 \theoremstyle{definition}
 \newtheorem{definition}{Definition}
+
+\newcommand{\definedin}[1]{\footnote{The accompanying code is in src/#1.agda}}
 
 %--------------------------------------------------
 
@@ -58,8 +63,10 @@
 
 %--------------------------------------------------
 
-\setmainfont[ItalicFont = xits-italic.otf]{xits-regular.otf}
-\setmathfont{xits-math.otf}
+\setmainfont[ItalicFont = xits-italic.otf
+, BoldFont = xits-bold.otf
+, BoldItalicFont = xits-bolditalic.otf]{xits-regular.otf}
+\setmathfont[BoldFont = xits-mathbold.otf]{xits-math.otf}
 \setsansfont[Scale=MatchLowercase]{DejaVuSans.ttf}
 \setmonofont[Scale=MatchLowercase]{DejaVuSansMono.ttf}
 
@@ -88,15 +95,12 @@
 \emph{Second examiner} Johan Jeuring
 \end{flushright}
 
+\listoftodos
 \input{introduction.tex}
 \input{literature.tex}
 \input{prototype.tex}
 \input{overview.tex}
-\input{relevance.tex}
-\input{methodology.tex}
 \input{plan.tex}
-
-% \input{body.tex}
 
 \bibliographystyle{plain}
 \bibliography{main}

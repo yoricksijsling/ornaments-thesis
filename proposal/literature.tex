@@ -1,4 +1,4 @@
-\section{Literature review}\label{sec:literature-review}
+\section{Literature review}\label{sec:lit}
 
 Ornaments fall within the wider topic of generic programming.
 In particular, all the current formalizations of ornaments work on
@@ -51,13 +51,13 @@ Indeed, when we try to interpret \AF{‵nat} = \AI{‵1} \AI{‵+} \AI{`var}
 \AY{(}\AF{\#} \AN{0}\AY{)} we get an expanding term \AF{⟦} \AF{‵nat}
 \AF{⟧} = \AR{⊤} \AD{⊎} \AF{⟦} \AF{‵nat} \AF{⟧} = ..
 
-\subsubsection{Single fixpoint}\label{sec:cft-single}
+\subsubsection{Single fixpoint}
 
 A well known solution to this non-termination is to introduce the
-induction later using a fix point data type (source?).
+induction later using a fix point data type\todo{source}.
 We will start out with single fixpoints.
 With single fixpoints we can only describe context free types with one
-$μ$, and it must be on the outside of the type (source?).
+$μ$, and it must be on the outside of the type\todo{source}.
 In other words, we can only induce on one variable.
 
 With this method we get rid of the explicit \AI{μ} constructor.
@@ -76,7 +76,7 @@ use.
   specialize it to Desc that's fine.
 \end{shaded}
 
-\subsubsection{Multiple fixpoints}
+\subsubsection{Multiple fixpoints}\label{sec:lit-cft-multi}
 
 Real context-free types can have multiple variable bindings.
 Take for instance $NatList = μX. 1 + (μY. 1 + Y) × Y$.
@@ -85,7 +85,7 @@ like internal fixpoints.
 
 Luckily, we can always transform a type with internal variable
 bindings into multiple types which do not have internal variable
-bindings (source?).
+bindings\todo{source}.
 $NatList$ can be split into two types $Nat = μY. 1 + Y$ and $NatList =
 μX. 1 + Nat × X$.
 
@@ -112,10 +112,4 @@ We can see that interpretation indeed uses the \AR{Σ} for dependent pairs.
 \InsertCode{finite-dep-*-desc}
 \InsertCode{finite-dep-*-interpretation}
 
-\begin{shaded}
-  I'm not quite sure if this is the right way.
-  Need to find some papers about this..
-  Induction-Recursion seems to be relevant.
-\end{shaded}
-
-
+\todo{Find papers about encoding dependent types. Induction-recursion?}

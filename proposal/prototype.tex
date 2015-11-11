@@ -1,6 +1,6 @@
-\section{Quoting library prototype}\label{sec:prototype}
+\section{Experimental study: Quoting library}\label{sec:prototype}
 
-For the thesis we will be using quoting in Agda.
+For this thesis we will be using quoting in Agda.
 We know that the quoting mechanism can be hard to work with, and is
 incomplete in some ways.
 The quoting mechanism is not well documented and published literature
@@ -8,14 +8,15 @@ does not teach us everything there is to know about it.
 For this reason, and to get some concrete experience with generic
 programming in Agda, we have built a prototype for a quoting library.
 
-The main goal of the prototype is to be able to fully automatically
+The main purpose of the prototype is to be able to fully automatically
 generate a description and embedding-projection pair for a given data
 type.
 
 \subsection{Context-free types with a single fix point}
 
 To keep things simple, we have chosen a fairly simple universe for
-context-free types with a single fix point.
+context-free types with a single fix
+point\definedin{ContextFree.One.Desc}.
 We described this universe in section \ref{sec:cft-single}.
 
 The code should generate three functions; one which gives the
@@ -37,7 +38,8 @@ to-from : ∀ x → from (to x) ≡ x
 from-to : ∀ x → to (from x) ≡ x
 \end{verbatim}
 
-\subsubsection{Example for natural numbers}
+\subsubsection[Example for natural numbers]
+  {Example for natural numbers\definedin{ContextFree.One.Examples.Nat}}
 
 We will first show how we can manually define \texttt{desc},
 \texttt{to} and \texttt{from} for some examples.
@@ -86,7 +88,8 @@ It is easy to prove that \texttt{to} and \texttt{from} are inverses of
 each other.
 Those proofs are omitted here, as they are not very interesting.
 
-\subsubsection{Example for lists}
+\subsubsection[Example for lists]
+  {Example for lists\definedin{ContextFree.One.Examples.List}}
 
 We will take a look at how lists are embedded in our universe.
 They have a type parameter, which we have to take care of.
@@ -124,7 +127,7 @@ from A ⟨ inj₂ (inj₂ ()) ⟩
 Given a data type in Agda, we want to mechanically derive the
 definition of \texttt{desc}.
 We will be using quoting to implement this, which is explained in
-section \ref{sec:prototype-quoting}.
+section \ref{sec:prototype-implementation}.
 
 The descriptions as we have shown in the examples follow the
 conventional sum-of-products style where each constructor becomes a
@@ -216,13 +219,115 @@ Where $i$ is a numerical identifier for the constructor, starting with
 $i = 0$ for the first one, \texttt{inj₂ⁱ} is exactly $i$ applications
 of \texttt{inj₂}.
 
-\subsubsection{Quoting}\label{sec:prototype-quoting}
+\subsection{Implementation}\label{sec:prototype-implementation}
 
+Up to this point we have not dived in to the nitty-gritty technical
+details of the prototype quoting library.
+The general structure is split in two parts:
+\begin{enumerate}
+\item Quoting the datatype to an intermediate representation.
+\item Use the intermediate representation to generate the
+  definitions of \texttt{desc}, \texttt{to} and \texttt{from}.
+\end{enumerate}
 
+The intermediate representation
+\texttt{SafeDatatype}\definedin{ContextFree.One.Quoted} is chosen to
+be safe in the sense that we can always generate function definitions
+from it.
+We have seen how we always generate descriptions in sum-of-products
+style, so \texttt{SafeDatatype} is roughly the same as a list of lists
+of arguments.
+The name of the datatype and the name of each constructor is also
+stored.
+
+\begin{verbatim}
+data SafeArg : Set where
+  SK : (S : Term) → SafeArg
+  Svar : SafeArg
+SafeProduct = Name × List SafeArg
+SafeSum = List SafeProduct
+SafeDatatype = Name × Params × SafeSum
+\end{verbatim}
+
+To support data type parameters we include a list of types in
+\texttt{Params}.
+We allow the inclusion of raw quoted terms in \texttt{SK}, which might
+refer to these parameters.
+This introduces some uncertainty, because it may contain terms which
+can not be represented by Desc.
+Such problems will give type errors during the unquoting of the
+definition of \texttt{desc}. \todo{Explain the problem}
+
+\subsubsection[Quoting]{Quoting\definedin{ContextFree.One.Quoting}}
+
+Agda supports quoting through a few built-in constructs.
+There are primitives to get the type and definition of a given name:
+
+\begin{verbatim}
+type         : Name → Type
+definition   : Name → Definition
+\end{verbatim}
+
+To use them, you need a \texttt{Name} which you can get with the
+\texttt{quote} keyword.
+A \texttt{Definition} can be anything which has a name, like
+functions, data types, records or constructors.
+If the definition gives us a data type, we can use 
+\texttt{constructors : Data-type → List Name} to get a list of names
+of the associated constructors.
+
+Since there are so many ways the quoting process can fail, we have
+defined an \texttt{Error}\definedin{Data.Error} type which supports
+logging and failure (it's a list of messages and a Maybe).
+\texttt{Error} is an applicative functor and a monad, so we can manage
+the complexity quite well:
+
+\begin{verbatim}
+constructors <$> getDatatype (quote ListP)
+ ≡ return (quote ListP.[] ∷ quote ListP._∷_ ∷ [])
+\end{verbatim}
+
+\todo{Explain why we have to pass the number of parameters}
+
+\definedin{ContextFree.One.Quoting.Constructor}
+
+quoteConstructor : Name → ⋯ → Error SafeProduct
+quoteDatatype : Name → 
+
+qdt : SafeDatatype
+qdt = quoteDatatype! (quote ListP) 1
 
 \subsubsection{Unquoting}
 
-\subsubsection{Results}
+\todo[inline]{Prototype - Unquoting}
+We can unquote a \texttt{SafeDatatype} us
+
+makeDesc : SafeDatatype → FunctionDef
+makeTo : (`to : Name) → (`desc : Name) → SafeDatatype → FunctionDef
+makeFrom : (`from : Name) → (`desc : Name) → SafeDatatype → FunctionDef
+
+unquoteDecl qdesc = makeDesc qdt
+unquoteDecl qto = makeTo qto (quote qdesc) qdt
+unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
+
+\subsection{Results}\label{sec:prototype-results}
+
+Propose changes:
+
+SafeDatatype : Set
+SafeDatatypeNames : SafeDatatype → Set
+NamedSafeDatatype : Set = Σ SafeDatatype SafeDatatypeNames
+
+DescFun : SafeDatatype → Set = p₁ → ⋯ → pₙ → Desc
+descFun : (sd : SafeDatatype) → DescFun sd
+
+makeTo : ⋯ → NamedSafeDatatype → FunctionDef
+makeFrom : ⋯ → NamedSafeDatatype → FunctionDef
+
+Make SafeDatatype truly safe by removing the Term's from it.
+
+\todo[inline]{Prototype - Conclusion}
+
 
 % \begin{tabular}{ l l l }
 %  & Agda-code & \texttt{Desc} \\ \hline
