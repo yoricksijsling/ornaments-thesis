@@ -2,21 +2,20 @@ open import Reflection
 
 module ContextFree.One.Unquoting (`Desc : Name)(`μ : Name)(`RawIsContextFree : Name) where
 
+open import ContextFree.One.Desc
+open import ContextFree.One.DescFunction
+open import ContextFree.One.Params
+open import ContextFree.One.Quoted
 open import Data.Fin using (toℕ)
-open import Data.List using (List; []; _∷_; map; [_]; _++_; _∷ʳ_; length; foldr)
+open import Data.List
 open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product using (_×_; _,_; proj₁; proj₂)
+open import Data.Product using (_×_; _,_)
 open import Data.Stream using (Stream; iterate)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Unit using (tt)
 open import Data.Vec using (Vec; toList)
 open import Function
 open import Reflection
-
-open import ContextFree.One.Desc
-open import ContextFree.One.Quoted
-open import ContextFree.One.DescFunction
-open import TypeArgs
 open import Stuff using (zipStream; zipStreamBackwards)
 
 private
@@ -55,13 +54,6 @@ private
   cdef₀ n = def n []
   cdef₁ : Name → Term → Term
   cdef₁ n t = def n (argvr t ∷ [])
-
-  cclause₀ : Term → Clause
-  cclause₀ t = clause [] t
-  cclause₁ : Pattern → Term → Clause
-  cclause₁ p₁ t = clause (argvr p₁ ∷ []) t
-  cclause₂ : Pattern → Pattern → Term → Clause
-  cclause₂ p₁ p₂ t = clause (argvr p₁ ∷ argvr p₂ ∷ []) t
 
   cabsurd-clause₂ : Pattern → Pattern → Clause
   cabsurd-clause₂ p₁ p₂ = absurd-clause (argvr p₁ ∷ argvr p₂ ∷ [])

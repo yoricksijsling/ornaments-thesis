@@ -1,6 +1,7 @@
 module ContextFree.One.DescFunction where
 
 open import ContextFree.One.Desc
+open import ContextFree.One.Params
 open import ContextFree.One.Quoted
 open import Data.Fin using (Fin; zero; suc)
 import Data.Fin.Properties as FinProps
@@ -12,7 +13,6 @@ open import Data.Vec using (Vec; []; _∷_)
 open import Function
 open import Level using (Lift; lift)
 open import Reflection
-open import TypeArgs
 
 module SD = SafeDatatype
 

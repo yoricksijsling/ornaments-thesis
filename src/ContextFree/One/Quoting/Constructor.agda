@@ -1,23 +1,22 @@
 module ContextFree.One.Quoting.Constructor where
 
-open import Data.Fin using (Fin; zero; suc; toℕ; #_; fromℕ≤)
+open import ContextFree.One.Params
+open import ContextFree.One.Quoted
+open import Data.Error
+open Data.Error.Monad
+open import Data.Fin using (Fin; #_; fromℕ≤)
 open import Data.List using (List; []; _∷_; drop; map)
+-- open import Data.Nat using (ℕ; zero; suc; _∸_; _≤?_; _≤_; z≤n; s≤s)
 open import Data.Nat using (ℕ; zero; suc; _∸_; _≤?_; _≤_; z≤n; s≤s)
-open import Data.Product using (_,_; uncurry′)
+open import Data.Product using (_,_)
 open import Data.Stream using (iterate)
 open import Data.Unit using (⊤; tt)
 open import Data.Vec using (toList)
 open import Function using (_∘′_)
 open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Nullary.Decidable using (toWitness)
 open import Relation.Binary.PropositionalEquality
 open import Reflection
-
-open import ContextFree.One.Quoted
-open import Data.Error
-open Data.Error.Monad
 open import Stuff using (zipStream)
-open import TypeArgs
 
 checkSort0 : Sort → Error ⊤
 checkSort0 (lit zero) = ok tt
@@ -32,20 +31,17 @@ checkArginfovr (arg-info _ _) = fail "Arg is not visible and relevant"
 
 -- in : name of datatype, Type of the constructor, the number of params to use
 -- out: list of SafeArgs
--- termToConstructor : (self : Name)(ct : Type)(pc : Fin (suc (paramCount ct))) →
---                     Error (List (SafeArg {toℕ pc}))
 termToConstructor : (`dt : Name)(ct : Type)(pc : ℕ)(pc≤ : pc ≤ paramCount ct) →
                     Error (List (SafeArg {pc}))
-termToConstructor `dt ct pc pc≤ = termToConstructor′ --termToConstructor′
+termToConstructor `dt ct pc pc≤ = termToConstructor′
   where
   termToArg : (offset : ℕ) → Term → Error SafeArg
   termToArg offset (def f args) with f ≟-Name `dt | drop pc args
   termToArg offset (def f args) | yes p | []    = return Svar
   termToArg offset (def f args) | yes p | _ ∷ _ = fail "termToArg: self-reference has arguments"
   termToArg offset (def f args) | no ¬p | _     = fail "termToArg: reference to type that is not self"
-  -- termToArg offset (var n []) = ok (Spar n)
   termToArg offset (var i []) = Spar <$> ℕtoFin (i ∸ offset)
-    "termToArg: De Bruijn index too high, referencing something outside the data type?"
+            "termToArg: De Bruijn index too high, referencing something outside the data type?"
   termToArg offset otherwise = fail "termToArg: term not supported"
 
   quoteArg : ℕ → Sort → Type → Error SafeArg

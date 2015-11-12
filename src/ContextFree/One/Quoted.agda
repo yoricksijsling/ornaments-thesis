@@ -1,14 +1,13 @@
 module ContextFree.One.Quoted where
 
+open import Data.Fin using (Fin)
 open import Data.List using (List; []; _∷_)
 open import Data.Nat using (ℕ)
 open import Data.Product using (_×_; _,_; Σ) renaming (map to map×)
-open import Data.Unit
+open import Data.Unit.Base
 open import Data.Vec using (Vec)
 open import Reflection using (Name)
-open import TypeArgs
-
-open import Data.Fin using (Fin)
+open import ContextFree.One.Params using (Param)
 
 data SafeArg {pc : ℕ} : Set where
   Spar : Fin pc → SafeArg -- The type of the param is only stored in the Param List

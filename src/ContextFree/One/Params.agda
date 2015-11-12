@@ -1,11 +1,9 @@
-module TypeArgs where
+module ContextFree.One.Params where
 
-open import Data.Fin using (Fin; zero; suc; toℕ; fromℕ)
-open import Data.Fin.Properties using (to-from)
 open import Data.List
-open import Data.Nat
-open import Data.Product renaming (map to map×)
-open import Data.Vec
+open import Data.Nat.Base
+open import Data.Product using (_×_; _,_; uncurry′) renaming (map to map×)
+open import Data.Vec using (Vec; []; _∷_)
 open import Function
 open import Reflection
 open import Relation.Binary.PropositionalEquality

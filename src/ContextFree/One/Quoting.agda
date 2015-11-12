@@ -1,39 +1,26 @@
 module ContextFree.One.Quoting where
 
-open import Data.Empty using (⊥)
-open import Data.Fin using (Fin; toℕ; #_)
-open import Data.Nat using (ℕ; zero; suc; _≤_; _≤?_; s≤s)
-open import Data.Maybe using (Maybe; just; nothing; maybe)
-open import Data.Product using (_×_; _,_; uncurry′; ∃; proj₁; proj₂)
-open import Data.List using (List; []; _∷_; map; length; drop)
-open import Data.List.All using (all)
-open import Data.Vec using (Vec; []; _∷_)
-open import Data.String
-open import Data.Unit using (⊤; tt)
-open import Function
-open import Reflection
-open import Relation.Binary.PropositionalEquality using (_≡_; refl; cong)
-open import Relation.Nullary using (¬_; Dec; yes; no)
-open import Relation.Nullary.Decidable using (True)
-
 open import ContextFree.One.Desc
-open import ContextFree.One.Quoting.Constructor
+open import ContextFree.One.Params
 open import ContextFree.One.Quoted
+open import ContextFree.One.Quoting.Constructor
 open import Data.Error
 open Data.Error.Monad
-open import TypeArgs
-open import Stuff
+open import Data.Nat using (ℕ; _≤_; _≤?_)
+open import Data.Product using (proj₁)
+open import Data.List using (List)
+open import Data.List.All using (all)
+open import Data.Vec using (Vec; []; _∷_)
+open import Data.String using (_++_)
+open import Function
+open import Reflection
+open import Relation.Nullary.Decidable using (True)
+open import Stuff using (mapAllToList)
 
 getDatatype : Name → Error Data-type
 getDatatype n with definition n
 getDatatype n | data-type x = ok x
 getDatatype n | otherwise = fail (showName n ++ " is not a data type")
-
-_fits_ : ℕ → Name → Set
-_fits_ p n = p ≤ paramCount (type n)
-
-_fits?_ : ∀ p n → Dec (p fits n)
-p fits? n = p ≤? paramCount (type n)
 
 dtParams : (`dt : Name)(pc : ℕ) → Error (Vec Param pc)
 dtParams `dt pc = proj₁ ∘′ takeParams (type `dt) pc
