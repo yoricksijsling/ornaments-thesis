@@ -5,10 +5,7 @@ open import Data.Nat using (ℕ)
 open import Data.Product using (_×_; _,_; Σ) renaming (map to map×)
 open import Data.Unit
 open import Reflection
-
-Params : Set
-Params = List (Sort × Arg Type)
-
+open import TypeArgs
 
 data SafeArg : Set where
   Spar : ℕ → SafeArg
@@ -23,7 +20,7 @@ SafeSum = List SafeProduct
 record SafeDatatype : Set where
   constructor mk
   field
-    params : Params
+    params : List Param
     sop : SafeSum
 
 
@@ -46,7 +43,7 @@ record NamedSafeDatatype : Set where
   constructor mk
   field
     dtname : Name
-    params : Params
+    params : List Param
     sop : NamedSafeSum
 
 

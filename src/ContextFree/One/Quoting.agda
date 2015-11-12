@@ -30,16 +30,16 @@ getDatatype n | data-type x = ok x
 getDatatype n | otherwise = fail (showName n ++ " is not a data type")
 
 _fits_ : ℕ → Name → Set
-_fits_ p n = p ≤ argCount (type n)
+_fits_ p n = p ≤ paramCount (type n)
 
 _fits?_ : ∀ p n → Dec (p fits n)
-p fits? n = p ≤? argCount (type n)
+p fits? n = p ≤? paramCount (type n)
 
 quoteDatatype : (dtname : Name) (p : ℕ) → Error NamedSafeDatatype
 quoteDatatype dtname p =
   getDatatype dtname >>= λ dt →
-  decToError "Too many params for datatype" (p ≤? argCount (type dtname)) >>= λ pfitsn →
-  let params = proj₁ (takeArgs (type dtname) (Data.Fin.fromℕ≤ (s≤s pfitsn))) in
+  decToError "Too many params for datatype" (p ≤? paramCount (type dtname)) >>= λ pfitsn →
+  let params = proj₁ (takeParams (type dtname) (Data.Fin.fromℕ≤ (s≤s pfitsn))) in
   -- TODO: extract params and check that constructors fit exactly
   decToError "Too many params for some constructors"
              (all (_fits?_ p) (constructors dt)) >>= λ pfitscs →

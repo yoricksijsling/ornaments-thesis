@@ -30,7 +30,7 @@ dropIndex : ℕ → SafeArg → SafeArg
 dropIndex n (Spar i) = Spar (i ∸ n)
 dropIndex n Svar = Svar
 
-termToConstructor : Name → (t : Type) → Fin (suc (argCount t)) → Error (List SafeArg)
+termToConstructor : Name → (t : Type) → Fin (suc (paramCount t)) → Error (List SafeArg)
 termToConstructor self ct p = termToConstructor′
   where
   termToArg : Term → Error SafeArg
@@ -41,11 +41,10 @@ termToConstructor self ct p = termToConstructor′
   termToArg (var n []) = ok (Spar n)
   termToArg otherwise = fail "termToArg: term not supported"
 
-  quoteArg : ℕ → Sort → Arg Type → Error SafeArg
-  quoteArg n s (arg i (el sarg t)) = checkSort0 s >>
-                                     checkArginfovr i >>
-                                     checkSort0 sarg >>
-                                     dropIndex n <$> termToArg t
+  quoteArg : ℕ → Sort → Type → Error SafeArg
+  quoteArg n s (el sarg t) = checkSort0 s >>
+                             checkSort0 sarg >>
+                             dropIndex n <$> termToArg t
 
   checkTarget : Type → Error ⊤
   checkTarget (el s (def f args)) with f ≟-Name self | drop (toℕ p) args
@@ -55,13 +54,13 @@ termToConstructor self ct p = termToConstructor′
   checkTarget otherwise = fail "checkTarget: Invalid constructor target"
 
   termToConstructor′ : Error (List SafeArg)
-  termToConstructor′ = let (pargs , ptarget) = takeArgs ct p in
+  termToConstructor′ = let (pargs , ptarget) = takeParams ct p in
                        let (args , target) = getArgs ptarget in
                        checkTarget target >>
                        sequenceM (zipStream (λ { n (s , a) → quoteArg n s a })
-                                            (iterate suc 0) (toList args))
+                                            (iterate suc 0) args)
 
-quoteConstructor : (self : Name)(c : Name) → Fin (suc (argCount (type c))) → Error NamedSafeProduct
+quoteConstructor : (self : Name)(c : Name) → Fin (suc (paramCount (type c))) → Error NamedSafeProduct
 quoteConstructor self c p = _,_ c <$> termToConstructor self (type c) p
 
 module TestTermToConstructor where

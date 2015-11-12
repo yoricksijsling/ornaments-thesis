@@ -1,53 +1,65 @@
 module TypeArgs where
 
-open import Data.Fin
-open import Data.Fin.Properties
+open import Data.Fin using (Fin; zero; suc; toℕ; fromℕ)
+open import Data.Fin.Properties using (to-from)
 open import Data.List
 open import Data.Nat
-open import Data.Product
+open import Data.Product renaming (map to map×)
 open import Data.Vec
 open import Function
 open import Reflection
 open import Relation.Binary.PropositionalEquality
 
-argCount : Type → ℕ
-argCount (el s (pi t₁ t₂)) = suc (argCount t₂)
-argCount otherwise = zero
+pattern arg-pat s a t = el s (pi (arg (arg-info visible relevant) a) t)
 
-addArgs : List (Sort × Arg Type) → Type → Type
-addArgs [] target = target
-addArgs ((s , argt) ∷ args) target = el s (pi argt (addArgs args target))
+data ArgView : Type → Set where
+  arg : (s : Sort)(a : Type)(t : Type) → ArgView (arg-pat s a t)
+  rest : (t : Type) → ArgView t
 
-addArgsTm : List (Sort × Arg Type) → Term → Term
-addArgsTm [] target = target
-addArgsTm ((_ , arg (arg-info v _) _) ∷ args) target = lam v (addArgsTm args target)
+argView : (t : Type) → ArgView t
+argView (arg-pat s a t) = arg s a t
+argView t = rest t
+
+getArgs : (t : Type) → List (Sort × Type) × Type
+getArgs t with argView t
+getArgs ._ | arg s a t = map× (_∷_ (s , a)) id (getArgs t)
+getArgs ._ | rest t = [] , t
 
 
-takeArgs : (t : Type) → (k : Fin (suc (argCount t))) → Vec (Sort × Arg Type) (toℕ k) × Type
-takeArgs t zero = [] , t
-takeArgs (el s (pi argt t₂)) (suc k) = let args , target = takeArgs t₂ k in
-                                       (s , argt) ∷ args , target
-takeArgs (el s (var x args)) (suc ())
-takeArgs (el s (con c args)) (suc ())
-takeArgs (el s (def f args)) (suc ())
-takeArgs (el s (lam v t)) (suc ())
-takeArgs (el s (pat-lam cs args)) (suc ())
-takeArgs (el s (sort x)) (suc ())
-takeArgs (el s (lit x)) (suc ())
-takeArgs (el s unknown) (suc ())
+data Param : Set where
+  param₀ : (v : Visibility) → Param
 
-getArgs : (t : Type) → Vec (Sort × Arg Type) (argCount t) × Type
-getArgs t with takeArgs t (fromℕ (argCount t))
-... | res rewrite to-from (argCount t) = res
+pattern param₀-pat v t = el (lit 1) (pi (arg (arg-info v relevant) (el (lit 1) (sort (lit 0)))) t)
 
-addTakeArgs : ∀ t k → uncurry′ (addArgs ∘′ Data.Vec.toList) (takeArgs t k) ≡ t
-addTakeArgs t zero = refl
-addTakeArgs (el s (pi argt t₂)) (suc k) = cong (el s ∘′ pi argt) (addTakeArgs t₂ k)
-addTakeArgs (el s (var x args)) (suc ())
-addTakeArgs (el s (con c args)) (suc ())
-addTakeArgs (el s (def f args)) (suc ())
-addTakeArgs (el s (lam v t)) (suc ())
-addTakeArgs (el s (pat-lam cs args)) (suc ())
-addTakeArgs (el s (sort x)) (suc ())
-addTakeArgs (el s (lit x)) (suc ())
-addTakeArgs (el s unknown) (suc ())
+data ParamView : Type → Set where
+  param₀ : (v : Visibility)(t : Type) → ParamView (param₀-pat v t)
+  rest : (t : Type) → ParamView t
+
+paramView : (t : Type) → ParamView t
+paramView (param₀-pat v t) = param₀ v t
+paramView t = rest t
+
+paramCount : Type → ℕ
+paramCount t with paramView t
+paramCount ._ | param₀ v t = suc (paramCount t)
+paramCount t | rest .t = 0
+
+takeParams : (t : Type) → (k : Fin (suc (paramCount t))) → Vec Param (toℕ k) × Type
+takeParams t zero = [] , t
+takeParams t (suc k) with paramView t
+takeParams ._ (suc k) | param₀ v t = map× (_∷_ (param₀ v)) id (takeParams t k)
+takeParams ._ (suc ()) | rest t
+
+addParams : List Param → Type → Type
+addParams [] target = target
+addParams (param₀ v ∷ args) target = param₀-pat v (addParams args target)
+
+addParamsTm : List Param → Term → Term
+addParamsTm [] target = target
+addParamsTm (param₀ v ∷ ps) target = lam v (addParamsTm ps target)
+
+addTakeParams : ∀ t k → uncurry′ (addParams ∘′ Data.Vec.toList) (takeParams t k) ≡ t
+addTakeParams t zero = refl
+addTakeParams t (suc k) with paramView t
+addTakeParams ._ (suc k) | param₀ v t = cong (param₀-pat v) (addTakeParams t k)
+addTakeParams ._ (suc ()) | rest t

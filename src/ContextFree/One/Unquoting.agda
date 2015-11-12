@@ -63,12 +63,15 @@ private
   cabsurd-clause₂ : Pattern → Pattern → Clause
   cabsurd-clause₂ p₁ p₂ = absurd-clause (argvr p₁ ∷ argvr p₂ ∷ [])
 
-  paramArgs : ℕ → Params → List (Arg Term)
-  paramArgs n = zipStreamBackwards (λ { n (_ , arg i _) → arg i (cvar₀ n) })
-                                   (iterate suc n)
+  paramArgs : ℕ → List Param → List (Arg Term)
+  paramArgs n = zipStreamBackwards tm (iterate suc n)
+    where tm : ℕ → Param → Arg Term
+          tm n (param₀ v) = arg (arg-info v relevant) (cvar₀ n)
 
-  paramPats : Params → List (Arg Pattern)
-  paramPats params = map (λ { (_ , arg i _) → arg i var }) params
+  paramPats : List Param → List (Arg Pattern)
+  paramPats params = map pt params
+    where pt : Param → Arg Pattern
+          pt (param₀ v) = arg (arg-info v relevant) var
 
   wrappers : ∀{tp} → Stream (tpv tp → tpv tp)
   wrappers = Data.Stream.map (λ w → ccon₁ (quote ⟨_⟩) ∘′ w ∘′ ccon₁ (quote inj₁))
@@ -94,12 +97,12 @@ module MakeDesc where
                  (ccon₀ (quote `0))
 
   ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
-  ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params (el (lit 1) (def `Desc [])))
-                                             [ cclause₀ (addArgsTm params ⟦ sop ⟧sum) ]
+  ⟦ mk dtname params sop ⟧datatype = fun-def (addParams params (el (lit 1) (def `Desc [])))
+                                             [ cclause₀ (addParamsTm params ⟦ sop ⟧sum) ]
 
 module MakeTo (`to : Name)(`desc : Name) where
 
-  module WithParams (params : Params) where
+  module WithParams (params : List Param) where
     ⟦_⟧arg-pat : SafeArg → Pattern
     ⟦ Spar i ⟧arg-pat = var
     ⟦ Svar ⟧arg-pat = var
@@ -124,7 +127,7 @@ module MakeTo (`to : Name)(`desc : Name) where
                                            (wrap ⟦ p ⟧product-term)
 
   ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
-  ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params base) ⟦ sop ⟧sum
+  ⟦ mk dtname params sop ⟧datatype = fun-def (addParams params base) ⟦ sop ⟧sum
     where
     open WithParams params
     base : Type
@@ -132,7 +135,7 @@ module MakeTo (`to : Name)(`desc : Name) where
                           (el (lit 0) (cdef₁ `μ (def `desc (paramArgs 1 params)))))
 
 module MakeFrom (`from : Name)(`desc : Name) where
-  module WithParams (params : Params) where
+  module WithParams (params : List Param) where
     ⟦_⟧arg-pat : SafeArg → Pattern
     ⟦ Spar i ⟧arg-pat = var
     ⟦ Svar ⟧arg-pat = var
@@ -160,7 +163,7 @@ module MakeFrom (`from : Name)(`desc : Name) where
                                            ⟦ p ⟧product-term
 
   ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
-  ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params base) ⟦ sop ⟧sum
+  ⟦ mk dtname params sop ⟧datatype = fun-def (addParams params base) ⟦ sop ⟧sum
     where
     open WithParams params
     base : Type
@@ -179,7 +182,7 @@ makeFrom : (`from : Name) → (`desc : Name) → NamedSafeDatatype → FunctionD
 makeFrom = MakeFrom.⟦_⟧datatype
 
 makeRecord : (`desc : Name) → (`to : Name) → (`from : Name) → NamedSafeDatatype → FunctionDef
-makeRecord `desc `to `from (mk dtname params sop) = fun-def (addArgs params basetype)
+makeRecord `desc `to `from (mk dtname params sop) = fun-def (addParams params basetype)
                                                             [ clause (paramPats params) term ]
   where
   basetype : Type
