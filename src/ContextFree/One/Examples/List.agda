@@ -1,9 +1,11 @@
 module ContextFree.One.Examples.List where
 
 open import ContextFree.One.Desc
-open import ContextFree.One.Quoting
-open import ContextFree.One.Quoted
+open import ContextFree.One.DescFunction
 open import ContextFree.One.Unquoting (quote Desc) (quote μ) (quote RawIsContextFree)
+open import ContextFree.One.Quoted
+open import ContextFree.One.Quoting
+open import Data.Fin using (#_)
 open import Data.Unit.Base
 open import Data.Product
 open import Data.Sum
@@ -16,7 +18,7 @@ data ListP (A : Set) : Set where
   _∷_ : A → ListP A → ListP A
 
 desc : (A : Set) → Desc
-desc A = `1 `+ (`K A `* `var `* `1) `+ `0
+desc A = `1 `+ (`P₀ A `* `var `* `1) `+ `0
 
 to : (A : Set) → ListP A → μ (desc A)
 to A [] = ⟨ inj₁ tt ⟩
@@ -47,11 +49,12 @@ module TestQdt where
   open import Reflection
   open import Data.List
   testQdt : NamedSafeDatatype.sop qdt ≡ (quote ListP.[]  , []) ∷
-                                        (quote ListP._∷_ , Spar 0 ∷ Svar ∷ []) ∷
+                                        (quote ListP._∷_ , Spar (# 0) ∷ Svar ∷ []) ∷
                                         []
   testQdt = refl
 
-unquoteDecl qdesc = makeDesc qdt
+qdesc : DescFun (proj₁ (unnameSafeDatatype qdt))
+qdesc = descFun (proj₁ (unnameSafeDatatype qdt))
 unquoteDecl qto = makeTo qto (quote qdesc) qdt
 unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
 unquoteDecl qcf = makeRecord (quote qdesc) (quote qto) (quote qfrom) qdt

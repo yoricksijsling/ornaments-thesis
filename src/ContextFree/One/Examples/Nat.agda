@@ -1,9 +1,10 @@
 module ContextFree.One.Examples.Nat where
 
 open import ContextFree.One.Desc
-open import ContextFree.One.Quoting
-open import ContextFree.One.Quoted
+open import ContextFree.One.DescFunction
 open import ContextFree.One.Unquoting (quote Desc) (quote μ) (quote RawIsContextFree)
+open import ContextFree.One.Quoted
+open import ContextFree.One.Quoting
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product
 open import Data.Unit.Base
@@ -38,18 +39,19 @@ isContextFree-ℕ = record { desc = desc ; to = to ; from = from
 qdt : NamedSafeDatatype
 qdt = quoteDatatype! (quote ℕ) 0
 
+qdesc : DescFun (proj₁ (unnameSafeDatatype qdt))
+qdesc = descFun (proj₁ (unnameSafeDatatype qdt))
+unquoteDecl qto = makeTo qto (quote qdesc) qdt
+unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
+unquoteDecl qcf = makeRecord (quote qdesc) (quote qto) (quote qfrom) qdt
+
 module TestQdt where
   open import Reflection
   open import Data.List
   testQdt : NamedSafeDatatype.sop qdt ≡ (quote zero , []) ∷
-                                        (quote suc , Svar ∷ []) ∷
-                                        []
+                                         (quote suc , Svar ∷ []) ∷
+                                         []
   testQdt = refl
-
-unquoteDecl qdesc = makeDesc qdt
-unquoteDecl qto = makeTo qto (quote qdesc) qdt
-unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
-unquoteDecl qcf = makeRecord (quote qdesc) (quote qto) (quote qfrom) qdt
 
 testDesc : qdesc ≡ desc
 testDesc = refl

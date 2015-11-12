@@ -10,7 +10,7 @@ infixr 4 _`*_
 
 -- One variable, not dependently typed
 data Desc : Set₁ where
-  `K : (S : Set) → Desc
+  `P₀ : (S : Set) → Desc
   `0 : Desc
   `1 : Desc
   _`+_ : (A B : Desc) → Desc
@@ -18,7 +18,7 @@ data Desc : Set₁ where
   `var : Desc
 
 ⟦_⟧ : Desc → Set → Set
-⟦_⟧ (`K S) X = S
+⟦_⟧ (`P₀ S) X = S
 ⟦_⟧ `0 X = ⊥
 ⟦_⟧ `1 X = ⊤
 ⟦_⟧ (A `+ B) X = ⟦ A ⟧ X ⊎ ⟦ B ⟧ X
@@ -33,7 +33,7 @@ open RawFunctor
 ⟦⟧-functor : ∀ D → RawFunctor ⟦ D ⟧
 ⟦⟧-functor `0 = record { _<$>_ = λ f x → x }
 ⟦⟧-functor `1 = record { _<$>_ = λ f x → x }
-⟦⟧-functor (`K S) = record { _<$>_ = λ f x → x }
+⟦⟧-functor (`P₀ S) = record { _<$>_ = λ f x → x }
 ⟦⟧-functor (A `+ B) = record { _<$>_ = λ f → Data.Sum.map (_<$>_ (⟦⟧-functor A) f)
                                                           (_<$>_ (⟦⟧-functor B) f) }
 ⟦⟧-functor (A `* B) = record { _<$>_ = λ f → Data.Product.map (_<$>_ (⟦⟧-functor A) f)

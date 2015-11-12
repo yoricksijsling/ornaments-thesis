@@ -1,19 +1,21 @@
 module ContextFree.One.Examples.Pair where
 
 open import ContextFree.One.Desc
-open import ContextFree.One.Quoting
-open import ContextFree.One.Quoted
+open import ContextFree.One.DescFunction
 open import ContextFree.One.Unquoting (quote Desc) (quote μ) (quote RawIsContextFree)
-open import Data.Unit.Base
+open import ContextFree.One.Quoted
+open import ContextFree.One.Quoting
+open import Data.Fin using (#_)
 open import Data.Product
 open import Data.Sum
+open import Data.Unit.Base
 open import Relation.Binary.PropositionalEquality
 
 data Pair (A B : Set) : Set where
   pair : (a : A) → (b : B) → Pair A B
 
 desc : (A B : Set) → Desc
-desc A B = `K A `* `K B `* `1 `+ `0
+desc A B = `P₀ A `* `P₀ B `* `1 `+ `0
 
 to : (A B : Set) → Pair A B → μ (desc A B)
 to A B (pair a b) = ⟨ inj₁ (a , b , tt) ⟩
@@ -39,11 +41,12 @@ qdt = quoteDatatype! (quote Pair) 2
 module TestQdt where
   open import Reflection
   open import Data.List
-  testQdt : NamedSafeDatatype.sop qdt ≡ (quote pair , Spar 1 ∷ Spar 0 ∷ []) ∷
+  testQdt : NamedSafeDatatype.sop qdt ≡ (quote pair , Spar (# 1) ∷ Spar (# 0) ∷ []) ∷
                                         []
   testQdt = refl
 
-unquoteDecl qdesc = makeDesc qdt
+qdesc : DescFun (proj₁ (unnameSafeDatatype qdt))
+qdesc = descFun (proj₁ (unnameSafeDatatype qdt))
 unquoteDecl qto = makeTo qto (quote qdesc) qdt
 unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
 unquoteDecl qcf = makeRecord (quote qdesc) (quote qto) (quote qfrom) qdt

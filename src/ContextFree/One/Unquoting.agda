@@ -2,17 +2,20 @@ open import Reflection
 
 module ContextFree.One.Unquoting (`Desc : Name)(`μ : Name)(`RawIsContextFree : Name) where
 
+open import Data.Fin using (toℕ)
 open import Data.List using (List; []; _∷_; map; [_]; _++_; _∷ʳ_; length; foldr)
 open import Data.Nat using (ℕ; zero; suc)
 open import Data.Product using (_×_; _,_; proj₁; proj₂)
 open import Data.Stream using (Stream; iterate)
 open import Data.Sum using (inj₁; inj₂)
 open import Data.Unit using (tt)
+open import Data.Vec using (Vec; toList)
 open import Function
 open import Reflection
 
 open import ContextFree.One.Desc
 open import ContextFree.One.Quoted
+open import ContextFree.One.DescFunction
 open import TypeArgs
 open import Stuff using (zipStream; zipStreamBackwards)
 
@@ -63,13 +66,13 @@ private
   cabsurd-clause₂ : Pattern → Pattern → Clause
   cabsurd-clause₂ p₁ p₂ = absurd-clause (argvr p₁ ∷ argvr p₂ ∷ [])
 
-  paramArgs : ℕ → List Param → List (Arg Term)
-  paramArgs n = zipStreamBackwards tm (iterate suc n)
+  paramArgs : (offset : ℕ){pc : ℕ} → Vec Param pc → List (Arg Term)
+  paramArgs offset = zipStreamBackwards tm (iterate suc offset) ∘′ toList
     where tm : ℕ → Param → Arg Term
-          tm n (param₀ v) = arg (arg-info v relevant) (cvar₀ n)
+          tm offset (param₀ v) = arg (arg-info v relevant) (cvar₀ offset)
 
-  paramPats : List Param → List (Arg Pattern)
-  paramPats params = map pt params
+  paramPats : {pc : ℕ} → Vec Param pc → List (Arg Pattern)
+  paramPats = map pt ∘′ toList
     where pt : Param → Arg Pattern
           pt (param₀ v) = arg (arg-info v relevant) var
 
@@ -83,33 +86,17 @@ private
           helper zero = absurd
           helper (suc n) = ccon₁ (quote inj₂) (helper n)
 
-module MakeDesc where
-  ⟦_⟧arg : SafeArg → Term
-  ⟦ Spar i ⟧arg = ccon₁ (quote `K) (cvar₀ i)
-  ⟦ Svar ⟧arg = ccon₀ (quote `var)
-
-  ⟦_⟧product : NamedSafeProduct → Term
-  ⟦_⟧product = foldr (λ a as → ccon₂ (quote _`*_) ⟦ a ⟧arg as)
-                     (ccon₀ (quote `1)) ∘′ proj₂
-
-  ⟦_⟧sum : NamedSafeSum → Term
-  ⟦_⟧sum = foldr (λ p ps → ccon₂ (quote _`+_) ⟦ p ⟧product ps)
-                 (ccon₀ (quote `0))
-
-  ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
-  ⟦ mk dtname params sop ⟧datatype = fun-def (addParams params (el (lit 1) (def `Desc [])))
-                                             [ cclause₀ (addParamsTm params ⟦ sop ⟧sum) ]
 
 module MakeTo (`to : Name)(`desc : Name) where
 
-  module WithParams (params : List Param) where
-    ⟦_⟧arg-pat : SafeArg → Pattern
+  module WithParams (pc : ℕ)(params : Vec Param pc) where
+    ⟦_⟧arg-pat : SafeArg {pc} → Pattern
     ⟦ Spar i ⟧arg-pat = var
     ⟦ Svar ⟧arg-pat = var
 
     module WithProductLength (total : ℕ) where
       -- meᵢ is the De Bruijn index of the pattern variable corresponding to this arg
-      ⟦_⟧arg-term : SafeArg → (meᵢ : ℕ) → Term
+      ⟦_⟧arg-term : SafeArg {pc} → (meᵢ : ℕ) → Term
       ⟦ Spar i ⟧arg-term meᵢ = cvar₀ meᵢ
       ⟦ Svar ⟧arg-term meᵢ = def `to (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
 
@@ -127,21 +114,21 @@ module MakeTo (`to : Name)(`desc : Name) where
                                            (wrap ⟦ p ⟧product-term)
 
   ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
-  ⟦ mk dtname params sop ⟧datatype = fun-def (addParams params base) ⟦ sop ⟧sum
+  ⟦ mk `dt pc params sop ⟧datatype = fun-def (addParams (toList params) base) ⟦ sop ⟧sum
     where
-    open WithParams params
+    open WithParams pc params
     base : Type
-    base = el (lit 0) (pi (argvr (el (lit 0) (def dtname (paramArgs 0 params))))
+    base = el (lit 0) (pi (argvr (el (lit 0) (def `dt (paramArgs 0 params))))
                           (el (lit 0) (cdef₁ `μ (def `desc (paramArgs 1 params)))))
 
 module MakeFrom (`from : Name)(`desc : Name) where
-  module WithParams (params : List Param) where
-    ⟦_⟧arg-pat : SafeArg → Pattern
+  module WithParams (pc : ℕ)(params : Vec Param pc) where
+    ⟦_⟧arg-pat : SafeArg {pc} → Pattern
     ⟦ Spar i ⟧arg-pat = var
     ⟦ Svar ⟧arg-pat = var
 
     module WithProduct (`con : Name)(total : ℕ) where
-      ⟦_⟧arg-term : SafeArg → (meᵢ : ℕ) → Term
+      ⟦_⟧arg-term : SafeArg {pc} → (meᵢ : ℕ) → Term
       ⟦ Spar i ⟧arg-term meᵢ = cvar₀ meᵢ
       ⟦ Svar ⟧arg-term meᵢ = def `from (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
 
@@ -163,17 +150,12 @@ module MakeFrom (`from : Name)(`desc : Name) where
                                            ⟦ p ⟧product-term
 
   ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
-  ⟦ mk dtname params sop ⟧datatype = fun-def (addParams params base) ⟦ sop ⟧sum
+  ⟦ mk `dt pc params sop ⟧datatype = fun-def (addParams (toList params) base) ⟦ sop ⟧sum
     where
-    open WithParams params
+    open WithParams pc params
     base : Type
     base = el (lit 0) (pi (argvr (el (lit 0) (cdef₁ `μ (def `desc (paramArgs 0 params)))))
-                          (el (lit 0) (def dtname (paramArgs 1 params))))
-
--- module MakeRecord
-
-makeDesc : NamedSafeDatatype → FunctionDef
-makeDesc = MakeDesc.⟦_⟧datatype
+                          (el (lit 0) (def `dt (paramArgs 1 params))))
 
 makeTo : (`to : Name) → (`desc : Name) → NamedSafeDatatype → FunctionDef
 makeTo = MakeTo.⟦_⟧datatype
@@ -182,11 +164,11 @@ makeFrom : (`from : Name) → (`desc : Name) → NamedSafeDatatype → FunctionD
 makeFrom = MakeFrom.⟦_⟧datatype
 
 makeRecord : (`desc : Name) → (`to : Name) → (`from : Name) → NamedSafeDatatype → FunctionDef
-makeRecord `desc `to `from (mk dtname params sop) = fun-def (addParams params basetype)
+makeRecord `desc `to `from (mk `dt pc params sop) = fun-def (addParams (toList params) basetype)
                                                             [ clause (paramPats params) term ]
   where
   basetype : Type
-  basetype = el (lit 1) (cdef₁ `RawIsContextFree (def dtname (paramArgs 0 params)))
+  basetype = el (lit 1) (cdef₁ `RawIsContextFree (def `dt (paramArgs 0 params)))
   term : Term
   term = ccon₃ (quote RawIsContextFree.mk) (def `desc (paramArgs 0 params))
                                            (def `to (paramArgs 0 params))

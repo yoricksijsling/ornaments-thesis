@@ -35,17 +35,22 @@ _fits_ p n = p ≤ paramCount (type n)
 _fits?_ : ∀ p n → Dec (p fits n)
 p fits? n = p ≤? paramCount (type n)
 
-quoteDatatype : (dtname : Name) (p : ℕ) → Error NamedSafeDatatype
-quoteDatatype dtname p =
-  getDatatype dtname >>= λ dt →
-  decToError "Too many params for datatype" (p ≤? paramCount (type dtname)) >>= λ pfitsn →
-  let params = proj₁ (takeParams (type dtname) (Data.Fin.fromℕ≤ (s≤s pfitsn))) in
-  -- TODO: extract params and check that constructors fit exactly
+dtParams : (`dt : Name)(pc : ℕ) → Error (Vec Param pc)
+dtParams `dt pc = proj₁ ∘′ takeParams (type `dt) pc
+                <$> decToError "Too many params for datatype" (pc ≤? paramCount (type `dt))
+
+quoteConstructors : (`dt : Name)(pc : ℕ)(dt : Data-type) → Error (List NamedSafeProduct)
+quoteConstructors `dt pc dt =
   decToError "Too many params for some constructors"
-             (all (_fits?_ p) (constructors dt)) >>= λ pfitscs →
-  sequenceM (mapAllToList (λ {c} pfitsc → quoteConstructor dtname c (Data.Fin.fromℕ≤ (s≤s pfitsc)))
-                          pfitscs) >>= λ cdescs →
-  return (mk dtname (Data.Vec.toList params) cdescs)
+             (all (λ `c → pc ≤? paramCount (type `c)) (constructors dt)) >>=
+  sequenceM ∘′ mapAllToList (λ {`c} pc≤ → quoteConstructor `dt `c pc pc≤)
+
+quoteDatatype : (`dt : Name)(pc : ℕ) → Error NamedSafeDatatype
+quoteDatatype `dt pc =
+  getDatatype `dt >>= λ dt →
+  dtParams `dt pc >>= λ params →
+  -- TODO: use params to check that constructors match exactly
+  mk `dt pc params <$> quoteConstructors `dt pc dt
 
 RunError : ∀{α}{A : Set α} → Error A → Set α
 RunError {A = A} e = {isOk : True (isOk? e)} → A
@@ -53,17 +58,6 @@ RunError {A = A} e = {isOk : True (isOk? e)} → A
 quoteDatatype! : (n : Name) (p : ℕ) → RunError (quoteDatatype n p)
 quoteDatatype! n p {isOk} = fromOk isOk
 
--- quoteDesc : Name → ℕ → Error Term
--- quoteDesc n p = ToDesc.⟦_⟧datatype <$> quoteDatatype n p
-
--- quoteDesc! : (n : Name)(p : ℕ){isOk : True (isOk? (quoteDesc n p))} → Term
--- quoteDesc! n p {isOk} = fromOk isOk
-
--- quoteTo : Name → ℕ → Error Term
--- quoteTo n p = ToTo.⟦_⟧datatype <$> quoteDatatype n p
-
--- quoteTo! : (n : Name)(p : ℕ){isOk : True (isOk? (quoteTo n p))} → Term
--- quoteTo! n p {isOk} = fromOk isOk
 
 
 -- PARAMETERS / INDICES

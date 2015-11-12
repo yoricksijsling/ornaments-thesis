@@ -44,11 +44,11 @@ paramCount t with paramView t
 paramCount ._ | param₀ v t = suc (paramCount t)
 paramCount t | rest .t = 0
 
-takeParams : (t : Type) → (k : Fin (suc (paramCount t))) → Vec Param (toℕ k) × Type
-takeParams t zero = [] , t
-takeParams t (suc k) with paramView t
-takeParams ._ (suc k) | param₀ v t = map× (_∷_ (param₀ v)) id (takeParams t k)
-takeParams ._ (suc ()) | rest t
+takeParams : (t : Type)(n : ℕ)(p : n ≤ paramCount t) → Vec Param n × Type
+takeParams t zero p = [] , t
+takeParams t (suc n) p with paramView t
+takeParams ._ (suc n) (s≤s p) | param₀ v t = map× (_∷_ (param₀ v)) id (takeParams t n p)
+takeParams ._ (suc n) () | rest t
 
 addParams : List Param → Type → Type
 addParams [] target = target
@@ -58,8 +58,9 @@ addParamsTm : List Param → Term → Term
 addParamsTm [] target = target
 addParamsTm (param₀ v ∷ ps) target = lam v (addParamsTm ps target)
 
-addTakeParams : ∀ t k → uncurry′ (addParams ∘′ Data.Vec.toList) (takeParams t k) ≡ t
-addTakeParams t zero = refl
-addTakeParams t (suc k) with paramView t
-addTakeParams ._ (suc k) | param₀ v t = cong (param₀-pat v) (addTakeParams t k)
-addTakeParams ._ (suc ()) | rest t
+module _ where
+  addTakeParams : ∀ t n p → uncurry′ (addParams ∘′ Data.Vec.toList) (takeParams t n p) ≡ t
+  addTakeParams t zero p = refl
+  addTakeParams t (suc n) p with paramView t
+  addTakeParams ._ (suc n) (s≤s p) | param₀ v t = cong (param₀-pat v) (addTakeParams t n p)
+  addTakeParams ._ (suc n) () | rest t
