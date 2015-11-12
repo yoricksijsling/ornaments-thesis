@@ -40,15 +40,15 @@ isContextFree-ListP : ∀ A → IsContextFree (ListP A)
 isContextFree-ListP A = record { desc = desc A ; to = to A ; from = from A
                                ; to-from = to-from A ; from-to = from-to A }
 
-qdt : SafeDatatype
+qdt : NamedSafeDatatype
 qdt = quoteDatatype! (quote ListP) 1
 
 module TestQdt where
   open import Reflection
   open import Data.List
-  testQdt : SafeDatatype.sop qdt ≡ (quote ListP.[]  , []) ∷
-                                   (quote ListP._∷_ , SK (var 0 []) ∷ Svar ∷ []) ∷
-                                   []
+  testQdt : NamedSafeDatatype.sop qdt ≡ (quote ListP.[]  , []) ∷
+                                        (quote ListP._∷_ , SK (var 0 []) ∷ Svar ∷ []) ∷
+                                        []
   testQdt = refl
 
 unquoteDecl qdesc = makeDesc qdt

@@ -35,7 +35,7 @@ _fits_ p n = p ≤ argCount (type n)
 _fits?_ : ∀ p n → Dec (p fits n)
 p fits? n = p ≤? argCount (type n)
 
-quoteDatatype : (dtname : Name) (p : ℕ) → Error SafeDatatype
+quoteDatatype : (dtname : Name) (p : ℕ) → Error NamedSafeDatatype
 quoteDatatype dtname p =
   getDatatype dtname >>= λ dt →
   decToError "Too many params for datatype" (p ≤? argCount (type dtname)) >>= λ pfitsn →

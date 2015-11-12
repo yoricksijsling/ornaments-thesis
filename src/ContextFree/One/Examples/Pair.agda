@@ -33,14 +33,14 @@ isContextFree-Pair : ∀ A B → IsContextFree (Pair A B)
 isContextFree-Pair A B = record { desc = desc A B ; to = to A B ; from = from A B
                                 ; to-from = to-from A B ; from-to = from-to A B }
 
-qdt : SafeDatatype
+qdt : NamedSafeDatatype
 qdt = quoteDatatype! (quote Pair) 2
 
 module TestQdt where
   open import Reflection
   open import Data.List
-  testQdt : SafeDatatype.sop qdt ≡ (quote pair , SK (var 1 []) ∷ SK (var 0 []) ∷ []) ∷
-                                   []
+  testQdt : NamedSafeDatatype.sop qdt ≡ (quote pair , SK (var 1 []) ∷ SK (var 0 []) ∷ []) ∷
+                                        []
   testQdt = refl
 
 unquoteDecl qdesc = makeDesc qdt

@@ -33,14 +33,14 @@ isContextFree-Unit : IsContextFree Unit
 isContextFree-Unit = record { desc = desc ; to = to ; from = from
                             ; to-from = to-from ; from-to = from-to }
 
-qdt : SafeDatatype
+qdt : NamedSafeDatatype
 qdt = quoteDatatype! (quote Unit) 0
 
 module TestQdt where
   open import Reflection
   open import Data.List
   open import Data.Product
-  testQdt : SafeDatatype.sop qdt ≡ (quote u , []) ∷ []
+  testQdt : NamedSafeDatatype.sop qdt ≡ (quote u , []) ∷ []
   testQdt = refl
 
 unquoteDecl qdesc = makeDesc qdt

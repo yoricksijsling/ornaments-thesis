@@ -85,15 +85,15 @@ module MakeDesc where
   ⟦ SK S ⟧arg = ccon₁ (quote `K) S
   ⟦ Svar ⟧arg = ccon₀ (quote `var)
 
-  ⟦_⟧product : SafeProduct → Term
+  ⟦_⟧product : NamedSafeProduct → Term
   ⟦_⟧product = foldr (λ a as → ccon₂ (quote _`*_) ⟦ a ⟧arg as)
                      (ccon₀ (quote `1)) ∘′ proj₂
 
-  ⟦_⟧sum : SafeSum → Term
+  ⟦_⟧sum : NamedSafeSum → Term
   ⟦_⟧sum = foldr (λ p ps → ccon₂ (quote _`+_) ⟦ p ⟧product ps)
                  (ccon₀ (quote `0))
 
-  ⟦_⟧datatype : SafeDatatype → FunctionDef
+  ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
   ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params (el (lit 1) (def `Desc [])))
                                              [ cclause₀ (addArgsTm params ⟦ sop ⟧sum) ]
 
@@ -110,20 +110,20 @@ module MakeTo (`to : Name)(`desc : Name) where
       ⟦ SK S ⟧arg-term meᵢ = cvar₀ meᵢ
       ⟦ Svar ⟧arg-term meᵢ = def `to (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
 
-    ⟦_⟧product-pat : SafeProduct → Pattern
+    ⟦_⟧product-pat : NamedSafeProduct → Pattern
     ⟦ `con , as ⟧product-pat = con `con (map (argvr ∘′ ⟦_⟧arg-pat) as)
 
-    ⟦_⟧product-term : SafeProduct → Term
+    ⟦_⟧product-term : NamedSafeProduct → Term
     ⟦ `con , as ⟧product-term = foldr (ccon₂ (quote _,_)) (ccon₀ (quote tt))
                               $ zipStreamBackwards (flip ⟦_⟧arg-term) (iterate suc 0) as
       where open WithProductLength (length as)
 
-    ⟦_⟧sum : SafeSum → List Clause
+    ⟦_⟧sum : NamedSafeSum → List Clause
     ⟦_⟧sum = zipStream makeclause wrappers
       where makeclause = λ wrap p → clause (paramPats params ∷ʳ argvr ⟦ p ⟧product-pat)
                                            (wrap ⟦ p ⟧product-term)
 
-  ⟦_⟧datatype : SafeDatatype → FunctionDef
+  ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
   ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params base) ⟦ sop ⟧sum
     where
     open WithParams params
@@ -142,24 +142,24 @@ module MakeFrom (`from : Name)(`desc : Name) where
       ⟦ SK S ⟧arg-term meᵢ = cvar₀ meᵢ
       ⟦ Svar ⟧arg-term meᵢ = def `from (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
 
-    ⟦_⟧product-pat : SafeProduct → Pattern
+    ⟦_⟧product-pat : NamedSafeProduct → Pattern
     ⟦ `con , as ⟧product-pat = foldr (ccon₂ (quote _,_)) (ccon₀ (quote tt))
                              $ map ⟦_⟧arg-pat as
 
-    ⟦_⟧product-term : SafeProduct → Term
+    ⟦_⟧product-term : NamedSafeProduct → Term
     ⟦ `con , as ⟧product-term = con `con
                               $ map argvr
                               $ zipStreamBackwards (flip ⟦_⟧arg-term) (iterate suc 0) as
       where
       open WithProduct `con (length as)
 
-    ⟦_⟧sum : SafeSum → List Clause
+    ⟦_⟧sum : NamedSafeSum → List Clause
     ⟦ ps ⟧sum = zipStream makeclause wrappers ps
               ∷ʳ absurd-clause (paramPats params ∷ʳ argvr (lastPattern (length ps)))
       where makeclause = λ wrap p → clause (paramPats params ∷ʳ argvr (wrap (⟦ p ⟧product-pat)))
                                            ⟦ p ⟧product-term
 
-  ⟦_⟧datatype : SafeDatatype → FunctionDef
+  ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
   ⟦ mk dtname params sop ⟧datatype = fun-def (addArgs params base) ⟦ sop ⟧sum
     where
     open WithParams params
@@ -169,16 +169,16 @@ module MakeFrom (`from : Name)(`desc : Name) where
 
 -- module MakeRecord
 
-makeDesc : SafeDatatype → FunctionDef
+makeDesc : NamedSafeDatatype → FunctionDef
 makeDesc = MakeDesc.⟦_⟧datatype
 
-makeTo : (`to : Name) → (`desc : Name) → SafeDatatype → FunctionDef
+makeTo : (`to : Name) → (`desc : Name) → NamedSafeDatatype → FunctionDef
 makeTo = MakeTo.⟦_⟧datatype
 
-makeFrom : (`from : Name) → (`desc : Name) → SafeDatatype → FunctionDef
+makeFrom : (`from : Name) → (`desc : Name) → NamedSafeDatatype → FunctionDef
 makeFrom = MakeFrom.⟦_⟧datatype
 
-makeRecord : (`desc : Name) → (`to : Name) → (`from : Name) → SafeDatatype → FunctionDef
+makeRecord : (`desc : Name) → (`to : Name) → (`from : Name) → NamedSafeDatatype → FunctionDef
 makeRecord `desc `to `from (mk dtname params sop) = fun-def (addArgs params basetype)
                                                             [ clause (paramPats params) term ]
   where

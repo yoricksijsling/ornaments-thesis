@@ -66,7 +66,7 @@ termToConstructor self ct p = termToConstructor′
                        sequenceM (zipStream (λ { n (s , a) → quoteArg n s a })
                                             (iterate suc 0) (toList args))
 
-quoteConstructor : (self : Name)(c : Name) → Fin (suc (argCount (type c))) → Error SafeProduct
+quoteConstructor : (self : Name)(c : Name) → Fin (suc (argCount (type c))) → Error NamedSafeProduct
 quoteConstructor self c p = _,_ c <$> termToConstructor self (type c) p
 
 module TestTermToConstructor where
