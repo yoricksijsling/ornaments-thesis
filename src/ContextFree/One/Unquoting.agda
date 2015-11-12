@@ -82,7 +82,7 @@ private
 
 module MakeDesc where
   ⟦_⟧arg : SafeArg → Term
-  ⟦ SK S ⟧arg = ccon₁ (quote `K) S
+  ⟦ Spar i ⟧arg = ccon₁ (quote `K) (cvar₀ i)
   ⟦ Svar ⟧arg = ccon₀ (quote `var)
 
   ⟦_⟧product : NamedSafeProduct → Term
@@ -101,13 +101,13 @@ module MakeTo (`to : Name)(`desc : Name) where
 
   module WithParams (params : Params) where
     ⟦_⟧arg-pat : SafeArg → Pattern
-    ⟦ SK S ⟧arg-pat = var
+    ⟦ Spar i ⟧arg-pat = var
     ⟦ Svar ⟧arg-pat = var
 
     module WithProductLength (total : ℕ) where
       -- meᵢ is the De Bruijn index of the pattern variable corresponding to this arg
       ⟦_⟧arg-term : SafeArg → (meᵢ : ℕ) → Term
-      ⟦ SK S ⟧arg-term meᵢ = cvar₀ meᵢ
+      ⟦ Spar i ⟧arg-term meᵢ = cvar₀ meᵢ
       ⟦ Svar ⟧arg-term meᵢ = def `to (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
 
     ⟦_⟧product-pat : NamedSafeProduct → Pattern
@@ -134,12 +134,12 @@ module MakeTo (`to : Name)(`desc : Name) where
 module MakeFrom (`from : Name)(`desc : Name) where
   module WithParams (params : Params) where
     ⟦_⟧arg-pat : SafeArg → Pattern
-    ⟦ SK S ⟧arg-pat = var
+    ⟦ Spar i ⟧arg-pat = var
     ⟦ Svar ⟧arg-pat = var
 
     module WithProduct (`con : Name)(total : ℕ) where
       ⟦_⟧arg-term : SafeArg → (meᵢ : ℕ) → Term
-      ⟦ SK S ⟧arg-term meᵢ = cvar₀ meᵢ
+      ⟦ Spar i ⟧arg-term meᵢ = cvar₀ meᵢ
       ⟦ Svar ⟧arg-term meᵢ = def `from (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
 
     ⟦_⟧product-pat : NamedSafeProduct → Pattern

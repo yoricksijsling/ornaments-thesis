@@ -1,6 +1,7 @@
 module ContextFree.One.Quoted where
 
 open import Data.List using (List; []; _∷_)
+open import Data.Nat using (ℕ)
 open import Data.Product using (_×_; _,_; Σ) renaming (map to map×)
 open import Data.Unit
 open import Reflection
@@ -10,7 +11,7 @@ Params = List (Sort × Arg Type)
 
 
 data SafeArg : Set where
-  SK : (S : Term) → SafeArg
+  Spar : ℕ → SafeArg
   Svar : SafeArg
 
 SafeProduct : Set

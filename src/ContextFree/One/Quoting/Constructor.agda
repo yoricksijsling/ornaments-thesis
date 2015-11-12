@@ -2,7 +2,7 @@ module ContextFree.One.Quoting.Constructor where
 
 open import Data.Fin using (Fin; zero; suc; toℕ; #_)
 open import Data.List using (List; []; _∷_; drop; map)
-open import Data.Nat using (ℕ; zero; suc)
+open import Data.Nat using (ℕ; zero; suc; _∸_)
 open import Data.Product using (_,_; uncurry′)
 open import Data.Stream using (iterate)
 open import Data.Unit using (⊤; tt)
@@ -26,14 +26,9 @@ checkArginfovr : Arg-info → Error ⊤
 checkArginfovr (arg-info visible relevant) = ok tt
 checkArginfovr (arg-info _ _) = fail "Arg is not visible and relevant"
 
-dropIndex : ℕ → SafeArg → Error SafeArg
-dropIndex (suc n) (SK t) = dropIndex₁ t >>= dropIndex n ∘′ SK
-  where
-  dropIndex₁ : Term → Error Term
-  dropIndex₁ (var (suc x) []) = return (var x [])
-  dropIndex₁ (def f args) = log "dropIndex: term not supported" >> fail (def f args)
-  dropIndex₁ otherwise = log "dropIndex: term not supported" >> fail otherwise
-dropIndex n otherwise = return otherwise
+dropIndex : ℕ → SafeArg → SafeArg
+dropIndex n (Spar i) = Spar (i ∸ n)
+dropIndex n Svar = Svar
 
 termToConstructor : Name → (t : Type) → Fin (suc (argCount t)) → Error (List SafeArg)
 termToConstructor self ct p = termToConstructor′
@@ -42,15 +37,15 @@ termToConstructor self ct p = termToConstructor′
   termToArg (def f args) with f ≟-Name self | drop (toℕ p) args
   termToArg (def f args) | yes p | []    = return Svar
   termToArg (def f args) | yes p | _ ∷ _ = fail "termToArg: self-reference has arguments"
-  termToArg (def f args) | no ¬p | _     = return (SK (def f args))
-  termToArg otherwise = return (SK otherwise)
+  termToArg (def f args) | no ¬p | _     = fail "termToArg: reference to type that is not self"
+  termToArg (var n []) = ok (Spar n)
+  termToArg otherwise = fail "termToArg: term not supported"
 
   quoteArg : ℕ → Sort → Arg Type → Error SafeArg
   quoteArg n s (arg i (el sarg t)) = checkSort0 s >>
                                      checkArginfovr i >>
                                      checkSort0 sarg >>
-                                     termToArg t >>=
-                                     dropIndex n
+                                     dropIndex n <$> termToArg t
 
   checkTarget : Type → Error ⊤
   checkTarget (el s (def f args)) with f ≟-Name self | drop (toℕ p) args
@@ -89,15 +84,14 @@ module TestTermToConstructor where
   data Dummy2 (A : Set) : Set where
     dRec : A → Dummy2 A
 
-  testRec : ok (quote dRec , SK (var 0 []) ∷ []) ≡ quoteConstructor (quote Dummy2) (quote dRec) (# 1)
+  testRec : ok (quote dRec , Spar 0 ∷ []) ≡ quoteConstructor (quote Dummy2) (quote dRec) (# 1)
   testRec = refl
 
   data Dummy3 (A B : Set) : Set where
     dPair : A → B → Dummy3 A B
     dMulti : B → B → Dummy2 A → Dummy3 A B
 
-  testPair : ok (quote dPair , SK (var 1 []) ∷
-                               SK (var 0 []) ∷ [])
+  testPair : ok (quote dPair , Spar 1 ∷ Spar 0 ∷ [])
     ≡ quoteConstructor (quote Dummy3) (quote dPair) (# 2)
   testPair = refl
 

@@ -39,7 +39,7 @@ qdt = quoteDatatype! (quote Pair) 2
 module TestQdt where
   open import Reflection
   open import Data.List
-  testQdt : NamedSafeDatatype.sop qdt ≡ (quote pair , SK (var 1 []) ∷ SK (var 0 []) ∷ []) ∷
+  testQdt : NamedSafeDatatype.sop qdt ≡ (quote pair , Spar 1 ∷ Spar 0 ∷ []) ∷
                                         []
   testQdt = refl
 
