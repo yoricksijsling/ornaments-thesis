@@ -25,19 +25,9 @@ open import TypeArgs
 open import Stuff
 
 getDatatype : Name → Error Data-type
-getDatatype n = fromMaybe (showName n ++ " is not a data type")
-                          (def2dt (definition n))
-  where
-  def2dt : Definition → Maybe Data-type
-  def2dt (function _) = nothing
-  def2dt (data-type x) = just x
-  def2dt (record′ _) = nothing
-  def2dt constructor′ = nothing
-  def2dt axiom = nothing
-  def2dt primitive′ = nothing
-
-getConstructors : Data-type → Error (List Name)
-getConstructors dt = ok (constructors dt)
+getDatatype n with definition n
+getDatatype n | data-type x = ok x
+getDatatype n | otherwise = fail (showName n ++ " is not a data type")
 
 _fits_ : ℕ → Name → Set
 _fits_ p n = p ≤ argCount (type n)
@@ -48,11 +38,11 @@ p fits? n = p ≤? argCount (type n)
 quoteDatatype : (dtname : Name) (p : ℕ) → Error SafeDatatype
 quoteDatatype dtname p =
   getDatatype dtname >>= λ dt →
-  getConstructors dt >>= λ cs →
   decToError "Too many params for datatype" (p ≤? argCount (type dtname)) >>= λ pfitsn →
   let params = proj₁ (takeArgs (type dtname) (Data.Fin.fromℕ≤ (s≤s pfitsn))) in
   -- TODO: extract params and check that constructors fit exactly
-  decToError "Too many params for some constructors" (all (_fits?_ p) cs) >>= λ pfitscs →
+  decToError "Too many params for some constructors"
+             (all (_fits?_ p) (constructors dt)) >>= λ pfitscs →
   sequenceM (mapAllToList (λ {c} pfitsc → quoteConstructor dtname c (Data.Fin.fromℕ≤ (s≤s pfitsc)))
                           pfitscs) >>= λ cdescs →
   return (mk dtname (Data.Vec.toList params) cdescs)
