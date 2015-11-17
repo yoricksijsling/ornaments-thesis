@@ -37,7 +37,7 @@ private
     argDesc : SafeArg {pc} → Desc
     argDesc (Spar i) with lookupParam i ptup
     argDesc (Spar i) | param₀ v , p = `P₀ p
-    argDesc Svar = `var
+    argDesc Srec = `var
     productDesc : SafeProduct → Desc
     productDesc = foldr (_`*_ ∘′ argDesc) `1
 

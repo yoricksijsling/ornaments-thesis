@@ -9,9 +9,30 @@ open import Data.Vec using (Vec)
 open import Reflection using (Name)
 open import ContextFree.One.Params using (Param)
 
+-- We do not want to use reflected Term's, because we can't unquote these in DescFunction.
+-- We do want to allow some kinds of terms though..
+-- Terms can be allowed if we can convert them to functions (Params → Set)
+-- Terms with quoted names can not be converted! Unless... the qouted name can be represented
+-- in our system.
+-- Another option is to pass along a mapping from quoted names to (⋯ → Set)s, but that could
+-- never be type safe
+
+-- data SafeLiteral : Set where
+--   nat : ℕ → SafeLiteral
+
+-- data SafeTerm : ℕ → Set where
+--   var : ∀{pc} → Fin pc → SafeTerm pc
+--   def : 
+--   lit : ∀{pc} → SafeLiteral → SafeTerm pc
+
+-- ℕ = def₀ (quote ℕ)
+-- Fin 3 = def (quote Fin) (argvr (lit (nat 3)))
+
 data SafeArg {pc : ℕ} : Set where
   Spar : Fin pc → SafeArg -- The type of the param is only stored in the Param List
-  Svar : SafeArg
+  -- This can replace Spar:
+  --   Sterm₀ : SafeTerm pc → SafeArg
+  Srec : SafeArg
 
 SafeProduct : {pc : ℕ} → Set
 SafeProduct {pc} = List (SafeArg {pc})

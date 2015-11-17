@@ -84,13 +84,13 @@ module MakeTo (`to : Name)(`desc : Name) where
   module WithParams (pc : ℕ)(params : Vec Param pc) where
     ⟦_⟧arg-pat : SafeArg {pc} → Pattern
     ⟦ Spar i ⟧arg-pat = var
-    ⟦ Svar ⟧arg-pat = var
+    ⟦ Srec ⟧arg-pat = var
 
     module WithProductLength (total : ℕ) where
       -- meᵢ is the De Bruijn index of the pattern variable corresponding to this arg
       ⟦_⟧arg-term : SafeArg {pc} → (meᵢ : ℕ) → Term
       ⟦ Spar i ⟧arg-term meᵢ = cvar₀ meᵢ
-      ⟦ Svar ⟧arg-term meᵢ = def `to (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
+      ⟦ Srec ⟧arg-term meᵢ = def `to (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
 
     ⟦_⟧product-pat : NamedSafeProduct → Pattern
     ⟦ `con , as ⟧product-pat = con `con (map (argvr ∘′ ⟦_⟧arg-pat) as)
@@ -117,12 +117,12 @@ module MakeFrom (`from : Name)(`desc : Name) where
   module WithParams (pc : ℕ)(params : Vec Param pc) where
     ⟦_⟧arg-pat : SafeArg {pc} → Pattern
     ⟦ Spar i ⟧arg-pat = var
-    ⟦ Svar ⟧arg-pat = var
+    ⟦ Srec ⟧arg-pat = var
 
     module WithProduct (`con : Name)(total : ℕ) where
       ⟦_⟧arg-term : SafeArg {pc} → (meᵢ : ℕ) → Term
       ⟦ Spar i ⟧arg-term meᵢ = cvar₀ meᵢ
-      ⟦ Svar ⟧arg-term meᵢ = def `from (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
+      ⟦ Srec ⟧arg-term meᵢ = def `from (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
 
     ⟦_⟧product-pat : NamedSafeProduct → Pattern
     ⟦ `con , as ⟧product-pat = foldr (ccon₂ (quote _,_)) (ccon₀ (quote tt))

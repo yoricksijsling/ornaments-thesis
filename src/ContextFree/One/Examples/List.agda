@@ -49,7 +49,7 @@ module TestQdt where
   open import Reflection
   open import Data.List
   testQdt : NamedSafeDatatype.sop qdt ≡ (quote ListP.[]  , []) ∷
-                                        (quote ListP._∷_ , Spar (# 0) ∷ Svar ∷ []) ∷
+                                        (quote ListP._∷_ , Spar (# 0) ∷ Srec ∷ []) ∷
                                         []
   testQdt = refl
 

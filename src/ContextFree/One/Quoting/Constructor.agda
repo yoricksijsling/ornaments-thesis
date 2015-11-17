@@ -37,7 +37,7 @@ termToConstructor `dt ct pc pc≤ = termToConstructor′
   where
   termToArg : (offset : ℕ) → Term → Error SafeArg
   termToArg offset (def f args) with f ≟-Name `dt | drop pc args
-  termToArg offset (def f args) | yes p | []    = return Svar
+  termToArg offset (def f args) | yes p | []    = return Srec
   termToArg offset (def f args) | yes p | _ ∷ _ = fail "termToArg: self-reference has arguments"
   termToArg offset (def f args) | no ¬p | _     = fail "termToArg: reference to type that is not self"
   termToArg offset (var i []) = Spar <$> ℕtoFin (i ∸ offset)
@@ -81,7 +81,7 @@ module TestTermToConstructor where
   testZ : ok ((quote dZ) , []) ≡ quoteConstructor (quote Dummy) (quote dZ) 0 z≤n
   testZ = refl
 
-  testS : ok ((quote dS) , Svar ∷ []) ≡ quoteConstructor (quote Dummy) (quote dS) 0 z≤n
+  testS : ok ((quote dS) , Srec ∷ []) ≡ quoteConstructor (quote Dummy) (quote dS) 0 z≤n
   testS = refl
 
   data Dummy2 (A : Set) : Set where
