@@ -1,5 +1,8 @@
 open import Reflection
 
+-- The quoted names of these types have to be passed from the calling module.
+-- Even though we can quote them ourselves, Agda throws an internal exception
+-- when we quote the name here and then unquote it in another file.
 module ContextFree.One.Unquoting (`Desc : Name)(`μ : Name)(`RawIsContextFree : Name) where
 
 open import ContextFree.One.Desc
@@ -149,13 +152,13 @@ module MakeFrom (`from : Name)(`desc : Name) where
     base = el (lit 0) (pi (argvr (el (lit 0) (cdef₁ `μ (def `desc (paramArgs 0 params)))))
                           (el (lit 0) (def `dt (paramArgs 1 params))))
 
-makeTo : (`to : Name) → (`desc : Name) → NamedSafeDatatype → FunctionDef
+makeTo : (`to `desc : Name) → NamedSafeDatatype → FunctionDef
 makeTo = MakeTo.⟦_⟧datatype
 
-makeFrom : (`from : Name) → (`desc : Name) → NamedSafeDatatype → FunctionDef
+makeFrom : (`from `desc : Name) → NamedSafeDatatype → FunctionDef
 makeFrom = MakeFrom.⟦_⟧datatype
 
-makeRecord : (`desc : Name) → (`to : Name) → (`from : Name) → NamedSafeDatatype → FunctionDef
+makeRecord : (`desc `to `from : Name) → NamedSafeDatatype → FunctionDef
 makeRecord `desc `to `from (mk `dt pc params sop) = fun-def (addParams (toList params) basetype)
                                                             [ clause (paramPats params) term ]
   where

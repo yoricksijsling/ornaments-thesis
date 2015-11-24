@@ -12,7 +12,7 @@ open import Data.Sum
 open import Relation.Binary.PropositionalEquality
 
 desc : Desc
-desc = `1 `+ (`var `* `1) `+ `0
+desc = `1 `+ (`rec `* `1) `+ `0
 
 to : ℕ → μ desc
 to zero = ⟨ inj₁ tt ⟩

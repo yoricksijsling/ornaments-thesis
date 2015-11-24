@@ -19,8 +19,8 @@ open import Stuff using (mapAllToList)
 
 getDatatype : Name → Error Data-type
 getDatatype n with definition n
-getDatatype n | data-type x = ok x
-getDatatype n | otherwise = fail (showName n ++ " is not a data type")
+getDatatype n | data-type x = return x
+getDatatype n | otherwise = log (showName n ++ " is not a data type") >> fail ""
 
 dtParams : (`dt : Name)(pc : ℕ) → Error (Vec Param pc)
 dtParams `dt pc = proj₁ ∘′ takeParams (type `dt) pc

@@ -1,17 +1,55 @@
 \section{Literature review}\label{sec:lit}
 
-Ornaments fall within the wider topic of generic programming.
-In particular, all the current formalizations of ornaments work on
-some generic representation of data types.
-We will give an overview of the current state of generic programming,
-making use of the strengths of dependent types in particular.
+Ornaments are strongly related to generic programming.
+In particular, many current implementations of ornaments work on
+generic representation of data types \cite{dagand12,dagand14-essence,dagand14-transporting}.
+We will give an overview of generic programming, making use of the
+strengths of dependent types in particular.
+For our work we will be using reflection, which is discussed in
+section \ref{sec:lit-reflection}.
+Finally we will describe what ornaments do in section
+\ref{sec:lit-ornaments}.
+
+% PAPERS
+
+% \begin{enumerate}
+%   \item A categorical treatment of ornaments \cite{dagand12}: no clue
+%   \item Categorical organisation of the ornament-refinement
+%     framework \cite{kogibbons13}: ...
+%   \item Generic programming with dependent types \cite{altenkirch06}:
+%     Universe descriptions of finite/cft/spt types.
+%     Containers.
+%     Derivatives of cft.
+%   \item Generic programming with fixed points for mutually recursive
+%     datatypes \cite{yakushev09}:
+%   \item Inductive families need not store their indices \cite{brady04}
+%   \item Modularising inductive families ...
+%   \item Ornaments in practice \cite{williams14}:
+%     Ornaments implemented in a subset of ML
+%   \item The essence of ornaments \cite{dagand14-essence}:
+%     Ornaments on signatures
+%   \item The gentle art of levitation \cite{chapman10}:
+%     Descriptions
+%   \item Transporting functions across ornaments \cite{dagand14-transporting}:
+%     Ornaments on descriptions with var, 1, Π and Σ.
+%     Stuff like functional ornaments, ornamental algebra's, algebraic
+%     ornaments, reornaments,
+% \end{enumerate}
 
 \subsection{Universe of finite types}
 
-Finite types can be constructed using four operations: $0$, $1$, $+$ and
-$*$ \cite{altenkirch06}.
-A pair of two booleans for instance is $(1 + 1) * (1 + 1)$.
-We can express this in Agda with the \AD{Desc} data type.
+Finite types are all those types which have a finite number of
+inhabitants.
+If the number of inhabitants of a type is $n$, we might say that the
+type is isomorphic to \texttt{Fin n}, where \texttt{Fin n} can
+represent all natural numbers up to $n$.
+
+A practical approach to describing finite types is by expressing them
+using four operations: $0$, $1$, $+$ and $*$ \cite{altenkirch06}.
+$0$ and $1$ are the empty and unit type respectively.
+$+$ represents a choice and $*$ represents a pair.
+This is formalized in Agda with the \AD{Desc} data type:
+\todo{reference universes Martin-Löf 1984}
 
 \InsertCodeN{finite-desc}
 
@@ -19,12 +57,66 @@ We write an interpretation function which converts descriptions to a
 type of which the inhabitants correspond with the inhabitants of the
 described type.
 
-\InsertCodeN{finite-interpretation}
+\InsertCode{finite-interpretation}
 
-If we restrict ourselves to only build sums of products, the described
-types correspond directly with data types in, for instance, Agda.
+\begin{example}[Description of a pair of booleans]
+As a finite type, a pair of two booleans can be expressed as $(1 + 1)
+* (1 + 1)$.
+The equivalent description in our universe is simply \texttt{boolDesc
+  = (`1 `+ `1) `* (`1 `+ `1)}.
+Interpretation of that description results in the type
+\texttt{⟦ boolDesc ⟧ ≡ (⊤ ⊎ ⊤) × (⊤ ⊎ ⊤)}.
+It is easy to verify that every inhabitant of this type corresponds
+with an inhabitant of a pair of two booleans, they are isomorphic.
+\end{example}
 
-\subsection{Universe of context-free types}
+If we have some data type in our host language which corresponds with
+some description, we can relate the two by providing an
+embedding-projection pair.
+
+\begin{definition}[Embedding-projection pair]
+  An \emph{embedding-projection pair} is a pair of functions
+  translating between the interpretation of a description \texttt{μ ⟦
+    D ⟧} and the corresponding data type \texttt{X}.
+  They have the types \texttt{X → μ ⟦ D ⟧} and \texttt{μ ⟦ D ⟧ → X}.
+\end{definition}
+
+To really make sure that the embedding-projection pair is correct, a
+proof should be given that the functions are each others inverses.
+
+\subsection{References to definitions}
+
+Not every finite type can be directly translated to an algebraic data
+type in a language like Agda.
+An algebraic data types describes exactly one sum of products, where
+finite types allow any nesting of products and sums.
+This is easily fixed by allowing references to other defined types.
+Every type can be translated to a bunch of sums of products, which can
+then be written as a bunch of algebraic data types.
+
+\begin{example}[Pair of booleans data type]
+The pair of booleans type is not a sum of products, so we factor out
+the boolean type and write $bool = 1 + 1$ and $pairOfBools = bool *
+bool$.
+Now these types can be written as Agda types.
+
+\begin{alltt}
+data Bool : Set where
+  true : Bool
+  false : Bool
+data PairOfBools : Set where
+  pairOfBools : Bool → Bool → PairOfBools
+\end{alltt}
+\end{example}
+
+Our descriptions do not yet support this.
+We could add such support by adding a \texttt{`K} constructor of type
+\texttt{Set → Desc} or \texttt{Desc → Desc}. \todo{pros and cons of
+  these two approaches, mutual recursion is a problem with Set..}
+
+\todo{introduce parameters somewhere}
+
+\subsection{Universe of context-free types}\label{sec:lit-cft}
 
 We can extend our definition of finite types to context-free types by
 adding a $μ$ operator to construct inductive types.
@@ -33,8 +125,7 @@ A = μX. 1 + A × X$.
 Context-free types also allow multiple variable bindings, rose trees
 can be expressed as $RT A = μX. List (A × X) = μX. μY. 1 + (A × X) × Y$.
 
-To represent these types we have to be able to bind and refer to
-variables.
+To represent these types we have to be able to bind variables.
 Following Altenkirch et al \cite{altenkirch06}), we might expand the
 definition of \AD{Desc} in listing \ref{code:finite-desc} to represent
 these operations.
@@ -51,65 +142,204 @@ Indeed, when we try to interpret \AF{‵nat} = \AI{‵1} \AI{‵+} \AI{`var}
 \AY{(}\AF{\#} \AN{0}\AY{)} we get an expanding term \AF{⟦} \AF{‵nat}
 \AF{⟧} = \AR{⊤} \AD{⊎} \AF{⟦} \AF{‵nat} \AF{⟧} = ..
 
-\subsubsection{Single fixpoint}
+\subsubsection{Single fixpoint}\label{sec:lit-cft-single}
 
-A well known solution to this non-termination is to introduce the
-induction later using a fix point data type\todo{source}.
-We will start out with single fixpoints.
-With single fixpoints we can only describe context free types with one
-$μ$, and it must be on the outside of the type\todo{source}.
-In other words, we can only induce on one variable.
-
-With this method we get rid of the explicit \AI{μ} constructor.
-In the interpretation of the descriptions we assume an implicit $μ$ on
+A common solution to this non-termination is by using a fix point
+construction \todo{source}.
+With this method we get rid of the explicit \AI{μ} constructor in the
+description type.
+The interpretation of descriptions always assumes an implicit $μ$ on
 the outside.
 The interpretation function \AF{⟦\_⟧} is now of type \AD{Desc} \AY{→}
 \AD{Set} \AY{→} \AD{Set}, so it takes a \AD{Desc} and gives us a
-functor on \AD{Set}.
-Taking the fixpoint of the \AD{Set}-functor gives us a \AD{Set} we can
-use.
+\emph{pattern functor}\todo{source} on \AD{Set}.
+Taking the fix point of the \AD{Set}-functor gives us a \AD{Set} we can
+use, a process known as \emph{tying the knot}.
 
 \InsertCode{contextfree-one-base}
 
-\begin{shaded}
-  A general fixpoint data type can not be written in Agda, but if we
-  specialize it to Desc that's fine.
-\end{shaded}
+Note that in general fix points do not necessarily terminate, so they
+do not pass Agda's termination checker.
+Therefore we use a fix point construction specialised to
+the interpretation function \AF{⟦\_⟧}.
+The termination checker can inspect the definition of \AF{⟦\_⟧} to see
+that none of the clauses introduce unbounded recursion.
+
+\begin{example}[Description of naturals]
+The data type for naturals requires recursion, and can now be
+described in our universe with \texttt{natDesc = `1 `+ `var}
+To see how this description relates to the original data type, we give
+the embedding-projection pair:
+
+\begin{alltt}
+to : ℕ → μ natDesc
+to zero = ⟨ inj₁ tt ⟩
+to (suc n) = ⟨ inj₂ (to n , tt) ⟩
+
+from : μ natDesc → ℕ
+from ⟨ inj₁ tt ⟩ = zero
+from ⟨ inj₂ (n , tt) ⟩ = suc (from n)
+\end{alltt}
+\end{example}
+
+This formalization of context free types is limited because it only
+allows a single fix point, and therefore can only describe types with
+a single variable binding $μ$.
 
 \subsubsection{Multiple fixpoints}\label{sec:lit-cft-multi}
 
 Real context-free types can have multiple variable bindings.
-Take for instance $NatList = μX. 1 + (μY. 1 + Y) × Y$.
-These are hard (impossible?) to define, since we would need something
-like internal fixpoints.
+If we allow references to defined types, we can quite easily split
+such types into smaller ones which all have only one variable
+binding.
 
-Luckily, we can always transform a type with internal variable
-bindings into multiple types which do not have internal variable
-bindings\todo{source}.
-$NatList$ can be split into two types $Nat = μY. 1 + Y$ and $NatList =
-μX. 1 + Nat × X$.
+\begin{example}
+  The type of lists of natural numbers is $NatList = μX. 1 + (μY. 1 +
+  Y) × X$.
+  We can extract the type $Nat = μY. 1 + Y$, leaving us with $NatList
+  = μX. 1 + Nat × X$.
+  Both types can be described in our universe if \texttt{Desc} has a
+  suitable \texttt{`K} constructor.
+\end{example}
 
-If we can express mutually recursive context-free types without internal
-variable bindings, we can express all context-free types.
+We can thus describe all context-free types, but we might need
+multiple descriptions.
 
-Mutually recursive types can be described with indices. As in
-Multirec, and generalized in gentle art of levitation.
+\subsection{Universe for inductive families}{sec:lit-families}
+
+The descriptions we have seen do not allow inductive families yet.
+An inductive family, indexed by some \texttt{I : Set} can be supported
+by expanding \texttt{Desc} to allow references to variables with a
+specific index \cite{chapman10}.
+
+\begin{alltt}
+  data Desc (I : Set) : Set where
+  `0 : Desc I
+  `1 : Desc I
+  _`+_ : (A B : Desc I) → Desc I
+  _`*_ : (A B : Desc I) → Desc I
+  `var : (i : I) → Desc I
+
+  ⟦_⟧ : ∀ {I} → Desc I → (I → Set) → Set
+  ⟦_⟧ `0 X = ⊥
+  ⟦_⟧ `1 X = ⊤
+  ⟦_⟧ (A `+ B) X = ⟦ A ⟧ X ⊎ ⟦ B ⟧ X
+  ⟦_⟧ (A `* B) X = ⟦ A ⟧ X × ⟦ B ⟧ X
+  ⟦_⟧ (`var i) X = X i
+\end{alltt}
+
+\todo{expand, show how μ changes and how we get an endofunctor on
+  Setⁱ}
+
+Indexed descriptions are not just useful for inductive families.
+They can also be used to describe multiple, mutually recursive,
+types by using the index to enumerate the types \cite{yakushev09}.
+
+\subsection{Encoding dependent types}
+
+The context free types in section \ref{sec:lit-cft} only allowed
+descriptions of non-dependent types.
+For instance, a dependent pair can not be described.
+
+\todo{Explain how Σ can be used for the roles of +, * and K. The
+  choice of the type on the left hand side is a significant problem,
+  especially with indexed descriptions.}
+
+% We can change the constructor \AI{\_‵*\_} to allow the description of
+% the type on the right side of a pair to depend on the value on the
+% left side.
+
+% \InsertCode{finite-dep-*-desc}
+
+%  We can see that interpretation indeed uses the \AR{Σ} for dependent pairs.
+
+% \InsertCode{finite-dep-*-interpretation}
+
+\todo{Find papers about encoding dependent types. Induction-recursion?}
 
 \subsection{Containers}
 
 Discuss the semantic approach with containers/signatures.
 
+\subsection{Reflection}\label{sec:lit-reflection}
 
-\subsection{Encoding dependent types}
+Agda supports quoting through a few built-in constructs.
+There are primitives to get the type and definition of a given name:
 
-One of things we can express using dependent types is a
-\emph{dependent pair}.
-We can change the constructor \AI{\_‵*\_} to allow the description of
-the type on the right side of a pair to depend on the value on the
-left side.
-We can see that interpretation indeed uses the \AR{Σ} for dependent pairs.
+\begin{alltt}
+type         : Name → Type
+definition   : Name → Definition
+\end{alltt}
 
-\InsertCode{finite-dep-*-desc}
-\InsertCode{finite-dep-*-interpretation}
+To use them, you need a \texttt{Name} which you can get with the
+\texttt{quote} keyword.
+A \texttt{Definition} can be anything which has a name, like
+functions, data types, records or constructors.
+If the definition gives us a data type, we can use 
+\texttt{constructors : Data-type → List Name} to get a list of names
+of the associated constructors.
 
-\todo{Find papers about encoding dependent types. Induction-recursion?}
+\todo{no visible difference between parameters and indices}
+
+unquotedecl...
+
+\todo{much more}
+
+\subsection{Ornaments}\label{sec:lit-ornaments}
+
+When two algebraic data types have a similar recursive structure,
+ornaments can be used to specify the exact relation between those two
+types.
+
+\subsubsection{Extending}
+
+'Insert' an argument somewhere in a product \cite{dagand14-transporting}.
+'Delete' is related to this.
+\todo{example of nat→list ornament}
+
+\subsubsection{Refining}
+
+Change indices of inductive points (var).
+\todo{example of list→vec and nat→fin ornaments}
+
+\subsubsection{Ornaments from functions}
+
+We have shown how to implement ornaments as the difference between two
+\texttt{Desc}s.
+Alternatively, one can build a system where ornaments are built by
+providing a projection function from the ornamented to the base type.
+This has been implemented as an extension to a subset of ML
+\cite{williams14}.
+The system inspects such a function definition and can use it as an
+ornament to lift functions.
+
+\begin{example}
+By simply defining the \texttt{length} function of type \texttt{List A
+  → ℕ}, the system would be able to generate a partial function
+definition of \texttt{++} (append) from the definition of \texttt{+}.
+\end{example}
+
+This approach is quite intuitive and is easy to understand without
+knowing much about ornaments specifically.
+There are however significant limits on the form of the projection
+functions which are used as an ornament, the patterns and terms must
+take on a very specific structure.
+
+An important observation to make on this approach is that the
+ornamented type can not be generated by the ornament, because the
+ornamented type must be defined before an ornament can be built.
+The approach of the previous sections does not have this requirement,
+and one could make an ornament for a type and generate the ornamented
+type from that.
+
+\subsubsection{Uses of ornaments}
+
+\todo{explain more}
+
+\begin{itemize}
+\item Lifting functions to reduce code duplication
+\item Refactoring
+\item Removing constructors
+\end{itemize}
+
+\cite{williams14}

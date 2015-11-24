@@ -12,7 +12,7 @@ open import ContextFree.One.Params using (Param)
 -- We do not want to use reflected Term's, because we can't unquote these in DescFunction.
 -- We do want to allow some kinds of terms though..
 -- Terms can be allowed if we can convert them to functions (Params → Set)
--- Terms with quoted names can not be converted! Unless... the qouted name can be represented
+-- Terms with quoted names can not be converted! Unless... the quoted name can be represented
 -- in our system.
 -- Another option is to pass along a mapping from quoted names to (⋯ → Set)s, but that could
 -- never be type safe
@@ -22,7 +22,8 @@ open import ContextFree.One.Params using (Param)
 
 -- data SafeTerm : ℕ → Set where
 --   var : ∀{pc} → Fin pc → SafeTerm pc
---   def : 
+--   def : ∀{pc} → Name → (p → Set) → SafeTerm pc
+--   def : ∀{pc} → (sdt : NamedSafeDatatype) → paramsFor sdt → SafeTerm pc
 --   lit : ∀{pc} → SafeLiteral → SafeTerm pc
 
 -- ℕ = def₀ (quote ℕ)
@@ -31,7 +32,7 @@ open import ContextFree.One.Params using (Param)
 data SafeArg {pc : ℕ} : Set where
   Spar : Fin pc → SafeArg -- The type of the param is only stored in the Param List
   -- This can replace Spar:
-  --   Sterm₀ : SafeTerm pc → SafeArg
+  -- Sterm₀ : SafeTerm pc → SafeArg
   Srec : SafeArg
 
 SafeProduct : {pc : ℕ} → Set
@@ -42,11 +43,9 @@ SafeSum {pc} = List (SafeProduct {pc})
 
 record SafeDatatype : Set where
   constructor mk
-  field
-    pc : ℕ
-    params : Vec Param pc
-    sop : SafeSum {pc}
-
+  field pc : ℕ
+        params : Vec Param pc
+        sop : SafeSum {pc}
 
 SafeSumNames : {pc : ℕ} → SafeSum {pc} → Set
 SafeSumNames [] = ⊤
@@ -65,11 +64,10 @@ NamedSafeSum {pc} = List (NamedSafeProduct {pc})
 
 record NamedSafeDatatype : Set where
   constructor mk
-  field
-    dtname : Name
-    pc : ℕ
-    params : Vec Param pc
-    sop : NamedSafeSum {pc}
+  field dtname : Name
+        pc : ℕ
+        params : Vec Param pc
+        sop : NamedSafeSum {pc}
 
 private
   nameSafeSum : {pc : ℕ} → (ss : SafeSum {pc}) → SafeSumNames ss → NamedSafeSum {pc}

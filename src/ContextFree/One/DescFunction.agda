@@ -37,7 +37,7 @@ private
     argDesc : SafeArg {pc} → Desc
     argDesc (Spar i) with lookupParam i ptup
     argDesc (Spar i) | param₀ v , p = `P₀ p
-    argDesc Srec = `var
+    argDesc Srec = `rec
     productDesc : SafeProduct → Desc
     productDesc = foldr (_`*_ ∘′ argDesc) `1
 
@@ -51,6 +51,7 @@ private
   toDescFun′ {ps = []} f = f (lift tt)
   toDescFun′ {ps = param₀ visible ∷ ps} f = λ v → toDescFun′ (curry f v)
   toDescFun′ {ps = param₀ hidden ∷ ps} f = λ {v} → toDescFun′ (curry f v)
+  -- Instance arguments don't really make sense here
   toDescFun′ {ps = param₀ instance′ ∷ ps} f = λ {{v}} → toDescFun′ (curry f v)
 
 DescFun : (sdt : SafeDatatype) → Set₁
@@ -58,3 +59,21 @@ DescFun (mk pc params sop) = DescFun′ params
 
 descFun : (sdt : SafeDatatype) → DescFun sdt
 descFun sdt = toDescFun′ (descFun× sdt)
+
+module _ where
+  open import Data.Fin
+  open import Data.List
+  open import Relation.Binary.PropositionalEquality
+
+  treeSdt : SafeDatatype
+  treeSdt = mk 1 (param₀ visible ∷ [])
+                 ([] ∷
+                  (Spar zero ∷ Srec ∷ []) ∷
+                  (Spar zero ∷ Srec ∷ Srec ∷ []) ∷ [])
+
+  treeDesc : Set → Desc
+  treeDesc A = descFun treeSdt A
+
+  testTreeDesc : ∀ A → descFun treeSdt A ≡
+    (`1 `+ `P₀ A `* `rec `* `1 `+ `P₀ A `* `rec `* `rec `* `1 `+ `0)
+  testTreeDesc A = refl

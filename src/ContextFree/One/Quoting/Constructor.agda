@@ -63,17 +63,11 @@ termToConstructor `dt ct pc pc≤ = termToConstructor′
                        sequenceM (zipStream (λ { n (s , a) → quoteArg n s a })
                                             (iterate suc 0) args)
 
-quoteConstructor : (`dt : Name)(c : Name)(pc : ℕ)(pc≤ : pc ≤ paramCount (type c)) →
+quoteConstructor : (`dt `c : Name)(pc : ℕ)(pc≤ : pc ≤ paramCount (type `c)) →
                    Error (NamedSafeProduct {pc})
-quoteConstructor `dt c pc pc≤ = _,_ c <$> termToConstructor `dt (type c) pc pc≤
+quoteConstructor `dt `c pc pc≤ = _,_ `c <$> termToConstructor `dt (type `c) pc pc≤
 
 module TestTermToConstructor where
-  el0 : Term → Type
-  el0 = el (lit 0)
-
-  argvr : ∀{A} → A → Arg A
-  argvr = arg (arg-info visible relevant)
-
   data Dummy : Set where
     dZ : Dummy
     dS : Dummy → Dummy

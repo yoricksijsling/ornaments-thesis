@@ -17,63 +17,84 @@ type.
 To keep things simple, we have chosen a fairly simple universe for
 context-free types with a single fix
 point\definedin{ContextFree.One.Desc}.
-We described this universe in section \ref{sec:cft-single}.
+It is similar to the one described in section
+\ref{sec:lit-cft-single}, but we have added support for data type
+parameters of kind \texttt{Set₀} by introducing the \texttt{`P₀}
+constructor.
 
-The code should generate three functions; one which gives the
-description within the universe, and two functions which convert
+\begin{alltt}
+data Desc : Set₁ where
+  `P₀ : (S : Set₀) → Desc
+  `0 : Desc
+  `1 : Desc
+  _`+_ : (A B : Desc) → Desc
+  _`*_ : (A B : Desc) → Desc
+  `rec : Desc
+\end{alltt}
+
+The quoting library should generate three functions; one which gives
+the description within the universe, and two functions which convert
 values between the original data type and the interpretation of the
 description, commonly referred to as an embedding-projection pair.
 
-\begin{verbatim}
-desc : Desc
-to : A → μ desc
-from : μ desc → A
-\end{verbatim}
+All the functions are parameterised by the data type parameters.
+A bunch of zero or more parameters is succinctly written as
+\texttt{\ttargs{p}}.
+
+\begin{alltt}
+desc : (\ttargs{p} : Set₀) → Desc
+to : (\ttargs{p} : Set₀) → A → μ (desc \ttargs{p})
+from : (\ttargs{p} : Set₀) → μ (desc \ttargs{p}) → A
+\end{alltt}
 
 The implementation is correct if \texttt{to} and \texttt{from} are
 inverses of each other.
 
-\begin{verbatim}
-to-from : ∀ x → from (to x) ≡ x
-from-to : ∀ x → to (from x) ≡ x
-\end{verbatim}
+\begin{alltt}
+to-from : (\ttargs{p} : Set₀) → ∀ x → from \ttargs{p} (to \ttargs{p} x) ≡ x
+from-to : (\ttargs{p} : Set₀) → ∀ x → to \ttargs{p} (from \ttargs{p} x) ≡ x
+\end{alltt}
 
 \subsubsection[Example for natural numbers]
   {Example for natural numbers\definedin{ContextFree.One.Examples.Nat}}
 
 We will first show how we can manually define \texttt{desc},
-\texttt{to} and \texttt{from} for some examples.
-The definitions are picked carefully to have a very predictable
-structure, so we can generate these automatically later on.
+\texttt{to} and \texttt{from} for some example data types.
+The function definitions are picked carefully to have a very
+regular structure, so we can generate them automatically later on.
 
 Natural numbers have two constructors, zero and suc, the first has no
 arguments and the latter has one recursive position.
 In Agda we would define them with a data type:
 
-\begin{verbatim}
+\begin{alltt}
 data ℕ : Set where
   zero : ℕ
   suc : ℕ → ℕ
-\end{verbatim}
+\end{alltt}
 
-We can also express them as $Nat = μX. 1 + x$.
-The products can be terminated with a $1$ and we the sums with $0$.
-Removing the $μ$, which is implicit in our universe, gives the
-following definition:
+Every data type can be expressed as a sum of products: $\Nat = μX. 1 +
+X$.
+Each product can freely be terminated with a $1$ and each sum with
+$0$.
+The $μ$ is implicit in our universe, so we can remove it and use
+\texttt{`rec} to refer to the variable which was bound.
 
-\begin{verbatim}
-desc = `1 `+ (`var `* `1) `+ `0
-\end{verbatim}
+\begin{alltt}
+desc : Desc
+desc = `1 `+ (`rec `* `1) `+ `0
+\end{alltt}
 
-Some definitions will have more clauses, and we will have some
-additional unit (\texttt{⊤}) values due to the extra \texttt{`1}'s and
-\texttt{`0}'s, but the more regular structure makes the code
-generation much easier.
+We could have omitted the extra \texttt{`1}'s and \texttt{`0}'s, but
+this way the structure is more regular.
+This is going to be the template for what we want the library to
+generate, so a more regular structure will make code generation
+simpler.
 
 The definitions of \texttt{to} and \texttt{from} are fairly
 straightforward:
 
-\begin{verbatim}
+\begin{alltt}
 to : ℕ → μ desc
 to zero = ⟨ inj₁ tt ⟩
 to (suc n) = ⟨ inj₂ (inj₁ (to n , tt)) ⟩
@@ -82,263 +103,369 @@ from : μ desc → ℕ
 from ⟨ inj₁ tt ⟩ = zero
 from ⟨ inj₂ (inj₁ (n , tt)) ⟩ = suc (from n)
 from ⟨ inj₂ (inj₂ ()) ⟩
-\end{verbatim}
+\end{alltt}
 
 It is easy to prove that \texttt{to} and \texttt{from} are inverses of
 each other.
 Those proofs are omitted here, as they are not very interesting.
 
-\subsubsection[Example for lists]
-  {Example for lists\definedin{ContextFree.One.Examples.List}}
+\subsubsection[Example for trees]
+  {Example for trees\definedin{ContextFree.One.Examples.Tree}}
+\label{sec:prototype-trees}
 
-We will take a look at how lists are embedded in our universe.
-They have a type parameter, which we have to take care of.
+We will take a look at how trees are embedded in our universe.
 
-\begin{verbatim}
-data List (A : Set) : Set where
-  [] : List A
-  _∷_ : A → List A → List A
-\end{verbatim}
+\begin{alltt}
+data Tree (A : Set) : Set where
+  leaf : Tree A
+  node1 : A → Tree A → Tree A
+  node2 : A → Tree A → Tree A → Tree A
+\end{alltt}
 
-The type parameter \texttt{A} has to be available in every function so we change
-the types accordingly by adding \texttt{(A : Set) →}\ \ in front of the
-type of each.
-With the \texttt{`K} constructor we can add a spot for values of type \texttt{A} to
-the description.
-Values of this type are simply passed through in the definitions of
-the embedding-projection pair.
+Our trees take a type parameter, and the nodes can have one or two
+subtrees.
+They can alternatively be described as $\Tree A = μX. 1 + A × X + A × X
+× X$.
+This data structure is chosen specifically to show what happens when
+we add type parameters, more than two constructors and multiple
+recursive points within a constructor.
 
-\begin{verbatim}
+\begin{alltt}
 desc : (A : Set) → Desc
-desc A = `1 `+ (`K A `* `var `* `1) `+ `0
+desc A = `1 `+ (`P₀ A `* `rec `* `1) `+ (`P₀ A `* `rec `* `rec `* `1) `+ `0
 
-to : (A : Set) → ListP A → μ (desc A)
-to A [] = ⟨ inj₁ tt ⟩
-to A (x ∷ xs) = ⟨ inj₂ (inj₁ (x , to A xs , tt)) ⟩
+to : (A : Set) → Tree A → μ (desc A)
+to A leaf = ⟨ inj₁ tt ⟩
+to A (node1 v xs) = ⟨ inj₂ (inj₁ (v , to A xs , tt)) ⟩
+to A (node2 v xs ys) = ⟨ inj₂ (inj₂ (inj₁ (v , to A xs , to A ys , tt))) ⟩
 
-from : (A : Set) → μ (desc A) → ListP A
-from A ⟨ inj₁ tt ⟩ = []
-from A ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = x ∷ from A xs
-from A ⟨ inj₂ (inj₂ ()) ⟩
-\end{verbatim}
-
-\subsubsection{Structure of desc}
-
-Given a data type in Agda, we want to mechanically derive the
-definition of \texttt{desc}.
-We will be using quoting to implement this, which is explained in
-section \ref{sec:prototype-implementation}.
-
-The descriptions as we have shown in the examples follow the
-conventional sum-of-products style where each constructor becomes a
-product and all the products are summed.
-Recursive arguments like \texttt{MyDatatype p₁⋯pₙ} become
-\texttt{`var}'s and parameter arguments like \texttt{A} become
-\texttt{`K A}.
+from : (A : Set) → μ (desc A) → Tree A
+from A ⟨ inj₁ tt ⟩ = leaf
+from A ⟨ inj₂ (inj₁ (v , xs , tt)) ⟩ = node1 v (from A xs)
+from A ⟨ inj₂ (inj₂ (inj₁ (v , xs , ys , tt))) ⟩
+  = node2 v (from A xs) (from A ys)
+from A ⟨ inj₂ (inj₂ (inj₂ ())) ⟩
+\end{alltt}
 
 \subsubsection{Structure of embedding-projection pair}
 
 There is a pretty symmetry between the patterns and terms of the
 clauses in \texttt{from} and the terms and patterns (respectively) of
 the clauses in \texttt{to}.
-We will call this property \emph{to/from symmetry}.
+Take the clauses for \texttt{node1}, the emphasized parts correspond
+with each other.
 
-\begin{definition}
+\begin{alltt}
+to A (\ttemph1{node1 v} xs) = \ttemph2{⟨ inj₂ (inj₁ (v , }to A xs\ttemph2{ , tt)) ⟩}
+from A \ttemph2{⟨ inj₂ (inj₁ (v , }xs\ttemph2{ , tt)) ⟩} = \ttemph1{node1 v (}from A xs\ttemph1{)}
+\end{alltt}
+
+\begin{definition}[to/from symmetry]
 An embedding-projection pair has \emph{to/from symmetry} when for each
-constructor of the datatype the functions have clauses with the
-following structure:
+constructor of the datatype we can pick pattern
+synonyms\footnote{It works like this if pattern synonyms would not
+  check for unbound variables like \texttt{v} in the \texttt{node1}
+  constructor.
+  Agda's pattern synonyms do check this, so to implement this all free
+  variables have to be bound, slightly complicating the definitions in
+  this section.}
+α and β such that \texttt{to} and \texttt{from} contain the following
+clauses:
 
-\begin{verbatim}
-to p₁⋯pₙ (real x) = rep (to p₁⋯pₙ x)
-from p₁⋯pₙ (rep y) = real (from p₁⋯pₙ y)
-\end{verbatim}
+\begin{alltt}
+to \ttargs{p} (\ttemph1{α} x₁⋯xₙ) = \ttemph2{β} (to \ttargs{p} x₁)⋯(to \ttargs{p} xₙ)
+from \ttargs{p} (\ttemph2{β} y₁⋯yₙ) = \ttemph1{α} (from \ttargs{p} y₁)⋯(from \ttargs{p} yₙ)
+\end{alltt}
 \end{definition}
 
-Here we use \texttt{real} and \texttt{rep} as code generation
-functions, which can be used both in patterns and in terms.
-In the remainder of this section we will omit the application of data
-type parameters \texttt{p₁⋯pₙ} for clarity.
-As an example, we can instantiate \texttt{real} and \texttt{rep} for
-the \texttt{suc} constructor:
+To fully define the embedding-projection pair, we only have to qive
+suitable definitions for \texttt{α} and \texttt{β} for every
+constructor.
+The pattern synonyms for the $i$th constructor (starting with $i=0$)
+will look something like this:
 
-\begin{verbatim}
-to (suc x) = ⟨ inj₂ (inj₁ (to x , tt)) ⟩
-from ⟨ inj₂ (inj₁ (y , tt)) ⟩ = suc (from y)
-\end{verbatim}
+\begin{alltt}
+αᵢ = constructorᵢ x₁⋯xₙ
+βᵢ = ⟨ inj₂ⁱ (inj₁ (x₁ , ⋯ , xₙ , tt)) ⟩
+\end{alltt}
 
-The to/from symmetry property has a degenerate case for constructors
-without recursive arguments:
-
-\begin{verbatim}
-to real = rep      -- for example: to zero = ⟨ inj₁ tt ⟩
-from rep = real    -- for example: from ⟨ inj₁ tt ⟩ = zero
-\end{verbatim}
+Where \texttt{inj₂ⁱ} is exactly $i$ applications of \texttt{inj₂}.
+This is a simplified representation, but it should give the reader
+an idea what the structure is.
 
 \begin{theorem}
 When an embedding-projection pair has to/from symmetry, \texttt{from}
 and \texttt{to} are each others inverses.
 \end{theorem}
 \begin{proof}
-The degenerate case is trivial:
 
-\begin{verbatim}
-to (from rep) ≡ to real ≡ rep
-\end{verbatim}
 
-To prove that \texttt{to (from (rep y)) ≡ rep y}, we can use induction
-on \texttt{y} because it is structurally smaller than \texttt{rep y}.
+The degenerate case without recursive arguments (for instance for
+\texttt{leaf}) is trivial:
 
-\begin{verbatim} 
-to (from (rep y))
+\begin{alltt}
+to \ttargs{p} (from \ttargs{p} β) ≡ to \ttargs{p} α ≡ β
+from \ttargs{p} (to \ttargs{p} α) ≡ from \ttargs{p} β = α
+\end{alltt}
+
+To prove that \texttt{to \ttargs{p} (from \ttargs{p} (β y₁⋯yₙ)) ≡ β
+  y₁⋯yₙ} we use induction.
+
+\begin{alltt}
+to \ttargs{p} (from \ttargs{p} (β y₁⋯yₙ))
   ≡ (definition of from)
-to (real (from y))
+to \ttargs{p} (α (from \ttargs{p} y₁)⋯(from \ttargs{p} yₙ))
   ≡ (definition of to)
-rep (to (from y))
-  ≡ (induction hypothesis: to (from y) ≡ y)
-rep y
-\end{verbatim}
+β (to \ttargs{p} (from \ttargs{p} y₁))⋯(to \ttargs{p} (from \ttargs{p} yₙ))
+  ≡ (induction hypotheses: to \ttargs{p} (from \ttargs{p} y₁) ≡ y₁ and so forth)
+β y₁⋯yₙ
+\end{alltt}
 
+The induction terminates because we are using structurally smaller
+arguments in every step.
 A similar argument can be used to show that
-\texttt{from (to (real x)) ≡ real x}.
+\texttt{from \ttargs{p} (to \ttargs{p} (α x₁⋯xₙ)) ≡ α x₁⋯xₙ}.
 \end{proof}
 
-To fully define the embedding-projection pair, we only have to qive
-suitable definitions for \texttt{real} and \texttt{rep}, and the
-required properties of \texttt{to} and \texttt{from} will follow.
-
-We give an imprecise definition of the code generation functions,
-enough to convince the reader that mechanical construction is
-possible:
-
-\begin{verbatim}
-real x = constructorᵢ args x args
-rep x = ⟨ inj₂ⁱ (inj₁ (args , x , args , tt)) ⟩
-\end{verbatim}
-
-Where $i$ is a numerical identifier for the constructor, starting with
-$i = 0$ for the first one, \texttt{inj₂ⁱ} is exactly $i$ applications
-of \texttt{inj₂}.
+So we know that as long as the embedding-projection pair is built such
+that it has to/from symmetry, we should always be able to prove that
+\texttt{to} and \texttt{from} are inverses.
 
 \subsection{Implementation}\label{sec:prototype-implementation}
 
-Up to this point we have not dived in to the nitty-gritty technical
+Up to this point we have not shown much of the technical
 details of the prototype quoting library.
-The general structure is split in two parts:
+In the next section we describe an intermediate representation closely
+related to \texttt{Desc}.
+
+The quoting process is then split in roughly two parts:
 \begin{enumerate}
-\item Quoting the datatype to an intermediate representation.
-\item Use the intermediate representation to generate the
-  definitions of \texttt{desc}, \texttt{to} and \texttt{from}.
+\item Quoting the datatype to the intermediate representation,
+  explained in section \ref{sec:prototype-quoting}.
+\item Using the intermediate representation to generate the
+  description and the definitions of \texttt{to} and \texttt{from},
+  which is described in section \ref{sec:prototype-unquoting}.
 \end{enumerate}
+
+\subsubsection{SafeDatatype}\label{sec:prototype-safedatatype}
 
 The intermediate representation
 \texttt{SafeDatatype}\definedin{ContextFree.One.Quoted} is chosen to
-be safe in the sense that we can always generate function definitions
-from it.
+be safe in the sense that we can always convert it to a function of
+type \texttt{desc : (\ttargs{p} : Set₀) → Desc}.
 We have seen how we always generate descriptions in sum-of-products
 style, so \texttt{SafeDatatype} is roughly the same as a list of lists
 of arguments.
-The name of the datatype and the name of each constructor is also
-stored.
 
-\begin{verbatim}
-data SafeArg : Set where
-  SK : (S : Term) → SafeArg
-  Svar : SafeArg
-SafeProduct = Name × List SafeArg
-SafeSum = List SafeProduct
-SafeDatatype = Name × Params × SafeSum
-\end{verbatim}
+\begin{alltt}
+data SafeArg {pc : ℕ} : Set where
+  Spar : Fin pc → SafeArg
+  Srec : SafeArg
+SafeProduct {pc} = List (SafeArg {pc})
+SafeSum {pc} = List (SafeProduct {pc})
+record SafeDatatype : Set where
+  constructor mk
+  field pc : ℕ
+        params : Vec Param pc
+        sop : SafeSum {pc}
+\end{alltt}
 
-To support data type parameters we include a list of types in
-\texttt{Params}.
-We allow the inclusion of raw quoted terms in \texttt{SK}, which might
-refer to these parameters.
-This introduces some uncertainty, because it may contain terms which
-can not be represented by Desc.
-Such problems will give type errors during the unquoting of the
-definition of \texttt{desc}. \todo{Explain the problem}
+In the \texttt{SafeDatatype} record, \texttt{pc} is the number of
+parameters (\emph{p}arameter \emph{c}ount).
+References to parameters with \texttt{Spar} use a De Bruijn index
+which is \texttt{pc} at maximum.
+The vector of \texttt{Param}s can be used for additional information
+for each parameter, currently this is only the visibility of the
+parameter but in the future it might be used to specify whether the
+type of the parameter is in Set₀ or Set₁ et cetera.
+
+The \texttt{SafeDatatype} for the Tree example of section
+\ref{sec:prototype-trees} looks like this:
+
+\begin{alltt}
+treeSdt : SafeDatatype
+treeSdt = mk 1 (param₀ visible ∷ [])
+               ([] ∷
+                (Spar zero ∷ Srec ∷ []) ∷
+                (Spar zero ∷ Srec ∷ Srec ∷ []) ∷ [])
+\end{alltt}
+
+We have defined a function
+\texttt{descFun}\definedin{ContextFree.One.DescFunction} which takes a 
+\texttt{SafeDatatype} and the data type parameters to return a Desc.
+The type of \texttt{descFun} is dependent on the declared parameters
+in the \texttt{SafeDatatype}.
+Applied to \texttt{treeSdt}, this function is pointwise equal to
+\texttt{desc} of section \ref{sec:prototype-trees}.
+
+\begin{alltt}
+treeDesc : Set → Desc
+treeDesc A = descFun treeSdt A
+
+testTreeDesc : ∀ A → descFun treeSdt A ≡
+  (`1 `+ `P₀ A `* `rec `* `1 `+ `P₀ A `* `rec `* `rec `* `1 `+ `0)
+testTreeDesc A = refl
+\end{alltt}
+
+Currently, we can not build a function which converts any
+\texttt{Desc} to a \texttt{SafeDatatype}.
+This is inherently impossible because \texttt{Desc} can be used to
+describe types which do not correspond to a single Agda data type.
+\todo{Explain more}
+
+\subsubsection{Unquoting}\label{sec:prototype-unquoting}
+
+\texttt{SafeDatatype} does not include any quoted names (or terms), so
+it is completely independent of the original datatype.
+While this is sufficient for \texttt{descFun}, we will need the name
+of the data type and the names of the constructors to be able to
+generate the definitions for the embedding-projection pair.
+For this purpose we have defined \texttt{NamedSafeDatatype}.
+
+\begin{alltt}
+NamedSafeProduct {pc} = (Name × List (SafeArg {pc}))
+NamedSafeSum {pc} = List (NamedSafeProduct {pc})
+record NamedSafeDatatype : Set where
+  constructor mk
+  field dtname : Name
+        pc : ℕ
+        params : Vec Param pc
+        sop : NamedSafeSum {pc}
+\end{alltt}
+
+Agda's reflection mechanism supports unquoting of function definitions
+with \texttt{unquoteDecl}.
+To do this, we need a \texttt{FunctionDef}\footnote{All the quoted
+  things are built-in in Agda, we will be using the names they are
+  given in the standard library.} containing the quoted type and
+clauses.
+
+To make recursive references and references to the \texttt{desc}
+function, we have to pass the names of \texttt{desc} and
+\texttt{to}/\texttt{from} to whichever function creates the function
+definition.
+All other names used in the function definitions are either in
+\texttt{SafeDatatype}, or globally available anyway (like \texttt{μ}
+and \texttt{\_,\_}).
+
+\begin{alltt}
+makeTo : (`to `desc : Name) → NamedSafeDatatype → FunctionDef
+makeFrom : (`from `desc : Name) → NamedSafeDatatype → FunctionDef
+\end{alltt}
+
+\texttt{makeTo} and \texttt{makeFrom} generate the function
+definitions, now we can unquote them.
+
+\begin{alltt}
+unquotedecl to = makeTo to (quote desc) namedsafedatatype
+unquotedecl from = makeFrom from (quote desc) namedsafedatatype
+\end{alltt}
+
+\begin{remark}
+In the current implementation we are not making full use of the fact
+that we have to/from-symmetry.
+\todo{Make unquoting nicer by using to/from-symmetry and explain a bit
+  more about the implementation.}
+\end{remark}
 
 \subsubsection[Quoting]{Quoting\definedin{ContextFree.One.Quoting}}
+\label{sec:prototype-quoting}
 
-Agda supports quoting through a few built-in constructs.
-There are primitives to get the type and definition of a given name:
+We have used the \texttt{NamedSafeDatatype}, but we still have to get
+it first.
+This is done by quoting an existing data type.
 
-\begin{verbatim}
-type         : Name → Type
-definition   : Name → Definition
-\end{verbatim}
-
-To use them, you need a \texttt{Name} which you can get with the
-\texttt{quote} keyword.
-A \texttt{Definition} can be anything which has a name, like
-functions, data types, records or constructors.
-If the definition gives us a data type, we can use 
-\texttt{constructors : Data-type → List Name} to get a list of names
-of the associated constructors.
-
-Since there are so many ways the quoting process can fail, we have
-defined an \texttt{Error}\definedin{Data.Error} type which supports
-logging and failure (it's a list of messages and a Maybe).
+There are many ways the quoting process can fail, so we have defined
+an \texttt{Error}\definedin{Data.Error} type which supports logging
+and failure.
+It is basically a list of messages combined with a Maybe.
 \texttt{Error} is an applicative functor and a monad, so we can manage
-the complexity quite well:
+the complexity quite well.
+Here is an example of functions using \texttt{Error}.
 
-\begin{verbatim}
-constructors <$> getDatatype (quote ListP)
- ≡ return (quote ListP.[] ∷ quote ListP._∷_ ∷ [])
-\end{verbatim}
+\begin{alltt}
+getDatatype : Name → Error Data-type
+getDatatype n with definition n
+getDatatype n | data-type x = return x
+getDatatype n | otherwise = log (showName n ++ " is not a data type") >> fail
 
-\todo{Explain why we have to pass the number of parameters}
+getConstructors : Name → Error (List Name)
+getConstructors n = constructors <\$> getDatatype n
+\end{alltt}
 
-\definedin{ContextFree.One.Quoting.Constructor}
+Every constructor can be quoted separately to a
+\texttt{NamedSafeProduct} with \texttt{quoteConstructor}\definedin{ContextFree.One.Quoting.Constructor}.
+The number of parameters is passed explicitly because we can not infer
+that from just the type of the constructor.
+The parameter count must be lower than or equal to the maximum number
+of allowed parameters as calculated by \texttt{paramCount}.
 
-quoteConstructor : Name → ⋯ → Error SafeProduct
-quoteDatatype : Name → 
+\begin{alltt}
+quoteConstructor : (`dt `c : Name)(pc : ℕ)
+  (pc≤ : pc ≤ paramCount (type `c)) → Error (NamedSafeProduct {pc})
+\end{alltt}
 
-qdt : SafeDatatype
-qdt = quoteDatatype! (quote ListP) 1
+\texttt{quoteConstructor} splits the type of the passed constructor
+name into its arguments and tries to convert each one into an
+\texttt{Srec} or \texttt{Spar}.
+The target is also checked to make sure the user is not trying to use
+indices (which are not supported yet).
+Applying \texttt{quoteConstructor} to \texttt{suc} indeed gives us the
+wanted result \texttt{Srec ∷ []}:
 
-\subsubsection{Unquoting}
+\begin{alltt}
+quoteConstructor (quote Nat) (quote suc) 0 z≤n ≡ return (quote suc , Srec ∷ [])
+\end{alltt}
 
-\todo[inline]{Prototype - Unquoting}
-We can unquote a \texttt{SafeDatatype} us
+Now we can use \texttt{quoteConstructor} to define a function which quotes
+a whole data type.
 
-makeDesc : SafeDatatype → FunctionDef
-makeTo : (`to : Name) → (`desc : Name) → SafeDatatype → FunctionDef
-makeFrom : (`from : Name) → (`desc : Name) → SafeDatatype → FunctionDef
+\begin{alltt}
+quoteDatatype : (`dt : Name)(pc : ℕ) → Error NamedSafeDatatype
+\end{alltt}
 
-unquoteDecl qdesc = makeDesc qdt
-unquoteDecl qto = makeTo qto (quote qdesc) qdt
-unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
+Whether \texttt{Error} is ok or has failed is always decidable.
+This means we can unwrap the value of the \texttt{Error} by using an
+implicit argument which witnesses that it is ok.
+When this is used and the quoting fails, the implicit argument can not
+be inferred and we get a type error.
+
+\begin{alltt}
+quoteDatatype! : (`dt : Name) (pc : ℕ)
+  {isOk : True (isOk? (quoteDatatype `dt pc))} → NamedSafeDatatype
+quoteDatatype! _ _ {isOk} = fromOk isOk
+\end{alltt}
+
+With this definition we can quote data types quite easily.
+
+\begin{alltt}
+nsdt : NamedSafeDatatype
+nsdt = quoteDatatype! (quote Tree) 1
+\end{alltt}
 
 \subsection{Results}\label{sec:prototype-results}
 
-Propose changes:
+The current version of the quoting library can be used like this:
 
-SafeDatatype : Set
-SafeDatatypeNames : SafeDatatype → Set
-NamedSafeDatatype : Set = Σ SafeDatatype SafeDatatypeNames
+\begin{alltt}
+nsdt : NamedSafeDatatype
+nsdt = quoteDatatype! (quote Tree) 1
 
-DescFun : SafeDatatype → Set = p₁ → ⋯ → pₙ → Desc
-descFun : (sd : SafeDatatype) → DescFun sd
+desc : DescFun (toSafeDatatype nsdt)
+desc = descFun (toSafeDatatype nsdt)
+unquoteDecl to = makeTo to (quote desc) nsdt
+unquoteDecl from = makeFrom from (quote desc) nsdt
+\end{alltt}
 
-makeTo : ⋯ → NamedSafeDatatype → FunctionDef
-makeFrom : ⋯ → NamedSafeDatatype → FunctionDef
+Even though it is not the one-liner we would like to have, the last
+four lines are always exactly the same so it seems like this could be
+automated quite easily.
 
-Make SafeDatatype truly safe by removing the Term's from it.
+The intermediate representation allows us to neatly separate quoting
+and unquoting.
+For the definition of desc we do not even use unquoting, which might
+make it easier to reason about operations on \texttt{SafeDatatype}s at
+some point. 
 
-\todo[inline]{Prototype - Conclusion}
-
-
-% \begin{tabular}{ l l l }
-%  & Agda-code & \texttt{Desc} \\ \hline
-% \multirow{2}{*}{⟦\_⟧arg} & \texttt{Self p₁⋯pₙ} & \texttt{`var} \\
-% & \texttt{A} & \texttt{`K A} \\
-% ⟦\_⟧prod & \texttt{a₁ → ⋯ → aₙ → Self p₁⋯pₙ}
-%   & \texttt{⟦a₁⟧arg `* ⋯ `* ⟦aₙ⟧arg `* `1 } \\
-% ⟦\_⟧sum & \vtop{
-%   \hbox{\strut\texttt{data Self p₁⋯pₙ : Set where}}
-%   \hbox{\strut\texttt{\ \ Con₁ : t₁}}
-%   \hbox{\strut\texttt{\ \ \ \ }⋮}
-%   \hbox{\strut\texttt{\ \ Conₙ : tₙ}}
-% } & \texttt{⟦t₁⟧prod `+ ⋯ `+ ⟦tₙ⟧prod `+ `0}\\
-% \end{tabular}
+As an experiment, the implementation of this library has given
+valuable insights in how to proceed with the thesis.

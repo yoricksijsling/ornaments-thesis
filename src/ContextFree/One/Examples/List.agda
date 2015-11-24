@@ -18,7 +18,7 @@ data ListP (A : Set) : Set where
   _∷_ : A → ListP A → ListP A
 
 desc : (A : Set) → Desc
-desc A = `1 `+ (`P₀ A `* `var `* `1) `+ `0
+desc A = `1 `+ (`P₀ A `* `rec `* `1) `+ `0
 
 to : (A : Set) → ListP A → μ (desc A)
 to A [] = ⟨ inj₁ tt ⟩

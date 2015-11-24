@@ -12,14 +12,35 @@
 % \definecolor{shadecolor}{rgb}{1,0.8,0.3}
 \definecolor{shadecolor}{rgb}{1.0,0.9,0.7}
 
-\usepackage{multirow}
+% \usepackage{multirow}
+
+\usepackage{alltt}
 
 \usepackage{amsthm}
-\newtheorem{theorem}{Theorem}
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{remark}{Remark}[section]
+\newtheorem{conjecture}{Conjecture}[section]
 \theoremstyle{definition}
-\newtheorem{definition}{Definition}
+% \newtheorem{example}{Example}[section]
+\newtheorem{examplex}{Example}[section]
+\newenvironment{example}
+  {\pushQED{\qed}\renewcommand{\qedsymbol}{$\triangle$}\examplex}
+  {\popQED\endexamplex}
+\newtheorem{definition}{Definition}[section]
 
-\newcommand{\definedin}[1]{\footnote{The accompanying code is in src/#1.agda}}
+\newcommand{\definedin}[1]{\footnote{Module: #1}}
+\newcommand{\args}[1]{\overline{#1}}
+\newcommand{\ttargs}[1]{\(\args{\texttt{#1}}\)}
+\newcommand{\ttunderline}[1]{\(\underline{\texttt{#1}}\)}
+\definecolor{ttemph1}{HTML}{BB0000}
+\definecolor{ttemph2}{HTML}{0000BB}
+\newcommand{\ttemph}[2]{%
+\ifnum#1=1\textcolor{ttemph1}{\textbf{#2}}%
+\else\ifnum#1=2\textcolor{ttemph2}{\textbf{#2}}%
+\else\textbf{#2}%
+\fi\fi}
+\newcommand{\Nat}{\textrm{Nat}} % or \mathit{N\!at}
+\newcommand{\Tree}{\textrm{Tree}}
 
 %--------------------------------------------------
 
@@ -67,8 +88,14 @@
 , BoldFont = xits-bold.otf
 , BoldItalicFont = xits-bolditalic.otf]{xits-regular.otf}
 \setmathfont[BoldFont = xits-mathbold.otf]{xits-math.otf}
-\setsansfont[Scale=MatchLowercase]{DejaVuSans.ttf}
-\setmonofont[Scale=MatchLowercase]{DejaVuSansMono.ttf}
+\setsansfont[Scale=MatchLowercase
+, ItalicFont = DejaVuSans-Oblique.ttf
+, BoldFont = DejaVuSans-Bold.ttf
+, BoldItalicFont = DejaVuSans-BoldOblique.ttf]{DejaVuSans.ttf}
+\setmonofont[Scale=MatchLowercase
+, ItalicFont = DejaVuSansMono-Oblique.ttf
+, BoldFont = DejaVuSansMono-Bold.ttf
+, BoldItalicFont = DejaVuSansMono-BoldOblique.ttf]{DejaVuSansMono.ttf}
 
 \newfontfamily{\xitsfont}[Scale=MatchLowercase]{xits-regular.otf}
 
@@ -79,6 +106,7 @@
 % \newunicodechar{●}{\textxits{•}}
 % \newunicodechar{⌷}{\textxits{$\vrectangle$}}
 % \newunicodechar{▱}{\textxits{\rotatebox[origin=c]{105}{▱}}}
+\newunicodechar{⊎}{\textxits{⊎}}
 
 %--------------------------------------------------
 

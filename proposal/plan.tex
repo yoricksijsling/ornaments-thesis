@@ -12,9 +12,6 @@ then we explain how we prioritize these milestones in section
 
 \subsubsection{Unquoting new data types}\label{sec:plan-new-types}
 
-The first step is to implement the proposed changes of section
-\ref{sec:prototype-results}. \todo{done?}
-
 In the current prototype we are able to quote a data type to a
 \texttt{SafeDatatype}.
 We want to be able to unquote a new data type from the
@@ -61,7 +58,7 @@ and we can experiment.
 \subsubsection{Strictly positive types}\label{sec:plan-spt}
 
 The prototype only supports arguments which refer to the data type
-itself or to a parameter.
+itself or to a Set₀ data type parameter.
 We would like to allow other kinds of terms in the arguments.
 For instance, functions in arguments would enable us to quote all
 strictly positive types.
@@ -85,7 +82,7 @@ description instead of on \texttt{SafeDatatype}.
 
 It would be nice if we could encode and quote dependently typed
 constructors.
-More real-world data types would then be supported by the library.
+More real-world data types could then be supported by the library.
 
 \subsubsection{Lifting functions over ornaments}\label{sec:plan-lifting}
 
