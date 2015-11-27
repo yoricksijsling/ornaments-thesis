@@ -10,12 +10,12 @@ infixr 4 _`*_
 
 -- One variable, not dependently typed
 data Desc : Set₁ where
-  `P₀ : (S : Set) → Desc
+  `P₀ : (S : Set₀) → Desc
   `0 : Desc
   `1 : Desc
   _`+_ : (A B : Desc) → Desc
   _`*_ : (A B : Desc) → Desc
-  `var : Desc
+  `rec : Desc
 
 ⟦_⟧ : Desc → Set → Set
 ⟦_⟧ (`P₀ S) X = S
@@ -23,7 +23,7 @@ data Desc : Set₁ where
 ⟦_⟧ `1 X = ⊤
 ⟦_⟧ (A `+ B) X = ⟦ A ⟧ X ⊎ ⟦ B ⟧ X
 ⟦_⟧ (A `* B) X = ⟦ A ⟧ X × ⟦ B ⟧ X
-⟦_⟧ `var X = X
+⟦_⟧ `rec X = X
 
 data μ (D : Desc) : Set where
   ⟨_⟩ : ⟦ D ⟧ (μ D) → μ D
@@ -38,7 +38,7 @@ open RawFunctor
                                                           (_<$>_ (⟦⟧-functor B) f) }
 ⟦⟧-functor (A `* B) = record { _<$>_ = λ f → Data.Product.map (_<$>_ (⟦⟧-functor A) f)
                                                               (_<$>_ (⟦⟧-functor B) f) }
-⟦⟧-functor `var = record { _<$>_ = λ f → f }
+⟦⟧-functor `rec = record { _<$>_ = λ f → f }
 
 
 open import Relation.Binary.PropositionalEquality using (_≡_)
