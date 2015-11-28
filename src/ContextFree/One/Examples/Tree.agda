@@ -38,6 +38,17 @@ from A (node1-β v xs) = node1-α v (from A xs)
 from A (node2-β v xs ys) = node2-α v (from A xs) (from A ys)
 from A absurd-β
 
+to-from : (A : Set) → ∀ x → from A (to A x) ≡ x
+to-from A leaf-α = refl
+to-from A (node1-α v xs) = cong (node1-α v) (to-from A xs)
+to-from A (node2-α v xs ys) = cong₂ (node2-α v) (to-from A xs) (to-from A ys)
+
+from-to : (A : Set) → ∀ x → to A (from A x) ≡ x
+from-to A leaf-β = refl
+from-to A (node1-β v xs) = cong (node1-β v) (from-to A xs)
+from-to A (node2-β v xs ys) = cong₂ (node2-β v) (from-to A xs) (from-to A ys)
+from-to A absurd-β
+
 qdt : NamedSafeDatatype
 qdt = quoteDatatype! (quote Tree) 1
 

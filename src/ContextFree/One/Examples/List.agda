@@ -20,23 +20,29 @@ data ListP (A : Set) : Set where
 desc : (A : Set) → Desc
 desc A = `1 `+ (`P₀ A `* `rec `* `1) `+ `0
 
+pattern nil-α = []
+pattern nil-β = ⟨ inj₁ tt ⟩
+pattern cons-α x xs = x ∷ xs
+pattern cons-β x xs = ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩
+pattern absurd-β = ⟨ inj₂ (inj₂ ()) ⟩
+
 to : (A : Set) → ListP A → μ (desc A)
-to A [] = ⟨ inj₁ tt ⟩
-to A (x ∷ xs) = ⟨ inj₂ (inj₁ (x , to A xs , tt)) ⟩
+to A nil-α = nil-β
+to A (cons-α x xs) = cons-β x (to A xs)
 
 from : (A : Set) → μ (desc A) → ListP A
-from A ⟨ inj₁ tt ⟩ = []
-from A ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = x ∷ from A xs
-from A ⟨ inj₂ (inj₂ ()) ⟩
+from A nil-β = []
+from A (cons-β x xs) = cons-α x (from A xs)
+from A absurd-β
 
 to-from : (A : Set) → ∀ x → from A (to A x) ≡ x
-to-from A [] = refl
-to-from A (x ∷ xs) = cong (_∷_ x) (to-from A xs)
+to-from A nil-α = refl
+to-from A (cons-α x xs) = cong (λ xs′ → cons-α x xs′) (to-from A xs)
 
 from-to : (A : Set) → ∀ x → to A (from A x) ≡ x
-from-to A ⟨ inj₁ tt ⟩ = refl
-from-to A ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = cong (λ v → ⟨ inj₂ (inj₁ (x , v , tt)) ⟩) (from-to A xs)
-from-to A ⟨ inj₂ (inj₂ ()) ⟩
+from-to A nil-β = refl
+from-to A (cons-β x xs) = cong (λ xs′ → cons-β x xs′) (from-to A xs)
+from-to A absurd-β
 
 isContextFree-ListP : ∀ A → IsContextFree (ListP A)
 isContextFree-ListP A = record { desc = desc A ; to = to A ; from = from A
@@ -63,10 +69,10 @@ testDesc : ∀{A} → qdesc A ≡ desc A
 testDesc = refl
 
 testTo : ∀{A} xs → qto A xs ≡ to A xs
-testTo [] = refl
-testTo (x ∷ xs) = cong (λ v → ⟨ inj₂ (inj₁ (x , v , tt)) ⟩) (testTo xs)
+testTo nil-α = refl
+testTo (cons-α x xs) = cong (cons-β x) (testTo xs)
 
 testFrom : ∀{A} xs → qfrom A xs ≡ from A xs
-testFrom ⟨ inj₁ tt ⟩ = refl
-testFrom ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩ = cong (_∷_ x) (testFrom xs)
-testFrom ⟨ inj₂ (inj₂ ()) ⟩
+testFrom nil-β = refl
+testFrom (cons-β x xs) = cong (cons-α x) (testFrom xs)
+testFrom absurd-β

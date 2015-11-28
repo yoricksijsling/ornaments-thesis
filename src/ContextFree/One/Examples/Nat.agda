@@ -25,11 +25,11 @@ from ⟨ inj₂ (inj₂ ()) ⟩
 
 to-from : ∀ x → from (to x) ≡ x
 to-from zero = refl
-to-from (suc x) = cong suc (to-from x)
+to-from (suc n) = cong suc (to-from n)
 
 from-to : ∀ x → to (from x) ≡ x
 from-to ⟨ inj₁ tt ⟩ = refl
-from-to ⟨ inj₂ (inj₁ n) ⟩ = cong (λ v → ⟨ inj₂ (inj₁ (v , tt)) ⟩) (from-to (proj₁ n))
+from-to ⟨ inj₂ (inj₁ (n , tt)) ⟩ = cong (λ v → ⟨ inj₂ (inj₁ (v , tt)) ⟩) (from-to n)
 from-to ⟨ inj₂ (inj₂ ()) ⟩
 
 isContextFree-ℕ : IsContextFree ℕ
