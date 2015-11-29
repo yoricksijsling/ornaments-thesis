@@ -5,22 +5,27 @@ We know that the quoting mechanism can be hard to work with, and is
 incomplete in some ways.
 The quoting mechanism is not well documented and published literature
 does not teach us everything there is to know about it.
+
 For this reason, and to get some concrete experience with generic
 programming in Agda, we have built a prototype for a quoting library.
+The quoting library is able to look at an existing data type and give
+a description of it.
+It also generates definitions for the embedding-projection pair which
+can be unquoted.
 
-The main purpose of the prototype is to be able to fully automatically
-generate a description and embedding-projection pair for a given data
-type.
-
-\subsection{Context-free types with a single fix point}
+\subsection{Universe}
 
 To keep things simple, we have chosen a fairly simple universe for
 context-free types with a single fix
 point\definedin{ContextFree.One.Desc}.
-It is similar to the one described in section
-\ref{sec:lit-cft-single}, but we have added support for data type
-parameters of kind \texttt{Set₀} by introducing the \texttt{`P₀}
-constructor.
+
+\subsubsection{Parameters}
+
+Many practical data types have data type parameters, so we wanted to
+support this in the library.
+Parameters are encoded by introducing the \texttt{`P₀} constructor,
+which describes a data type parameter of kind \texttt{Set₀}, resulting
+in the following \texttt{Desc} type:
 
 \begin{alltt}
 data Desc : Set₁ where
@@ -32,12 +37,47 @@ data Desc : Set₁ where
   `rec : Desc
 \end{alltt}
 
+The interpretation of \texttt{`P₀} is simple:
+
+\begin{alltt}
+⟦ `P₀ S ⟧ X = S
+\end{alltt}
+
+\begin{remark}
+We choose \emph{not} to limit the parameters to types which we can
+quote to a description.
+If the original data type does not impose any restrictions for a
+parameter, the description should not impose any restrictions either.
+\end{remark}
+
+A drawback of this way of encoding parameters is that \texttt{Desc}
+is in \texttt{Set₁}.
+Even worse, if we might want to add support for parameters in
+\texttt{Set₁} and higher, the level of \texttt{Desc} would increase
+too.
+The choice for this encoding is mostly pragmatic; it is simply the one
+which we have gotten to work.
+
+Alternatively, it might be possible to move the \texttt{Set} argument
+to the parameters of \texttt{Desc} and then refer to them in the
+constructor:
+
+\begin{alltt}
+data Desc {pc : ℕ}(params : Vec Set pc) : Set where
+  `P₀ : Fin pc → Desc params
+  ...
+\end{alltt}
+
+This neatly places \texttt{Desc} in \texttt{Set₀} but it is not
+easy to work with.
+Up to this point we have not found fundamental reasons why this would
+not work, so it is definitely a change to consider in future work.
+
 The quoting library should generate three functions; one which gives
 the description within the universe, and two functions which convert
 values between the original data type and the interpretation of the
 description, commonly referred to as an embedding-projection pair.
-
-All the functions are parameterised by the data type parameters.
+All these functions are parameterised by the data type parameters.
 A bunch of zero or more parameters is succinctly written as
 \texttt{\ttargs{p}}.
 
@@ -55,17 +95,18 @@ to-from : (\ttargs{p} : Set₀) → ∀ x → from \ttargs{p} (to \ttargs{p} x) 
 from-to : (\ttargs{p} : Set₀) → ∀ x → to \ttargs{p} (from \ttargs{p} x) ≡ x
 \end{alltt}
 
-\subsubsection[Example for natural numbers]
-  {Example for natural numbers\definedin{ContextFree.One.Examples.Nat}}
+\subsubsection{Examples}
 
 We will first show how we can manually define \texttt{desc},
 \texttt{to} and \texttt{from} for some example data types.
 The function definitions are picked carefully to have a very
-regular structure, so we can generate them automatically later on.
+regular structure, so we can generate them automatically later.
 
+\begin{example}[natural numbers]
 Natural numbers have two constructors, zero and suc, the first has no
 arguments and the latter has one recursive position.
-In Agda we would define them with a data type:
+In Agda we would define them with a data
+type\definedin{ContextFree.One.Examples.Nat}:
 
 \begin{alltt}
 data ℕ : Set where
@@ -76,7 +117,7 @@ data ℕ : Set where
 Every data type can be expressed as a sum of products: $\Nat = μX. 1 +
 X$.
 Each product can freely be terminated with a $1$ and each sum with
-$0$.
+$0$, so an equivalent expression is $\Nat = μX. 1 + (X * 1) + 0$.
 The $μ$ is implicit in our universe, so we can remove it and use
 \texttt{`rec} to refer to the variable which was bound.
 
@@ -108,12 +149,11 @@ from ⟨ inj₂ (inj₂ ()) ⟩
 It is easy to prove that \texttt{to} and \texttt{from} are inverses of
 each other.
 Those proofs are omitted here, as they are not very interesting.
+\end{example}
 
-\subsubsection[Example for trees]
-  {Example for trees\definedin{ContextFree.One.Examples.Tree}}
-\label{sec:prototype-trees}
-
-We will take a look at how trees are embedded in our universe.
+\begin{example}[trees]
+We will take a look at how trees are embedded in our
+universe\definedin{ContextFree.One.Examples.Tree}.
 
 \begin{alltt}
 data Tree (A : Set) : Set where
@@ -146,6 +186,7 @@ from A ⟨ inj₂ (inj₂ (inj₁ (v , xs , ys , tt))) ⟩
   = node2 v (from A xs) (from A ys)
 from A ⟨ inj₂ (inj₂ (inj₂ ())) ⟩
 \end{alltt}
+\end{example}
 
 \subsubsection{Structure of embedding-projection pair}
 
@@ -157,7 +198,7 @@ with each other.
 
 \begin{alltt}
 to A (\ttemph1{node1 v} xs) = \ttemph2{⟨ inj₂ (inj₁ (v , }to A xs\ttemph2{ , tt)) ⟩}
-from A \ttemph2{⟨ inj₂ (inj₁ (v , }xs\ttemph2{ , tt)) ⟩} = \ttemph1{node1 v (}from A xs\ttemph1{)}
+from A \ttemph2{⟨ inj₂ (inj₁ (v , }xs\ttemph2{ , tt)) ⟩} = \ttemph1{node1 v} (from A xs)
 \end{alltt}
 
 \begin{definition}[to/from symmetry]
@@ -178,7 +219,7 @@ from \ttargs{p} (\ttemph2{β} y₁⋯yₙ) = \ttemph1{α} (from \ttargs{p} y₁)
 \end{alltt}
 \end{definition}
 
-To fully define the embedding-projection pair, we only have to qive
+To fully define the embedding-projection pair, we only have to give
 suitable definitions for \texttt{α} and \texttt{β} for every
 constructor.
 The pattern synonyms for the $i$th constructor (starting with $i=0$)
@@ -230,6 +271,19 @@ A similar argument can be used to show that
 So we know that as long as the embedding-projection pair is built such
 that it has to/from symmetry, we should always be able to prove that
 \texttt{to} and \texttt{from} are inverses.
+In fact, the patterns \texttt{α} and \texttt{β} can be reused to give
+the clauses for \texttt{to-from} and \texttt{from-to}:
+
+\begin{alltt}
+to-from \ttargs{p} (α x₁⋯xₙ) = congₙ α (to-from \ttargs{p} x₁) ⋯ (to-from \ttargs{p} xₙ)
+from-to \ttargs{p} (β x₁⋯xₙ) = congₙ β (from-to \ttargs{p} x₁) ⋯ (from-to \ttargs{p} xₙ)
+\end{alltt}
+
+Where \texttt{congₙ} is of type
+\texttt{(f : A₁ → ⋯ → Aₙ → B) → x₁ ≡ y₁ → ⋯ → xₙ ≡ yₙ → f x₁ ⋯ xₙ ≡ f y₁ ⋯ yₙ}
+for the right implicit variables.
+The generation of the function definitions for \texttt{to-from} and
+\texttt{from-to} are not implemented in the prototype.
 
 \subsection{Implementation}\label{sec:prototype-implementation}
 
@@ -277,7 +331,7 @@ which is \texttt{pc} at maximum.
 The vector of \texttt{Param}s can be used for additional information
 for each parameter, currently this is only the visibility of the
 parameter but in the future it might be used to specify whether the
-type of the parameter is in Set₀ or Set₁ et cetera.
+type of the parameter is in \texttt{Set₀} or \texttt{Set₁} et cetera.
 
 The \texttt{SafeDatatype} for the Tree example of section
 \ref{sec:prototype-trees} looks like this:

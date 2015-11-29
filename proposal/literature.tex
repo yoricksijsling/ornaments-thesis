@@ -7,8 +7,9 @@ We will give an overview of generic programming, making use of the
 strengths of dependent types in particular.
 For our work we will be using reflection, which is discussed in
 section \ref{sec:lit-reflection}.
-Finally we will describe what ornaments do in section
+Finally we will describe ornaments in section
 \ref{sec:lit-ornaments}.
+\todo{everything included?}
 
 % PAPERS
 
@@ -44,18 +45,18 @@ If the number of inhabitants of a type is $n$, we might say that the
 type is isomorphic to \texttt{Fin n}, where \texttt{Fin n} can
 represent all natural numbers up to $n$.
 
-A practical approach to describing finite types is by expressing them
-using four operations: $0$, $1$, $+$ and $*$ \cite{altenkirch06}.
-$0$ and $1$ are the empty and unit type respectively.
-$+$ represents a choice and $*$ represents a pair.
+A practical way of describing finite types is by expressing them with
+four constructors \cite{altenkirch06}:
+$0$ and $1$ are for the empty and unit type respectively.
+$*$ is used for products and $+$ for coproducts (sums).
 This is formalized in Agda with the \AD{Desc} data type:
 \todo{reference universes Martin-Löf 1984}
 
 \InsertCodeN{finite-desc}
 
 We write an interpretation function which converts descriptions to a
-type of which the inhabitants correspond with the inhabitants of the
-described type.
+type of which the inhabitants correspond uniquely to the inhabitants
+of the described type.
 
 \InsertCode{finite-interpretation}
 
@@ -67,18 +68,19 @@ The equivalent description in our universe is simply \texttt{boolDesc
 Interpretation of that description results in the type
 \texttt{⟦ boolDesc ⟧ ≡ (⊤ ⊎ ⊤) × (⊤ ⊎ ⊤)}.
 It is easy to verify that every inhabitant of this type corresponds
-with an inhabitant of a pair of two booleans, they are isomorphic.
+uniquely to an inhabitant of a pair of two booleans; they are
+isomorphic.
 \end{example}
 
-If we have some data type in our host language which corresponds with
+If we have some data type in our host language which corresponds to
 some description, we can relate the two by providing an
 embedding-projection pair.
 
-\begin{definition}[Embedding-projection pair]
+\begin{definition}[Embedding-projection pair for finite types]\label{def:ep-pair-finite}
   An \emph{embedding-projection pair} is a pair of functions
-  translating between the interpretation of a description \texttt{μ ⟦
-    D ⟧} and the corresponding data type \texttt{X}.
-  They have the types \texttt{X → μ ⟦ D ⟧} and \texttt{μ ⟦ D ⟧ → X}.
+  translating between the interpretation of a description \texttt{⟦ D
+    ⟧} and the corresponding data type \texttt{X}.
+  They have the types \texttt{X → ⟦ D ⟧} and \texttt{⟦ D ⟧ → X}.
 \end{definition}
 
 To really make sure that the embedding-projection pair is correct, a
@@ -87,7 +89,7 @@ proof should be given that the functions are each others inverses.
 \subsection{References to definitions}
 
 Not every finite type can be directly translated to an algebraic data
-type in a language like Agda.
+type in a language like Agda.\todo{explanation is unclear}
 An algebraic data types describes exactly one sum of products, where
 finite types allow any nesting of products and sums.
 This is easily fixed by allowing references to other defined types.
@@ -96,7 +98,7 @@ then be written as a bunch of algebraic data types.
 
 \begin{example}[Pair of booleans data type]
 The pair of booleans type is not a sum of products, so we factor out
-the boolean type and write $bool = 1 + 1$ and $pairOfBools = bool *
+the boolean type and write $bool = 1 + 1$ and $\PairOfBools = bool *
 bool$.
 Now these types can be written as Agda types.
 
@@ -120,13 +122,13 @@ We could add such support by adding a \texttt{`K} constructor of type
 
 We can extend our definition of finite types to context-free types by
 adding a $μ$ operator to construct inductive types.
-For instance, $Nat$ can be expressed as $Nat = μX. 1 + x$ and List as $List
-A = μX. 1 + A × X$.
-Context-free types also allow multiple variable bindings, rose trees
+For instance, $\Nat$ can be expressed as $\Nat = μX. 1 + x$ and List
+as $List A = μX. 1 + A × X$.
+Context-free types also allow multiple variable bindings; rose trees
 can be expressed as $RT A = μX. List (A × X) = μX. μY. 1 + (A × X) × Y$.
 
 To represent these types we have to be able to bind variables.
-Following Altenkirch et al \cite{altenkirch06}), we might expand the
+Following Altenkirch et al \cite{altenkirch06}, we might expand the
 definition of \AD{Desc} in listing \ref{code:finite-desc} to represent
 these operations.
 We introduce a \AD{ℕ} index to indicate the number of free variables.
@@ -162,12 +164,21 @@ Note that in general fix points do not necessarily terminate, so they
 do not pass Agda's termination checker.
 Therefore we use a fix point construction specialised to
 the interpretation function \AF{⟦\_⟧}.
-The termination checker can inspect the definition of \AF{⟦\_⟧} to see
+The termination checker inspects the definition of \AF{⟦\_⟧} to see
 that none of the clauses introduce unbounded recursion.
+
+With the addition of \texttt{μ} we have to adjust our notion of
+embedding-projection pairs (definition \ref{def:ep-pair-finite}).
+\begin{definition}[Embedding-projection pair for context-free types]
+  An \emph{embedding-projection pair} is a pair of functions
+  translating between the interpretation of a description \texttt{μ ⟦
+    D ⟧} and the corresponding data type \texttt{X}.
+  They have the types \texttt{X → μ ⟦ D ⟧} and \texttt{μ ⟦ D ⟧ → X}.
+\end{definition}
 
 \begin{example}[Description of naturals]
 The data type for naturals requires recursion, and can now be
-described in our universe with \texttt{natDesc = `1 `+ `var}
+described in our universe with \texttt{natDesc = `1 `+ `var}.
 To see how this description relates to the original data type, we give
 the embedding-projection pair:
 
@@ -185,6 +196,7 @@ from ⟨ inj₂ (n , tt) ⟩ = suc (from n)
 This formalization of context free types is limited because it only
 allows a single fix point, and therefore can only describe types with
 a single variable binding $μ$.
+\todo{we do support parameters, example of list}
 
 \subsubsection{Multiple fixpoints}\label{sec:lit-cft-multi}
 
@@ -194,10 +206,10 @@ such types into smaller ones which all have only one variable
 binding.
 
 \begin{example}
-  The type of lists of natural numbers is $NatList = μX. 1 + (μY. 1 +
+  The type of lists of natural numbers is $\NatList = μX. 1 + (μY. 1 +
   Y) × X$.
-  We can extract the type $Nat = μY. 1 + Y$, leaving us with $NatList
-  = μX. 1 + Nat × X$.
+  We can extract the type $\Nat = μY. 1 + Y$, leaving us with $\NatList
+  = μX. 1 + \Nat × X$.
   Both types can be described in our universe if \texttt{Desc} has a
   suitable \texttt{`K} constructor.
 \end{example}
@@ -205,7 +217,7 @@ binding.
 We can thus describe all context-free types, but we might need
 multiple descriptions.
 
-\subsection{Universe for inductive families}{sec:lit-families}
+\subsection{Universe for inductive families}\label{sec:lit-families}
 
 The descriptions we have seen do not allow inductive families yet.
 An inductive family, indexed by some \texttt{I : Set} can be supported
