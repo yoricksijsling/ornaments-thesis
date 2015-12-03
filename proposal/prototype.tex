@@ -497,7 +497,7 @@ nsdt : NamedSafeDatatype
 nsdt = quoteDatatype! (quote Tree) 1
 \end{alltt}
 
-\subsection{Results}\label{sec:prototype-results}
+\subsection{Results and discussion}\label{sec:prototype-results}
 
 The current version of the quoting library can be used like this:
 
@@ -520,6 +520,8 @@ and unquoting.
 For the definition of desc we do not even use unquoting, which might
 make it easier to reason about operations on \texttt{SafeDatatype}s at
 some point. 
+
+\todo{Maybe fuse SafaDatatype and Desc}
 
 As an experiment, the implementation of this library has given
 valuable insights in how to proceed with the thesis.
