@@ -30,19 +30,26 @@ cleancode:
 
 # Proposal --------------------
 
-proposal: AGDA_PARAMS = $(INCLUDE_PARAMS) --latex-dir=lagda-out --latex --allow-unsolved-metas
+PROPOSAL_TEX=main introduction literature prototype overview plan
+
+proposal: AGDA_PARAMS = $(INCLUDE_PARAMS) --latex-dir=src-tex --latex --allow-unsolved-metas
 proposal: proposal/main.pdf
 
-lagda-out/%.tex: $(SRC)/%.lagda
-	agda $(AGDA_PARAMS) $<
+src-tex:
+	mkdir -p src-tex
+src-tex/%.tex: $(SRC)/%.lagda src-tex
+	lhs2TeX --agda -o $@ $<
 
-proposal/main.pdf: $(MODULES:%=lagda-out/%.tex) proposal/agda.sty proposal/*.tex proposal/main.bib
+proposal/%.tex: proposal/%.lagda
+	lhs2TeX --agda -o $@ $<
+
+proposal/main.pdf: $(PROPOSAL_TEX:%=proposal/%.tex) $(MODULES:%=src-tex/%.tex) proposal/agda.sty proposal/main.bib
 	cd proposal; latexmk -xelatex -outdir=out main.tex
 	cp proposal/out/main.pdf proposal/main.pdf
 	rm proposal/out/main.pdf
 
 cleanproposal:
-	rm -rf lagda-out
+	rm -rf src-tex
 	rm -rf proposal/out
 
 

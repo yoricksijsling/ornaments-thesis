@@ -1,22 +1,24 @@
 \documentclass[a4paper]{article}
 
 \usepackage[english]{babel}
-
 \usepackage{graphicx}
 \usepackage{hyperref}
-
 \usepackage[draft]{todonotes}
 % \usepackage[disable]{todonotes}
-
 \usepackage{framed,color}
-% \definecolor{shadecolor}{rgb}{1,0.8,0.3}
+% \usepackage{multirow}
+\usepackage{alltt}
+\usepackage{amsthm}
+
+%include lhs2TeX.fmt
+%include lhs2TeX.sty
+%include polycode.fmt
+
+
+% Frame color
 \definecolor{shadecolor}{rgb}{1.0,0.9,0.7}
 
-% \usepackage{multirow}
-
-\usepackage{alltt}
-
-\usepackage{amsthm}
+% Theorem styles
 \newtheorem{theorem}{Theorem}[section]
 \newtheorem{remark}{Remark}[section]
 \newtheorem{conjecture}{Conjecture}[section]
@@ -71,17 +73,17 @@
 \newcommand{\ARR}{\AgdaRecord}
 \newcommand{\AP}{\AgdaPostulate}
 
-\newcommand{\InsertCodeInline}[2][Proposal.tex]{\codeinlinetrue\ExecuteMetaData[../lagda-out/#1]{#2}}
+\newcommand{\InsertCodeInline}[2][Proposal.tex]{\codeinlinetrue\ExecuteMetaData[../src-tex/#1]{#2}}
 \newcommand{\InsertCode}[2][Proposal.tex]{
   \codeinlinefalse
   \medskip
-  \ExecuteMetaData[../lagda-out/#1]{#2}
+  \ExecuteMetaData[../src-tex/#1]{#2}
 
   \medskip}
 \newcommand{\InsertCodeN}[2][Proposal.tex]{
   \codeinlinefalse
   \medskip
-  \ExecuteMetaData[../lagda-out/#1]{#2}\refstepcounter{codeblock}\begin{center}Listing \thecodeblock\end{center}\label{code:#2}%
+  \ExecuteMetaData[../src-tex/#1]{#2}\refstepcounter{codeblock}\begin{center}Listing \thecodeblock\end{center}\label{code:#2}%
 
   \medskip}
 
@@ -137,6 +139,8 @@
 \input{plan.tex}
 
 \bibliographystyle{plain}
+% \bibliographystyle{alpha}
+% \bibliographystyle{apa}
 \bibliography{main}
 
 \end{document}

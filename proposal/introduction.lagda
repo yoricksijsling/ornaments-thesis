@@ -1,3 +1,6 @@
+%include lhs2TeX.fmt
+%include polycode.fmt
+
 \section{Introduction}\label{sec:introduction}
 
 With the introduction of indexed data types (GADTs), functional
@@ -18,7 +21,7 @@ work on the first data type to functions which work on the
 second\cite{dagand14-transporting, williams14}.
 For instance to transform addition on natural numbers to append on lists.
 
-This topic has been explored and formalised using category theory
+This topic has been explored and formalized using category theory
 \cite{dagand12, kogibbons13} and in Agda \cite{dagand14-transporting,
   dagand14-essence}.
 The Agda implementations require you to describe your data types

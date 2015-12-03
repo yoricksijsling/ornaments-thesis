@@ -1,3 +1,6 @@
+%include lhs2TeX.fmt
+%include polycode.fmt
+
 \section{Literature review}\label{sec:lit}
 
 Ornaments are strongly related to generic programming.
@@ -43,7 +46,7 @@ Finally we will describe ornaments in section
 Finite types are all those types which have a finite number of
 inhabitants.
 If the number of inhabitants of a type is $n$, we might say that the
-type is isomorphic to \texttt{Fin n}, where \texttt{Fin n} can
+type is isomorphic to |Fin n|, where |Fin n| can
 represent all natural numbers up to $n$.
 
 A practical way of describing finite types is by defining them with a
@@ -57,23 +60,35 @@ $0$ and $1$ are for the empty and unit type respectively.
 $*$ is used for products and $+$ for coproducts (sums).
 
 This can be formalized as a universe construction\cite{martinloef84}
-in Agda with the \AD{Desc} data type:
+in Agda with the |Desc| data type:
 
-\InsertCodeN{finite-desc}
+\begin{code}
+data Desc : Set where
+  `0 : Desc
+  `1 : Desc
+  _`+_ : (A B : Desc) → Desc
+  _`*_ : (A B : Desc) → Desc
+\end{code}
 
 We write an interpretation function which converts descriptions to a
 type of which the inhabitants correspond uniquely to the inhabitants
 of the described type.
 
-\InsertCode{finite-interpretation}
+\begin{code}
+⟦_⟧ : Desc → Set
+⟦ `0 ⟧ = ⊥
+⟦ `1 ⟧ = ⊤
+⟦ A `+ B ⟧ = ⟦ A ⟧ ⊎ ⟦ B ⟧
+⟦ A `* B ⟧ = ⟦ A ⟧ × ⟦ B ⟧
+\end{code}
 
 \begin{example}[Description of a pair of booleans]
 As a finite type, a pair of two booleans can be expressed as
 $\PairOfBools = (1 + 1) * (1 + 1)$.
 The equivalent description in our universe is simply
-\texttt{pairOfBoolsDesc = (`1 `+ `1) `* (`1 `+ `1)}.
-Interpretation of that description results in the type
-\texttt{⟦ pairOfBoolsDesc ⟧ ≡ (⊤ ⊎ ⊤) × (⊤ ⊎ ⊤)}.
+|pairOfBoolsDesc = (`1 `+ `1) `* (`1 `+ `1)|.
+Interpretation of that description, |⟦ pairOfBoolsDesc ⟧|,
+results in the type \texttt{(⊤ ⊎ ⊤) × (⊤ ⊎ ⊤)}.
 It is easy to verify that every inhabitant of this type corresponds
 uniquely to an inhabitant of a pair of two booleans; they are
 isomorphic.

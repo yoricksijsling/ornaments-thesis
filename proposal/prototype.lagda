@@ -1,3 +1,6 @@
+%include lhs2TeX.fmt
+%include polycode.fmt
+
 \section{Experimental study: Quoting library}\label{sec:prototype}
 
 For this thesis we will be using quoting in Agda.

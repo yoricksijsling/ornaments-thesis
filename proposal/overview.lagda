@@ -1,3 +1,6 @@
+%include lhs2TeX.fmt
+%include polycode.fmt
+
 \section{Proposal overview}\label{sec:proposal-overview}
 
 With increasing usage of GADTs, with logical invariants encoded in

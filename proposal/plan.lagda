@@ -1,3 +1,6 @@
+%include lhs2TeX.fmt
+%include polycode.fmt
+
 \section{Plan}\label{sec:plan}
 
 In the first phase of the thesis project we have studied the
