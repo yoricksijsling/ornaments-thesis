@@ -12,25 +12,31 @@ open import Data.Sum
 open import Relation.Binary.PropositionalEquality
 
 desc : Desc
-desc = `1 `+ (`rec `* `1) `+ `0
+desc = `1 `+ (`var `* `1) `+ `0
+
+pattern zero-α = zero
+pattern zero-β = ⟨ inj₁ tt ⟩
+pattern suc-α n = suc n
+pattern suc-β n = ⟨ inj₂ (inj₁ (n , tt)) ⟩
+pattern absurd-β = ⟨ inj₂ (inj₂ ()) ⟩
 
 to : ℕ → μ desc
-to zero = ⟨ inj₁ tt ⟩
+to zero = zero-β
 to (suc n) = ⟨ inj₂ (inj₁ (to n , tt)) ⟩
 
 from : μ desc → ℕ
-from ⟨ inj₁ tt ⟩ = zero
-from ⟨ inj₂ (inj₁ (n , tt)) ⟩ = suc (from n)
-from ⟨ inj₂ (inj₂ ()) ⟩
+from zero-β = zero-α
+from (suc-β n) = suc-α (from n)
+from absurd-β
 
 to-from : ∀ x → from (to x) ≡ x
-to-from zero = refl
-to-from (suc n) = cong suc (to-from n)
+to-from zero-α = refl
+to-from (suc-α n) = cong suc-α (to-from n)
 
 from-to : ∀ x → to (from x) ≡ x
-from-to ⟨ inj₁ tt ⟩ = refl
-from-to ⟨ inj₂ (inj₁ (n , tt)) ⟩ = cong (λ v → ⟨ inj₂ (inj₁ (v , tt)) ⟩) (from-to n)
-from-to ⟨ inj₂ (inj₂ ()) ⟩
+from-to zero-β = refl
+from-to (suc-β n) = cong suc-β (from-to n)
+from-to absurd-β
 
 isContextFree-ℕ : IsContextFree ℕ
 isContextFree-ℕ = record { desc = desc ; to = to ; from = from
@@ -57,10 +63,10 @@ testDesc : qdesc ≡ desc
 testDesc = refl
 
 testTo : ∀ n → qto n ≡ to n
-testTo zero = refl
-testTo (suc n) = cong (λ v → ⟨ inj₂ (inj₁ (v , tt)) ⟩) (testTo n)
+testTo zero-α = refl
+testTo (suc-α n) = cong suc-β (testTo n)
 
 testFrom : ∀ n → qfrom n ≡ from n
-testFrom ⟨ inj₁ tt ⟩ = refl
-testFrom ⟨ inj₂ (inj₁ (n , tt)) ⟩ = cong suc (testFrom n)
-testFrom ⟨ inj₂ (inj₂ ()) ⟩
+testFrom zero-β = refl
+testFrom (suc-β n) = cong suc-α (testFrom n)
+testFrom absurd-β

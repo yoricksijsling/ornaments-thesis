@@ -17,7 +17,7 @@ data Tree (A : Set) : Set where
   node2 : A → Tree A → Tree A → Tree A
 
 desc : (A : Set) → Desc
-desc A = `1 `+ (`P₀ A `* `rec `* `1) `+ (`P₀ A `* `rec `* `rec `* `1) `+ `0
+desc A = `1 `+ (`P₀ A `* `var `* `1) `+ (`P₀ A `* `var `* `var `* `1) `+ `0
 
 pattern leaf-α = leaf
 pattern leaf-β = ⟨ inj₁ tt ⟩
@@ -62,6 +62,6 @@ testDesc : ∀{A} → qdesc A ≡ desc A
 testDesc = refl
 
 testTo : ∀{A} t → qto A t ≡ to A t
-testTo leaf = refl
-testTo (node1 v xs) = cong (λ xs′ → ⟨ inj₂ (inj₁ (v , xs′ , tt)) ⟩) (testTo xs)
-testTo (node2 v xs ys) = cong₂ (λ xs′ ys′ → ⟨ inj₂ (inj₂ (inj₁ (v , xs′ , ys′ , tt))) ⟩) (testTo xs) (testTo ys)
+testTo leaf-α = refl
+testTo (node1-α v xs) = cong (node1-β v) (testTo xs)
+testTo (node2-α v xs ys) = cong₂ (node2-β v) (testTo xs) (testTo ys)

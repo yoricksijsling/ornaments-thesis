@@ -37,7 +37,7 @@ private
     argDesc : SafeArg {pc} → Desc
     argDesc (Spar i) with lookupParam i ptup
     argDesc (Spar i) | param₀ v , p = `P₀ p
-    argDesc Srec = `rec
+    argDesc Srec = `var
     productDesc : SafeProduct → Desc
     productDesc = foldr (_`*_ ∘′ argDesc) `1
 
@@ -75,5 +75,5 @@ module _ where
   treeDesc A = descFun treeSdt A
 
   testTreeDesc : ∀ A → descFun treeSdt A ≡
-    (`1 `+ `P₀ A `* `rec `* `1 `+ `P₀ A `* `rec `* `rec `* `1 `+ `0)
+    (`1 `+ `P₀ A `* `var `* `1 `+ `P₀ A `* `var `* `var `* `1 `+ `0)
   testTreeDesc A = refl

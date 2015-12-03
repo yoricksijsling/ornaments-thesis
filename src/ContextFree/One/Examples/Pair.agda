@@ -17,19 +17,23 @@ data Pair (A B : Set) : Set where
 desc : (A B : Set) → Desc
 desc A B = `P₀ A `* `P₀ B `* `1 `+ `0
 
+pattern α a b = pair a b
+pattern β a b = ⟨ inj₁ (a , b , tt) ⟩
+pattern absurd-β = ⟨ inj₂ () ⟩
+
 to : (A B : Set) → Pair A B → μ (desc A B)
-to A B (pair a b) = ⟨ inj₁ (a , b , tt) ⟩
+to A B (α a b) = β a b
 
 from : (A B : Set) → μ (desc A B) → Pair A B
-from A B ⟨ inj₁ (a , b , tt) ⟩ = pair a b
-from A B ⟨ inj₂ () ⟩
+from A B (β a b) = α a b
+from A B absurd-β
 
 to-from : (A B : Set) → ∀ x → from A B (to A B x) ≡ x
-to-from A B (pair a b) = refl
+to-from A B (α a b) = refl
 
 from-to : (A B : Set) → ∀ x → to A B (from A B x) ≡ x
-from-to A B ⟨ inj₁ (a , b , tt) ⟩ = refl
-from-to A B ⟨ inj₂ () ⟩
+from-to A B (β a b) = refl
+from-to A B absurd-β
 
 isContextFree-Pair : ∀ A B → IsContextFree (Pair A B)
 isContextFree-Pair A B = record { desc = desc A B ; to = to A B ; from = from A B
@@ -55,8 +59,8 @@ testDesc : ∀{A B} → qdesc A B ≡ desc A B
 testDesc = refl
 
 testTo : ∀{A B} x → qto A B x ≡ to A B x
-testTo (pair a b) = refl
+testTo (α a b) = refl
 
 testFrom : ∀{A B} x → qfrom A B x ≡ from A B x
-testFrom ⟨ inj₁ x ⟩ = refl
-testFrom ⟨ inj₂ () ⟩
+testFrom (β a b) = refl
+testFrom absurd-β

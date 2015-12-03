@@ -17,19 +17,23 @@ data Unit : Set where
 desc : Desc
 desc = `1 `+ `0
 
+pattern α = u
+pattern β = ⟨ inj₁ tt ⟩
+pattern absurd-β = ⟨ inj₂ () ⟩
+
 to : Unit → μ desc
-to u = ⟨ inj₁ tt ⟩
+to α = β
 
 from : μ desc → Unit
-from ⟨ inj₁ tt ⟩ = u
-from ⟨ inj₂ () ⟩
+from β = α
+from absurd-β
 
 to-from : ∀ x → from (to x) ≡ x
-to-from u = refl
+to-from α = refl
 
 from-to : ∀ x → to (from x) ≡ x
-from-to ⟨ inj₁ tt ⟩ = refl
-from-to ⟨ inj₂ () ⟩
+from-to β = refl
+from-to absurd-β
 
 isContextFree-Unit : IsContextFree Unit
 isContextFree-Unit = record { desc = desc ; to = to ; from = from
@@ -55,8 +59,8 @@ testDesc : qdesc ≡ desc
 testDesc = refl
 
 testTo : ∀ x → qto x ≡ to x
-testTo u = refl
+testTo α = refl
 
 testFrom : ∀ x → qfrom x ≡ from x
-testFrom ⟨ inj₁ tt ⟩ = refl
-testFrom ⟨ inj₂ () ⟩
+testFrom β = refl
+testFrom absurd-β
