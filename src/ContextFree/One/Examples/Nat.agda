@@ -21,8 +21,8 @@ pattern suc-β n = ⟨ inj₂ (inj₁ (n , tt)) ⟩
 pattern absurd-β = ⟨ inj₂ (inj₂ ()) ⟩
 
 to : ℕ → μ desc
-to zero = zero-β
-to (suc n) = ⟨ inj₂ (inj₁ (to n , tt)) ⟩
+to zero-α = zero-β
+to (suc-α n) = suc-β (to n)
 
 from : μ desc → ℕ
 from zero-β = zero-α

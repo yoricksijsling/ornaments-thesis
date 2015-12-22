@@ -37,10 +37,10 @@ proposal: proposal/main.pdf
 
 src-tex:
 	mkdir -p src-tex
-src-tex/%.tex: $(SRC)/%.lagda src-tex
+src-tex/%.tex: $(SRC)/%.lagda src-tex proposal.fmt
 	lhs2TeX --agda -o $@ $<
 
-proposal/%.tex: proposal/%.lagda
+proposal/%.tex: proposal/%.lagda proposal.fmt
 	lhs2TeX --agda -o $@ $<
 
 proposal/main.pdf: $(PROPOSAL_TEX:%=proposal/%.tex) $(MODULES:%=src-tex/%.tex) proposal/agda.sty proposal/main.bib

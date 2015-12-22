@@ -1,5 +1,4 @@
-%include lhs2TeX.fmt
-%include polycode.fmt
+%include proposal.fmt
 
 \section{Plan}\label{sec:plan}
 
@@ -7,102 +6,80 @@ In the first phase of the thesis project we have studied the
 literature and have implemented a simple quoting library.
 The next phase will be focused on working towards a library in which
 we can apply ornaments to these quoted types.
-In the next section we identify the milestones in this process, and
-then we explain how we prioritize these milestones in section
-\ref{sec:plan-priorities}.
+We present a step-by-step plan, which we will definitely not be able
+to complete.
 
-\subsection{Milestones}
+\subsection{Unquoting new datatypes}\label{sec:plan-new-types}
 
-\subsubsection{Unquoting new data types}\label{sec:plan-new-types}
-
-In the current prototype we are able to quote a data type to a
-\texttt{SafeDatatype}.
-We want to be able to unquote a new data type from the
-\texttt{SafeDatatype}, which would give us a new
-\texttt{NamedSafeDatatype}.
+In the current prototype we are able to quote a datatype to a
+|SafeDatatype|.
+We want to be able to unquote a new datatype from the
+|SafeDatatype|, which would give us a new
+|NamedSafeDatatype|.
 This procedure can not be implemented as an Agda function, since it
 has the side effect of introducing new names.
 We can keep the number of manual steps small, and we hope that a
-future version of Agda will allow us to properly unquote data types.
+future version of Agda will allow us to properly unquote datatypes.
+It is useful to do this step early, to figure out how unquoting of
+datatypes works with a simple universe.
 
-\subsubsection{Ornaments - Extensions}\label{sec:plan-extensions}
+\subsection{Ornaments - Extensions}\label{sec:plan-extensions}
 
-We can try to make simple modifications to data types by defining
-functions on \texttt{SafeDatatype}.
+We can try to make simple modifications to datatypes by defining
+functions on |SafeDatatype|.
 One such operation which might be fun to experiment with is taking the
 derivative (this makes a zipper).
 The derivative is not essential for our goals, but it might provide insight.
 
-When that works we define a type for extensions to data types.
-Extensions are half of what ornaments are; they can only attach data
-to constructors.
+When that works we define a type for extensions to datatypes, as
+described in section \ref{sec:lit-extensions}.
 
-\subsubsection{Indices}\label{sec:plan-indices}
+\subsection{Indices}\label{sec:plan-indices}
 
-The prototype does not support context free types with multiple fix
-points.
-One of the drawbacks, as explained in section \ref{sec:lit-cft-multi},
-is that we can not handle data type indices.
+The universe of the prototype does not support indices.
+To solve this, we will implement the universe for indexed functors as
+described in section \ref{sec:lit-indexed}.
 
-We will have to formalise indexed descriptions (section
-\todo{ref}), then we modify \texttt{SafeDatatype} and the quoter to
-allow quoting of data types with indices.
-This will introduce fundamental changes in many parts of the library,
-so it might be quite a challenge.
+The first step is to use this universe without adding new
+functionality, so without changing |SafeDatatype|.
+This will introduce some fundamental changes, so it might be quite a
+challenge.
+Once that works, we can extend the quoting and |SafeDatatype| to allow
+indices.
 
-\subsubsection{Ornaments - Refinements}\label{sec:plan-refinements}
+\subsection{Ornaments - Refinements}\label{sec:plan-refinements}
 
 When extensions and indices are implemented, we can continue with the
-other half of ornaments: refinements. \todo{ref to refinements}
+other half of ornaments: refinements (section \ref{sec:lit-refinements}).
 
 At this point we should be able to implement some interesting examples
 and we can experiment.
 
-\subsubsection{Strictly positive types}\label{sec:plan-spt}
+\subsection{Mutually recursive types}\label{sec:plan-mutual}
 
-The prototype only supports arguments which refer to the data type
-itself or to a Set₀ data type parameter.
-We would like to allow other kinds of terms in the arguments.
-For instance, functions in arguments would enable us to quote all
-strictly positive types.
-
-\subsubsection{Mutually recursive types}\label{sec:plan-mutual}
-
-Indexed descriptions allow mutually recursive data types, but
-a \texttt{SafeDatatype} which works for indexed data types would not
-automatically support mutually recursive types.
-If \texttt{MultiSafeDatatype} would be a variant of
-\texttt{SafeDatatype} which would allow mutually recursive types, we
-would be able to transform any indexed description to a
-\texttt{MultiSafeDatatype} by first applying a normalisation step.
-
-This would free us from having to work with \texttt{SafeDatatype} for
+A single indexed description can describe a family of mutually
+recursive datatypes, but the quoter and |SafeDatatype| do not yet
+support it.
+If |MultiSafeDatatype| is a variant of |SafeDatatype| which allows
+mutually recursive types, we would be able to transform any indexed
+description to a |MultiSafeDatatype| by first applying a normalisation
+step.
+This would free us from having to work with |SafeDatatype| for
 functions which transform types.
 In particular, ornaments could then work directly on the indexed
-description instead of on \texttt{SafeDatatype}.
+description instead of on |SafeDatatype|.
 
-\subsubsection{Dependent types}\label{sec:plan-deptypes}
+\subsection{Dependent types}\label{sec:plan-deptypes}
 
-It would be nice if we could encode and quote dependently typed
-constructors.
-More real-world data types could then be supported by the library.
+It would be nice if types of arguments could depend on arguments
+before it.
+The |Σ| constructor is required for this, to encode dependent pairs.
+More real-world datatypes could then be supported by the library.
 
-\subsubsection{Lifting functions over ornaments}\label{sec:plan-lifting}
+\subsection{Strictly positive types}\label{sec:plan-spt}
 
-If we could lift functions over ornaments, we would be able to utilise
-the ornaments to actually write less code.
-It would be a major step in making ornaments something you would
-actually use.
-
-\subsection{Priorities}\label{sec:plan-priorities}
-
-The primary goal is to implement the first four milestones: unquoting
-new data types, extensions, indices and refinements.
-This is what we definitely want to reach in this project and they will
-be executed in that order.
-
-If it all goes well we will have time to continue with some other
-extensions to the library.
-We postpone the decision of which task we choose until that moment.
-At that point we should be able to make a better estimation of what is
-easy or hard, and how much time each task will take.
+The prototype does not yet support functions as arguments.
+We could add this functionality by adding a |Π| constructor for
+(dependent) arrows in the indexed description type.
+Support for this would enable us to quote all strictly positive types,
+but we have to be careful that we do not allow variables in the wrong positions\cite{altenkirch06}.
