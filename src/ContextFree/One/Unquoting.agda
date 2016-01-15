@@ -39,77 +39,70 @@ private
   tpf {tp-term} ft fp = ft ∘′ map argvr
   tpf {tp-patt} ft fp = fp ∘′ map argvr
 
+  ccon : ∀{tp} → Name → List (tpv tp) → tpv tp
+  ccon n = tpf (con n) (con n)
   ccon₀ : ∀{tp} → Name → tpv tp
-  ccon₀ n = tpf (con n) (con n) []
+  ccon₀ n = ccon n []
   ccon₁ : ∀{tp} → Name → tpv tp → tpv tp
-  ccon₁ n t₁ = tpf (con n) (con n) (t₁ ∷ [])
+  ccon₁ n t₁ = ccon n (t₁ ∷ [])
   ccon₂ : ∀{tp} → Name → tpv tp → tpv tp → tpv tp
-  ccon₂ n t₁ t₂ = tpf (con n) (con n) (t₁ ∷ t₂ ∷ [])
+  ccon₂ n t₁ t₂ = ccon n (t₁ ∷ t₂ ∷ [])
   ccon₃ : ∀{tp} → Name → tpv tp → tpv tp → tpv tp → tpv tp
-  ccon₃ n t₁ t₂ t₃ = tpf (con n) (con n) (t₁ ∷ t₂ ∷ t₃ ∷ [])
+  ccon₃ n t₁ t₂ t₃ = ccon n (t₁ ∷ t₂ ∷ t₃ ∷ [])
 
-  cvar₀ : ℕ → Term
-  cvar₀ n = var n []
-  cvar₁ : ℕ → Term → Term
-  cvar₁ n t = var n (argvr t ∷ [])
+  cvar : ∀{tp} → ℕ → List (tpv tp) → tpv tp
+  cvar n = tpf (var n) (const var)
+  cvar₀ : ∀{tp} → ℕ → tpv tp
+  cvar₀ n = cvar n []
 
-  cdef₀ : Name → Term
-  cdef₀ n = def n []
   cdef₁ : Name → Term → Term
   cdef₁ n t = def n (argvr t ∷ [])
 
-  cabsurd-clause₂ : Pattern → Pattern → Clause
-  cabsurd-clause₂ p₁ p₂ = absurd-clause (argvr p₁ ∷ argvr p₂ ∷ [])
-
-  paramArgs : (offset : ℕ){pc : ℕ} → Vec Param pc → List (Arg Term)
-  paramArgs offset = zipStreamBackwards tm (iterate suc offset) ∘′ toList
-    where tm : ℕ → Param → Arg Term
+  paramArgs : ∀{tp}(offset : ℕ){pc : ℕ} → Vec Param pc → List (Arg (tpv tp))
+  paramArgs {tp} offset = zipStreamBackwards tm (iterate suc offset) ∘′ toList
+    where tm : ℕ → Param → Arg (tpv tp)
           tm offset (param₀ v) = arg (arg-info v relevant) (cvar₀ offset)
 
   paramPats : {pc : ℕ} → Vec Param pc → List (Arg Pattern)
-  paramPats = map pt ∘′ toList
-    where pt : Param → Arg Pattern
-          pt (param₀ v) = arg (arg-info v relevant) var
+  paramPats = paramArgs 0 -- If it is used as a pattern, the offset is not used
 
-  wrappers : ∀{tp} → Stream (tpv tp → tpv tp)
-  wrappers = Data.Stream.map (λ w → ccon₁ (quote ⟨_⟩) ∘′ w ∘′ ccon₁ (quote inj₁))
-           $ iterate (_∘′_ (ccon₁ (quote inj₂))) id
+  inj₂^_ : ∀{tp} → ℕ → tpv tp → tpv tp
+  inj₂^_ zero = id
+  inj₂^_ (suc n) = ccon₁ (quote inj₂) ∘′ (inj₂^ n)
 
-  lastPattern : ℕ → Pattern
-  lastPattern = ccon₁ (quote ⟨_⟩) ∘′ helper
-    where helper : ℕ → Pattern
-          helper zero = absurd
-          helper (suc n) = ccon₁ (quote inj₂) (helper n)
+module MakeAlphaBeta {pc : ℕ}{tp : TP}(recArgWrapper : tpv tp → tpv tp) where
+  αβ-arg : (meᵢ : ℕ) → SafeArg {pc} → tpv tp
+  αβ-arg meᵢ (Spar i) = cvar₀ meᵢ
+  αβ-arg meᵢ Srec = recArgWrapper (cvar₀ meᵢ)
 
+  -- constructorᵢ x₁ ⋯ xn
+  α : NamedSafeProduct {pc} → tpv tp
+  α (`con , as) = ccon `con (zipStreamBackwards αβ-arg (iterate suc 0) as)
+
+  -- ⟨ inj₂ⁱ (inj₁ (x₁ , ⋯ , xn , tt)) ⟩
+  β : (i : ℕ) → NamedSafeProduct {pc} → tpv tp
+  β i (`con , as) = ccon₁ (quote ⟨_⟩) ∘′ (inj₂^ i) ∘′ ccon₁ (quote inj₁)
+                  $ foldr (ccon₂ (quote _,_)) (ccon₀ (quote tt))
+                  $ zipStreamBackwards αβ-arg (iterate suc 0) as
 
 module MakeTo (`to : Name)(`desc : Name) where
 
   module WithParams (pc : ℕ)(params : Vec Param pc) where
-    ⟦_⟧arg-pat : SafeArg {pc} → Pattern
-    ⟦ Spar i ⟧arg-pat = var
-    ⟦ Srec ⟧arg-pat = var
+    open MakeAlphaBeta
 
-    module WithProductLength (total : ℕ) where
-      -- meᵢ is the De Bruijn index of the pattern variable corresponding to this arg
-      ⟦_⟧arg-term : SafeArg {pc} → (meᵢ : ℕ) → Term
-      ⟦ Spar i ⟧arg-term meᵢ = cvar₀ meᵢ
-      ⟦ Srec ⟧arg-term meᵢ = def `to (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
+    β-term : ℕ → NamedSafeProduct {pc} → Term
+    β-term i (`con , as) = β (λ x → def `to (paramArgs (length as) params ∷ʳ argvr x))
+                             i (`con , as)
 
-    ⟦_⟧product-pat : NamedSafeProduct → Pattern
-    ⟦ `con , as ⟧product-pat = con `con (map (argvr ∘′ ⟦_⟧arg-pat) as)
+    makeClause : ℕ → NamedSafeProduct {pc} → Clause
+    makeClause i p = clause (paramPats params ∷ʳ argvr (α id p))
+                            (β-term i p)
 
-    ⟦_⟧product-term : NamedSafeProduct → Term
-    ⟦ `con , as ⟧product-term = foldr (ccon₂ (quote _,_)) (ccon₀ (quote tt))
-                              $ zipStreamBackwards (flip ⟦_⟧arg-term) (iterate suc 0) as
-      where open WithProductLength (length as)
+    makeClauses : NamedSafeSum → List Clause
+    makeClauses = zipStream makeClause (iterate suc 0)
 
-    ⟦_⟧sum : NamedSafeSum → List Clause
-    ⟦_⟧sum = zipStream makeclause wrappers
-      where makeclause = λ wrap p → clause (paramPats params ∷ʳ argvr ⟦ p ⟧product-pat)
-                                           (wrap ⟦ p ⟧product-term)
-
-  ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
-  ⟦ mk `dt pc params sop ⟧datatype = fun-def (addParams (toList params) base) ⟦ sop ⟧sum
+  makeFunction : NamedSafeDatatype → FunctionDef
+  makeFunction (mk `dt pc params sop) = fun-def (addParams (toList params) base) (makeClauses sop)
     where
     open WithParams pc params
     base : Type
@@ -118,34 +111,25 @@ module MakeTo (`to : Name)(`desc : Name) where
 
 module MakeFrom (`from : Name)(`desc : Name) where
   module WithParams (pc : ℕ)(params : Vec Param pc) where
-    ⟦_⟧arg-pat : SafeArg {pc} → Pattern
-    ⟦ Spar i ⟧arg-pat = var
-    ⟦ Srec ⟧arg-pat = var
+    open MakeAlphaBeta
 
-    module WithProduct (`con : Name)(total : ℕ) where
-      ⟦_⟧arg-term : SafeArg {pc} → (meᵢ : ℕ) → Term
-      ⟦ Spar i ⟧arg-term meᵢ = cvar₀ meᵢ
-      ⟦ Srec ⟧arg-term meᵢ = def `from (paramArgs total params ∷ʳ argvr (cvar₀ meᵢ))
+    α-term : NamedSafeProduct {pc} → Term
+    α-term (`con , as) = α (λ x → def `from (paramArgs (length as) params ∷ʳ argvr x))
+                           (`con , as)
 
-    ⟦_⟧product-pat : NamedSafeProduct → Pattern
-    ⟦ `con , as ⟧product-pat = foldr (ccon₂ (quote _,_)) (ccon₀ (quote tt))
-                             $ map ⟦_⟧arg-pat as
+    β-last : ℕ → Pattern
+    β-last n = ccon₁ (quote ⟨_⟩) ((inj₂^ n) absurd)
 
-    ⟦_⟧product-term : NamedSafeProduct → Term
-    ⟦ `con , as ⟧product-term = con `con
-                              $ map argvr
-                              $ zipStreamBackwards (flip ⟦_⟧arg-term) (iterate suc 0) as
-      where
-      open WithProduct `con (length as)
+    makeClause : ℕ → NamedSafeProduct {pc} → Clause
+    makeClause i p = clause (paramPats params ∷ʳ argvr (β id i p))
+                            (α-term p)
 
-    ⟦_⟧sum : NamedSafeSum → List Clause
-    ⟦ ps ⟧sum = zipStream makeclause wrappers ps
-              ∷ʳ absurd-clause (paramPats params ∷ʳ argvr (lastPattern (length ps)))
-      where makeclause = λ wrap p → clause (paramPats params ∷ʳ argvr (wrap (⟦ p ⟧product-pat)))
-                                           ⟦ p ⟧product-term
+    makeClauses : NamedSafeSum → List Clause
+    makeClauses ps = zipStream makeClause (iterate suc 0) ps
+                   ∷ʳ absurd-clause (paramPats params ∷ʳ argvr (β-last (length ps)))
 
-  ⟦_⟧datatype : NamedSafeDatatype → FunctionDef
-  ⟦ mk `dt pc params sop ⟧datatype = fun-def (addParams (toList params) base) ⟦ sop ⟧sum
+  makeFunction : NamedSafeDatatype → FunctionDef
+  makeFunction (mk `dt pc params sop) = fun-def (addParams (toList params) base) (makeClauses sop)
     where
     open WithParams pc params
     base : Type
@@ -153,10 +137,10 @@ module MakeFrom (`from : Name)(`desc : Name) where
                           (el (lit 0) (def `dt (paramArgs 1 params))))
 
 makeTo : (`to `desc : Name) → NamedSafeDatatype → FunctionDef
-makeTo = MakeTo.⟦_⟧datatype
+makeTo = MakeTo.makeFunction
 
 makeFrom : (`from `desc : Name) → NamedSafeDatatype → FunctionDef
-makeFrom = MakeFrom.⟦_⟧datatype
+makeFrom = MakeFrom.makeFunction
 
 makeRecord : (`desc `to `from : Name) → NamedSafeDatatype → FunctionDef
 makeRecord `desc `to `from (mk `dt pc params sop) = fun-def (addParams (toList params) basetype)
