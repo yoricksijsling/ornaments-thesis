@@ -70,33 +70,39 @@ private
   inj₂^_ zero = id
   inj₂^_ (suc n) = ccon₁ (quote inj₂) ∘′ (inj₂^ n)
 
-module MakeAlphaBeta {pc : ℕ}{tp : TP}(recArgWrapper : tpv tp → tpv tp) where
-  αβ-arg : (meᵢ : ℕ) → SafeArg {pc} → tpv tp
-  αβ-arg meᵢ (Spar i) = cvar₀ meᵢ
-  αβ-arg meᵢ Srec = recArgWrapper (cvar₀ meᵢ)
-
+module MakeAlphaBeta where
   -- constructorᵢ x₁ ⋯ xn
-  α : NamedSafeProduct {pc} → tpv tp
-  α (`con , as) = ccon `con (zipStreamBackwards αβ-arg (iterate suc 0) as)
+  α : ∀{tp} → Name → List (tpv tp) → tpv tp
+  α `con = ccon `con
 
   -- ⟨ inj₂ⁱ (inj₁ (x₁ , ⋯ , xn , tt)) ⟩
-  β : (i : ℕ) → NamedSafeProduct {pc} → tpv tp
-  β i (`con , as) = ccon₁ (quote ⟨_⟩) ∘′ (inj₂^ i) ∘′ ccon₁ (quote inj₁)
-                  $ foldr (ccon₂ (quote _,_)) (ccon₀ (quote tt))
-                  $ zipStreamBackwards αβ-arg (iterate suc 0) as
+  β : ∀{tp} → (i : ℕ) → List (tpv tp) → tpv tp
+  β i = ccon₁ (quote ⟨_⟩) ∘′ inj₂^ i ∘′ ccon₁ (quote inj₁)
+       ∘′ foldr (ccon₂ (quote _,_)) (ccon₀ (quote tt))
+
+module MakeToFrom {pc : ℕ}(params : Vec Param pc) where
+  -- Given a list of arguments [a, x, y, b, z], where xyz are recursive arguments
+  -- Returns a list of patterns [a, x, y, b, z]
+  patArgs : List (SafeArg {pc}) → List Pattern
+  patArgs as = zipStreamBackwards (λ meᵢ a → cvar₀ meᵢ) (iterate suc 0) as
+
+  -- Given a list of arguments [a, x, y, b, z], where xyz are recursive arguments
+  -- Returns a list of terms [a, `f x, `f y, b, `f z]
+  termArgs : Name → List (SafeArg {pc}) → List Term
+  termArgs `f as = zipStreamBackwards termArg (iterate suc 0) as
+    where
+    termArg : ℕ → SafeArg {pc} → Term
+    termArg meᵢ (Spar i) = cvar₀ meᵢ
+    termArg meᵢ Srec = def `f (paramArgs (length as) params ∷ʳ argvr (cvar₀ meᵢ))
 
 module MakeTo (`to : Name)(`desc : Name) where
-
-  module WithParams (pc : ℕ)(params : Vec Param pc) where
+  module WithParams {pc : ℕ}(params : Vec Param pc) where
     open MakeAlphaBeta
-
-    β-term : ℕ → NamedSafeProduct {pc} → Term
-    β-term i (`con , as) = β (λ x → def `to (paramArgs (length as) params ∷ʳ argvr x))
-                             i (`con , as)
+    open MakeToFrom params
 
     makeClause : ℕ → NamedSafeProduct {pc} → Clause
-    makeClause i p = clause (paramPats params ∷ʳ argvr (α id p))
-                            (β-term i p)
+    makeClause i (`con , as) = clause (paramPats params ∷ʳ argvr (α `con $ patArgs as))
+                                      (β i $ termArgs `to as)
 
     makeClauses : NamedSafeSum → List Clause
     makeClauses = zipStream makeClause (iterate suc 0)
@@ -104,25 +110,28 @@ module MakeTo (`to : Name)(`desc : Name) where
   makeFunction : NamedSafeDatatype → FunctionDef
   makeFunction (mk `dt pc params sop) = fun-def (addParams (toList params) base) (makeClauses sop)
     where
-    open WithParams pc params
+    open WithParams params
     base : Type
     base = el (lit 0) (pi (argvr (el (lit 0) (def `dt (paramArgs 0 params))))
                           (el (lit 0) (cdef₁ `μ (def `desc (paramArgs 1 params)))))
 
 module MakeFrom (`from : Name)(`desc : Name) where
-  module WithParams (pc : ℕ)(params : Vec Param pc) where
+  module WithParams {pc : ℕ}(params : Vec Param pc) where
     open MakeAlphaBeta
+    open MakeToFrom params
 
     α-term : NamedSafeProduct {pc} → Term
-    α-term (`con , as) = α (λ x → def `from (paramArgs (length as) params ∷ʳ argvr x))
-                           (`con , as)
+    α-term (`con , as) = α `con (termArgs `from as)
+
+    β-pattern : ℕ → NamedSafeProduct {pc} → Pattern
+    β-pattern i (`con , as) = β i (patArgs as)
 
     β-last : ℕ → Pattern
     β-last n = ccon₁ (quote ⟨_⟩) ((inj₂^ n) absurd)
 
     makeClause : ℕ → NamedSafeProduct {pc} → Clause
-    makeClause i p = clause (paramPats params ∷ʳ argvr (β id i p))
-                            (α-term p)
+    makeClause i (`con , as) = clause (paramPats params ∷ʳ argvr (β i $ patArgs as))
+                                      (α `con $ termArgs `from as)
 
     makeClauses : NamedSafeSum → List Clause
     makeClauses ps = zipStream makeClause (iterate suc 0) ps
@@ -131,7 +140,7 @@ module MakeFrom (`from : Name)(`desc : Name) where
   makeFunction : NamedSafeDatatype → FunctionDef
   makeFunction (mk `dt pc params sop) = fun-def (addParams (toList params) base) (makeClauses sop)
     where
-    open WithParams pc params
+    open WithParams params
     base : Type
     base = el (lit 0) (pi (argvr (el (lit 0) (cdef₁ `μ (def `desc (paramArgs 0 params)))))
                           (el (lit 0) (def `dt (paramArgs 1 params))))
