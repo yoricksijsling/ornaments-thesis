@@ -1,4 +1,4 @@
-module ContextFree.One.Unquoting where
+module ContextFree.One.EmbeddingProjection where
 
 open import Common
 open import ContextFree.One.Desc

@@ -3,7 +3,7 @@ module ContextFree.One.Examples.Pair where
 open import Common
 open import ContextFree.One.Desc
 open import ContextFree.One.DescFunction
-open import ContextFree.One.Unquoting
+open import ContextFree.One.EmbeddingProjection
 open import ContextFree.One.Quoted
 open import ContextFree.One.Quoting
 
