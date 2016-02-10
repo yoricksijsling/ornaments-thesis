@@ -56,7 +56,7 @@ module TestQdt where
                        [])
   test-qdt = refl
 
-unquoteDecl qrec = defineRec qrec qdt
+unquoteDecl qrec = defineRecord qrec qdt
 
 module Q (A : Set) = RawIsContextFree (qrec A)
 

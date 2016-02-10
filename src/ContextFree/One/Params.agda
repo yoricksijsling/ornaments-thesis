@@ -1,7 +1,7 @@
 module ContextFree.One.Params where
 
 open import Common
-open import Builtin.Reflection
+open import Reflection
 open import Tactic.Nat
 
 pattern arg-pat a s t = pi (arg (arg-info visible relevant) a) (abs s t)
@@ -22,7 +22,7 @@ getArgs ._ | rest t = [] , t
 data Param : Set where
   param₀ : (v : Visibility)(s : String) → Param
 
-pattern param₀-pat v s t = pi (arg (arg-info v relevant) (agda-sort (lit 0))) (abs s t)
+pattern param₀-pat v s t = pi (arg (arg-info v relevant) set₀) (abs s t)
 
 data ParamView : Type → Set where
   param₀ : (v : Visibility)(s : String)(t : Type) → ParamView (param₀-pat v s t)

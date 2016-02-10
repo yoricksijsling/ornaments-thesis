@@ -44,7 +44,7 @@ module TestQdt where
   testQdt : qdt ≡ mk (quote U) 0 [] ((quote u , []) ∷ [])
   testQdt = refl
 
-unquoteDecl qrec = defineRec qrec qdt
+unquoteDecl qrec = defineRecord qrec qdt
 
 module Q = RawIsContextFree qrec
 
