@@ -1,15 +1,11 @@
 module ContextFree.One.Examples.List where
 
+open import Common
 open import ContextFree.One.Desc
 open import ContextFree.One.DescFunction
-open import ContextFree.One.Unquoting (quote Desc) (quote μ) (quote RawIsContextFree)
+open import ContextFree.One.Unquoting
 open import ContextFree.One.Quoted
 open import ContextFree.One.Quoting
-open import Data.Fin using (#_)
-open import Data.Unit.Base
-open import Data.Product
-open import Data.Sum
-open import Relation.Binary.PropositionalEquality
 
 infixr 5 _∷_
 
@@ -21,10 +17,10 @@ desc : (A : Set) → Desc
 desc A = `1 `+ (`P₀ A `* `var `* `1) `+ `0
 
 pattern nil-α = []
-pattern nil-β = ⟨ inj₁ tt ⟩
+pattern nil-β = ⟨ left tt ⟩
 pattern cons-α x xs = x ∷ xs
-pattern cons-β x xs = ⟨ inj₂ (inj₁ (x , xs , tt)) ⟩
-pattern absurd-β = ⟨ inj₂ (inj₂ ()) ⟩
+pattern cons-β x xs = ⟨ right (left (x , xs , tt)) ⟩
+pattern absurd-β = ⟨ right (right ()) ⟩
 
 to : (A : Set) → ListP A → μ (desc A)
 to A nil-α = nil-β
@@ -49,30 +45,29 @@ isContextFree-ListP A = record { desc = desc A ; to = to A ; from = from A
                                ; to-from = to-from A ; from-to = from-to A }
 
 qdt : NamedSafeDatatype
-qdt = quoteDatatype! (quote ListP) 1
+qdt = quoteDatatypeᵐ ListP
 
 module TestQdt where
-  open import Reflection
-  open import Data.List
-  testQdt : NamedSafeDatatype.sop qdt ≡ (quote ListP.[]  , []) ∷
-                                        (quote ListP._∷_ , Spar (# 0) ∷ Srec ∷ []) ∷
-                                        []
-  testQdt = refl
+  open import Builtin.Reflection
+  open import ContextFree.One.Params
+  test-qdt : qdt ≡ mk (quote ListP) 1 (param₀ visible "A" ∷ [])
+                      ((quote ListP.[]  , []) ∷
+                       (quote ListP._∷_ , Spar 0 ∷ Srec ∷ []) ∷
+                       [])
+  test-qdt = refl
 
-qdesc : DescFun (proj₁ (unnameSafeDatatype qdt))
-qdesc = descFun (proj₁ (unnameSafeDatatype qdt))
-unquoteDecl qto = makeTo qto (quote qdesc) qdt
-unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
-unquoteDecl qcf = makeRecord (quote qdesc) (quote qto) (quote qfrom) qdt
+unquoteDecl qrec = defineRec qrec qdt
 
-testDesc : ∀{A} → qdesc A ≡ desc A
+module Q (A : Set) = RawIsContextFree (qrec A)
+
+testDesc : ∀{A} → Q.desc A ≡ desc A
 testDesc = refl
 
-testTo : ∀{A} xs → qto A xs ≡ to A xs
+testTo : ∀{A} xs → Q.to A xs ≡ to A xs
 testTo nil-α = refl
 testTo (cons-α x xs) = cong (cons-β x) (testTo xs)
 
-testFrom : ∀{A} xs → qfrom A xs ≡ from A xs
+testFrom : ∀{A} xs → Q.from A xs ≡ from A xs
 testFrom nil-β = refl
 testFrom (cons-β x xs) = cong (cons-α x) (testFrom xs)
 testFrom absurd-β

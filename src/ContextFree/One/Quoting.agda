@@ -1,49 +1,26 @@
 module ContextFree.One.Quoting where
 
+open import Builtin.Reflection
+open import Common
+open import Data.Traversable
+open import TC
+
 open import ContextFree.One.Desc
 open import ContextFree.One.Params
 open import ContextFree.One.Quoted
 open import ContextFree.One.Quoting.Constructor
-open import Data.Error
-open Data.Error.Monad
-open import Data.Nat using (ℕ; _≤_; _≤?_)
-open import Data.Product using (proj₁)
-open import Data.List using (List)
-open import Data.List.All using (all)
-open import Data.Vec using (Vec; []; _∷_)
-open import Data.String using (_++_)
-open import Function
-open import Reflection
-open import Relation.Nullary.Decidable using (True)
-open import Stuff using (mapAllToList)
 
-getDatatype : Name → Error Data-type
-getDatatype n with definition n
-getDatatype n | data-type x = return x
-getDatatype n | otherwise = log (showName n ++ " is not a data type") >> fail ""
+quoteDatatype : (`dt : Name) → TC NamedSafeDatatype
+quoteDatatype `dt =
+  do dtty ← getType `dt
+  -| pc ← getParameters `dt
+  -| params ← iguard (fst $ takeParams dtty pc) "Too many parameters for datatype"
+  -| cnames ← getConstructors `dt
+  -| (mk `dt pc params) <$> mapM (quoteConstructor `dt pc) cnames
 
-dtParams : (`dt : Name)(pc : ℕ) → Error (Vec Param pc)
-dtParams `dt pc = proj₁ ∘′ takeParams (type `dt) pc
-                <$> decToError "Too many params for datatype" (pc ≤? paramCount (type `dt))
-
-quoteConstructors : (`dt : Name)(pc : ℕ)(dt : Data-type) → Error (List NamedSafeProduct)
-quoteConstructors `dt pc dt =
-  decToError "Too many params for some constructors"
-             (all (λ `c → pc ≤? paramCount (type `c)) (constructors dt)) >>=
-  sequenceM ∘′ mapAllToList (λ {`c} pc≤ → quoteConstructor `dt `c pc pc≤)
-
-quoteDatatype : (`dt : Name)(pc : ℕ) → Error NamedSafeDatatype
-quoteDatatype `dt pc =
-  getDatatype `dt >>= λ dt →
-  dtParams `dt pc >>= λ params →
-  -- TODO: use params to check that constructors match exactly
-  mk `dt pc params <$> quoteConstructors `dt pc dt
-
-RunError : ∀{α}{A : Set α} → Error A → Set α
-RunError {A = A} e = {isOk : True (isOk? e)} → A
-
-quoteDatatype! : (n : Name) (p : ℕ) → RunError (quoteDatatype n p)
-quoteDatatype! n p {isOk} = fromOk isOk
+macro
+  quoteDatatypeᵐ : (`dt : Name) → Tactic
+  quoteDatatypeᵐ `dt = runTC (quoteDatatype `dt)
 
 
 

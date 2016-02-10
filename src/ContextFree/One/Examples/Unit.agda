@@ -1,30 +1,26 @@
 module ContextFree.One.Examples.Unit where
 
+open import Common
 open import ContextFree.One.Desc
 open import ContextFree.One.DescFunction
-open import ContextFree.One.Unquoting (quote Desc) (quote μ) (quote RawIsContextFree)
+open import ContextFree.One.Unquoting
 open import ContextFree.One.Quoted
 open import ContextFree.One.Quoting
-open import Data.Error
-open import Data.Product using (proj₁)
-open import Data.Sum
-open import Data.Unit.Base
-open import Relation.Binary.PropositionalEquality
 
-data Unit : Set where
-  u : Unit
+data U : Set where
+  u : U
 
 desc : Desc
 desc = `1 `+ `0
 
 pattern α = u
-pattern β = ⟨ inj₁ tt ⟩
-pattern absurd-β = ⟨ inj₂ () ⟩
+pattern β = ⟨ left tt ⟩
+pattern absurd-β = ⟨ right () ⟩
 
-to : Unit → μ desc
+to : U → μ desc
 to α = β
 
-from : μ desc → Unit
+from : μ desc → U
 from β = α
 from absurd-β
 
@@ -35,32 +31,29 @@ from-to : ∀ x → to (from x) ≡ x
 from-to β = refl
 from-to absurd-β
 
-isContextFree-Unit : IsContextFree Unit
-isContextFree-Unit = record { desc = desc ; to = to ; from = from
+isContextFree-U : IsContextFree U
+isContextFree-U = record { desc = desc ; to = to ; from = from
                             ; to-from = to-from ; from-to = from-to }
 
 qdt : NamedSafeDatatype
-qdt = quoteDatatype! (quote Unit) 0
+qdt = quoteDatatypeᵐ U
 
 module TestQdt where
-  open import Reflection
-  open import Data.List
-  open import Data.Product
-  testQdt : NamedSafeDatatype.sop qdt ≡ (quote u , []) ∷ []
+  open import Builtin.Reflection
+  open import ContextFree.One.Params
+  testQdt : qdt ≡ mk (quote U) 0 [] ((quote u , []) ∷ [])
   testQdt = refl
 
-qdesc : DescFun (proj₁ (unnameSafeDatatype qdt))
-qdesc = descFun (proj₁ (unnameSafeDatatype qdt))
-unquoteDecl qto = makeTo qto (quote qdesc) qdt
-unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
-unquoteDecl qcf = makeRecord (quote qdesc) (quote qto) (quote qfrom) qdt
+unquoteDecl qrec = defineRec qrec qdt
 
-testDesc : qdesc ≡ desc
+module Q = RawIsContextFree qrec
+
+testDesc : Q.desc ≡ desc
 testDesc = refl
 
-testTo : ∀ x → qto x ≡ to x
+testTo : ∀ x → Q.to x ≡ to x
 testTo α = refl
 
-testFrom : ∀ x → qfrom x ≡ from x
+testFrom : ∀ x → Q.from x ≡ from x
 testFrom β = refl
 testFrom absurd-β

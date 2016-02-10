@@ -1,30 +1,26 @@
 module ContextFree.One.Examples.Nat where
 
+open import Common
 open import ContextFree.One.Desc
 open import ContextFree.One.DescFunction
-open import ContextFree.One.Unquoting (quote Desc) (quote μ) (quote RawIsContextFree)
+open import ContextFree.One.Unquoting
 open import ContextFree.One.Quoted
 open import ContextFree.One.Quoting
-open import Data.Nat using (ℕ; zero; suc)
-open import Data.Product
-open import Data.Unit.Base
-open import Data.Sum
-open import Relation.Binary.PropositionalEquality
 
 desc : Desc
 desc = `1 `+ (`var `* `1) `+ `0
 
 pattern zero-α = zero
-pattern zero-β = ⟨ inj₁ tt ⟩
+pattern zero-β = ⟨ left tt ⟩
 pattern suc-α n = suc n
-pattern suc-β n = ⟨ inj₂ (inj₁ (n , tt)) ⟩
-pattern absurd-β = ⟨ inj₂ (inj₂ ()) ⟩
+pattern suc-β n = ⟨ right (left (n , tt)) ⟩
+pattern absurd-β = ⟨ right (right ()) ⟩
 
-to : ℕ → μ desc
+to : Nat → μ desc
 to zero-α = zero-β
 to (suc-α n) = suc-β (to n)
 
-from : μ desc → ℕ
+from : μ desc → Nat
 from zero-β = zero-α
 from (suc-β n) = suc-α (from n)
 from absurd-β
@@ -38,35 +34,34 @@ from-to zero-β = refl
 from-to (suc-β n) = cong suc-β (from-to n)
 from-to absurd-β
 
-isContextFree-ℕ : IsContextFree ℕ
-isContextFree-ℕ = record { desc = desc ; to = to ; from = from
+isContextFree-Nat : IsContextFree Nat
+isContextFree-Nat = record { desc = desc ; to = to ; from = from
                          ; to-from = to-from ; from-to = from-to }
 
 qdt : NamedSafeDatatype
-qdt = quoteDatatype! (quote ℕ) 0
-
-qdesc : DescFun (proj₁ (unnameSafeDatatype qdt))
-qdesc = descFun (proj₁ (unnameSafeDatatype qdt))
-unquoteDecl qto = makeTo qto (quote qdesc) qdt
-unquoteDecl qfrom = makeFrom qfrom (quote qdesc) qdt
-unquoteDecl qcf = makeRecord (quote qdesc) (quote qto) (quote qfrom) qdt
+qdt = quoteDatatypeᵐ Nat
 
 module TestQdt where
-  open import Reflection
-  open import Data.List
-  testQdt : NamedSafeDatatype.sop qdt ≡ (quote zero , []) ∷
-                                         (quote suc , Srec ∷ []) ∷
-                                         []
-  testQdt = refl
+  open import Builtin.Reflection
+  open import ContextFree.One.Params
+  test-qdt : qdt ≡ mk (quote Nat) 0 []
+                      ((quote Nat.zero , []) ∷
+                       (quote Nat.suc , Srec ∷ []) ∷
+                       [])
+  test-qdt = refl
 
-testDesc : qdesc ≡ desc
+unquoteDecl qrec = defineRec qrec qdt
+
+module Q = RawIsContextFree qrec
+
+testDesc : Q.desc ≡ desc
 testDesc = refl
 
-testTo : ∀ n → qto n ≡ to n
+testTo : ∀ n → Q.to n ≡ to n
 testTo zero-α = refl
 testTo (suc-α n) = cong suc-β (testTo n)
 
-testFrom : ∀ n → qfrom n ≡ from n
+testFrom : ∀ n → Q.from n ≡ from n
 testFrom zero-β = refl
 testFrom (suc-β n) = cong suc-α (testFrom n)
 testFrom absurd-β

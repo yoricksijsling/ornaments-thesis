@@ -1,9 +1,6 @@
 module ContextFree.One.Desc where
 
-open import Data.Empty
-open import Data.Unit.Base
-open import Data.Sum
-open import Data.Product
+open import Common
 
 infixr 3 _`+_
 infixr 4 _`*_
@@ -21,26 +18,21 @@ data Desc : Set₁ where
 ⟦_⟧ (`P₀ S) X = S
 ⟦_⟧ `0 X = ⊥
 ⟦_⟧ `1 X = ⊤
-⟦_⟧ (A `+ B) X = ⟦ A ⟧ X ⊎ ⟦ B ⟧ X
+⟦_⟧ (A `+ B) X = Either (⟦ A ⟧ X) (⟦ B ⟧ X)
 ⟦_⟧ (A `* B) X = ⟦ A ⟧ X × ⟦ B ⟧ X
 ⟦_⟧ `var X = X
 
 data μ (D : Desc) : Set where
   ⟨_⟩ : ⟦ D ⟧ (μ D) → μ D
 
-open import Category.Functor
-open RawFunctor
-⟦⟧-functor : ∀ D → RawFunctor ⟦ D ⟧
-⟦⟧-functor `0 = record { _<$>_ = λ f x → x }
-⟦⟧-functor `1 = record { _<$>_ = λ f x → x }
-⟦⟧-functor (`P₀ S) = record { _<$>_ = λ f x → x }
-⟦⟧-functor (A `+ B) = record { _<$>_ = λ f → Data.Sum.map (_<$>_ (⟦⟧-functor A) f)
-                                                          (_<$>_ (⟦⟧-functor B) f) }
-⟦⟧-functor (A `* B) = record { _<$>_ = λ f → Data.Product.map (_<$>_ (⟦⟧-functor A) f)
-                                                              (_<$>_ (⟦⟧-functor B) f) }
-⟦⟧-functor `var = record { _<$>_ = λ f → f }
-
-open import Relation.Binary.PropositionalEquality using (_≡_)
+instance
+  ⟦⟧-functor : ∀ D → Functor ⟦ D ⟧
+  ⟦⟧-functor (`P₀ S) = record { fmap = λ f x → x }
+  ⟦⟧-functor `0 = record { fmap = λ f x → x }
+  ⟦⟧-functor `1 = record { fmap = λ f x → x }
+  ⟦⟧-functor (A `+ B) = record { fmap = λ f → mapEither (fmap {{⟦⟧-functor A}} f) (fmap {{⟦⟧-functor B}} f) }
+  ⟦⟧-functor (A `* B) = record { fmap = λ f → map× (fmap f) (fmap f) }
+  ⟦⟧-functor `var = record { fmap = λ f → f }
 
 record RawIsContextFree (A : Set) : Set₁ where
   constructor mk

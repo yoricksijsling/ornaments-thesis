@@ -1,12 +1,7 @@
 module ContextFree.One.Quoted where
 
-open import Data.Fin using (Fin)
-open import Data.List using (List; []; _∷_)
-open import Data.Nat using (ℕ)
-open import Data.Product using (_×_; _,_; Σ) renaming (map to map×)
-open import Data.Unit.Base
-open import Data.Vec using (Vec)
-open import Reflection using (Name)
+open import Common
+open import Builtin.Reflection
 open import ContextFree.One.Params using (Param)
 
 -- We do not want to use reflected Term's, because we can't unquote these in DescFunction.
@@ -18,36 +13,36 @@ open import ContextFree.One.Params using (Param)
 -- never be type safe
 
 -- data SafeLiteral : Set where
---   nat : ℕ → SafeLiteral
+--   nat : Nat → SafeLiteral
 
--- data SafeTerm : ℕ → Set where
+-- data SafeTerm : Nat → Set where
 --   var : ∀{pc} → Fin pc → SafeTerm pc
 --   def : ∀{pc} → Name → (p → Set) → SafeTerm pc
 --   def : ∀{pc} → (sdt : NamedSafeDatatype) → paramsFor sdt → SafeTerm pc
 --   lit : ∀{pc} → SafeLiteral → SafeTerm pc
 
--- ℕ = def₀ (quote ℕ)
+-- Nat = def₀ (quote Nat)
 -- Fin 3 = def (quote Fin) (argvr (lit (nat 3)))
 
-data SafeArg {pc : ℕ} : Set where
+data SafeArg {pc : Nat} : Set where
   Spar : Fin pc → SafeArg -- The type of the param is only stored in the Param List
   -- This can replace Spar:
   -- Sterm₀ : SafeTerm pc → SafeArg
   Srec : SafeArg
 
-SafeProduct : {pc : ℕ} → Set
+SafeProduct : {pc : Nat} → Set
 SafeProduct {pc} = List (SafeArg {pc})
 
-SafeSum : {pc : ℕ} → Set
+SafeSum : {pc : Nat} → Set
 SafeSum {pc} = List (SafeProduct {pc})
 
 record SafeDatatype : Set where
   constructor mk
-  field pc : ℕ
+  field pc : Nat
         params : Vec Param pc
         sop : SafeSum {pc}
 
-SafeSumNames : {pc : ℕ} → SafeSum {pc} → Set
+SafeSumNames : {pc : Nat} → SafeSum {pc} → Set
 SafeSumNames [] = ⊤
 SafeSumNames (_ ∷ ps) = Name × SafeSumNames ps
 
@@ -56,26 +51,26 @@ SafeDatatypeNames (mk pc params sop) = Name × SafeSumNames sop
 
 
 
-NamedSafeProduct : {pc : ℕ} → Set
+NamedSafeProduct : {pc : Nat} → Set
 NamedSafeProduct {pc} = (Name × List (SafeArg {pc}))
 
-NamedSafeSum : {pc : ℕ} → Set
+NamedSafeSum : {pc : Nat} → Set
 NamedSafeSum {pc} = List (NamedSafeProduct {pc})
 
 record NamedSafeDatatype : Set where
   constructor mk
   field dtname : Name
-        pc : ℕ
+        pc : Nat
         params : Vec Param pc
         sop : NamedSafeSum {pc}
 
 private
-  nameSafeSum : {pc : ℕ} → (ss : SafeSum {pc}) → SafeSumNames ss → NamedSafeSum {pc}
+  nameSafeSum : {pc : Nat} → (ss : SafeSum {pc}) → SafeSumNames ss → NamedSafeSum {pc}
   nameSafeSum [] tt = []
   nameSafeSum (p ∷ ps) (pn , psn) = (pn , p) ∷ nameSafeSum ps psn
-  unnameSafeSum : {pc : ℕ} → NamedSafeSum {pc} → Σ SafeSum SafeSumNames
+  unnameSafeSum : {pc : Nat} → NamedSafeSum {pc} → Σ SafeSum SafeSumNames
   unnameSafeSum [] = [] , tt
-  unnameSafeSum ((pn , p) ∷ nps) = map× (_∷_ p) (_,_ pn) (unnameSafeSum nps)
+  unnameSafeSum (p ∷ nps) = map× (_∷_ (snd p)) (_,_ (fst p)) (unnameSafeSum nps)
 
 nameSafeDatatype : (sd : SafeDatatype) → SafeDatatypeNames sd → NamedSafeDatatype
 nameSafeDatatype (mk pc params sop) (n , sopn) = mk n pc params (nameSafeSum sop sopn)
@@ -84,20 +79,17 @@ unnameSafeDatatype : NamedSafeDatatype → Σ SafeDatatype SafeDatatypeNames
 unnameSafeDatatype (mk dtname pc params sopn) = map× (mk pc params) (_,_ dtname) (unnameSafeSum sopn)
 
 module _ where
-  open import Data.Product using (uncurry)
-  open import Relation.Binary.PropositionalEquality
-
   name-unname : ∀ x → uncurry nameSafeDatatype (unnameSafeDatatype x) ≡ x
-  name-unname (mk dtname pc params sop) = cong (mk dtname pc params) (sum sop)
+  name-unname (mk dtname pc params sop) = cong (mk dtname pc params) (s sop)
     where
-    sum : ∀ x → uncurry nameSafeSum (unnameSafeSum x) ≡ x
-    sum [] = refl
-    sum (_ ∷ nps) = cong₂ _∷_ refl (sum nps)
+    s : ∀ x → uncurry nameSafeSum (unnameSafeSum x) ≡ x
+    s [] = refl
+    s ((_ , _) ∷ nps) = cong₂ _∷_ refl (s nps)
 
   private
-    unname-name-sum : {pc : ℕ} → ∀ ps psn → unnameSafeSum {pc} (nameSafeSum ps psn) ≡ ps , psn
+    unname-name-sum : {pc : Nat} → ∀ ps psn → unnameSafeSum {pc} (nameSafeSum ps psn) ≡ (ps , psn)
     unname-name-sum [] tt = refl
     unname-name-sum (p ∷ ps) (pn , psn) rewrite unname-name-sum ps psn = refl
 
-  unname-name : ∀ ps psn → unnameSafeDatatype (nameSafeDatatype ps psn) ≡ ps , psn
+  unname-name : ∀ ps psn → unnameSafeDatatype (nameSafeDatatype ps psn) ≡ (ps , psn)
   unname-name (mk pc params sop) (n , sopn) rewrite unname-name-sum sop sopn = refl

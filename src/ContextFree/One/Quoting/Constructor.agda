@@ -1,95 +1,102 @@
 module ContextFree.One.Quoting.Constructor where
 
+open import Builtin.Reflection
+open import Common
+open import Data.Traversable
+open import TC
+
 open import ContextFree.One.Params
 open import ContextFree.One.Quoted
-open import Data.Error
-open Data.Error.Monad
-open import Data.Fin using (Fin; #_; fromℕ≤)
-open import Data.List using (List; []; _∷_; drop; map)
--- open import Data.Nat using (ℕ; zero; suc; _∸_; _≤?_; _≤_; z≤n; s≤s)
-open import Data.Nat using (ℕ; zero; suc; _∸_; _≤?_; _≤_; z≤n; s≤s)
-open import Data.Product using (_,_)
-open import Data.Stream using (iterate)
-open import Data.Unit using (⊤; tt)
-open import Data.Vec using (toList)
-open import Function using (_∘′_)
-open import Relation.Nullary using (Dec; yes; no)
-open import Relation.Binary.PropositionalEquality
-open import Reflection
-open import Stuff using (zipStream)
+open import Stuff using (zipNats)
 
-checkSort0 : Sort → Error ⊤
-checkSort0 (lit zero) = ok tt
-checkSort0 s = log "Sort is not `lit 0`" >> fail s
+private
+  SomeNamedSafeProduct : Set
+  SomeNamedSafeProduct = Σ Nat (λ pc → NamedSafeProduct {pc})
 
-checkArginfovr : Arg-info → Error ⊤
-checkArginfovr (arg-info visible relevant) = ok tt
+checkArginfovr : ArgInfo → TC ⊤
+checkArginfovr (arg-info visible relevant) = return tt
 checkArginfovr (arg-info _ _) = fail "Arg is not visible and relevant"
 
-ℕtoFin : ∀{m S} → ℕ → S → Error (Fin m)
-ℕtoFin n s = fromℕ≤ <$> decToError s (suc n ≤? _)
+NatToFin : ∀{m} → Nat → String → TC (Fin m)
+NatToFin {m} n s = iguard (natToFin n) s
 
 -- in : name of datatype, Type of the constructor, the number of params to use
 -- out: list of SafeArgs
-termToConstructor : (`dt : Name)(ct : Type)(pc : ℕ)(pc≤ : pc ≤ paramCount ct) →
-                    Error (List (SafeArg {pc}))
-termToConstructor `dt ct pc pc≤ = termToConstructor′
+parseConstructor : (`dt : Name)(pc : Nat)(cty : Type) → TC (List (SafeArg {pc}))
+parseConstructor `dt pc = parseConstructor′
   where
-  termToArg : (offset : ℕ) → Term → Error SafeArg
-  termToArg offset (def f args) with f ≟-Name `dt | drop pc args
-  termToArg offset (def f args) | yes p | []    = return Srec
-  termToArg offset (def f args) | yes p | _ ∷ _ = fail "termToArg: self-reference has arguments"
-  termToArg offset (def f args) | no ¬p | _     = fail "termToArg: reference to type that is not self"
-  termToArg offset (var i []) = Spar <$> ℕtoFin (i ∸ offset)
-            "termToArg: De Bruijn index too high, referencing something outside the data type?"
-  termToArg offset otherwise = fail "termToArg: term not supported"
+  parseArg : (offset : Nat) → Term → TC SafeArg
+  parseArg offset (def f args) with f == `dt | drop pc args
+  parseArg offset (def f args) | yes p | []    = return Srec
+  parseArg offset (def f args) | yes p | _ ∷ _ = fail "parseArg: self-reference has arguments"
+  parseArg offset (def f args) | no ¬p | _     = fail "parseArg: reference to type that is not self"
+  parseArg offset (var i []) = Spar <$> NatToFin (i -N offset)
+            "parseArg: De Bruijn index too high, referencing something outside the data type?"
+  parseArg offset otherwise = fail "parseArg: term not supported"
 
-  quoteArg : ℕ → Sort → Type → Error SafeArg
-  quoteArg offset s (el sarg t) = checkSort0 s >>
-                                  checkSort0 sarg >>
-                                  termToArg offset t
-
-  checkTarget : Type → Error ⊤
-  checkTarget (el s (def f args)) with f ≟-Name `dt | drop pc args
-  checkTarget (el s (def f _)) | yes p | []    = checkSort0 s >> return tt
-  checkTarget (el s (def f _)) | yes p | _ ∷ _ = fail "checkTarget: Indices in constructor target are not supported"
-  checkTarget (el s (def f _)) | no ¬p | _     = fail "checkTarget: Invalid constructor target"
+  checkTarget : Type → TC ⊤
+  checkTarget (def f args) with f == `dt | drop pc args
+  checkTarget (def f _) | yes p | [] = return tt
+  checkTarget (def f _) | yes p | _ ∷ _ = fail "checkTarget: Indices in constructor target are not supported"
+  checkTarget (def f _) | no ¬p | _ = fail "checkTarget: Invalid constructor target"
   checkTarget otherwise = fail "checkTarget: Invalid constructor target"
 
-  termToConstructor′ : Error (List SafeArg)
-  termToConstructor′ = let (pargs , ptarget) = takeParams ct pc pc≤ in
-                       let (args , target) = getArgs ptarget in
-                       checkTarget target >>
-                       sequenceM (zipStream (λ { n (s , a) → quoteArg n s a })
-                                            (iterate suc 0) args)
+  parseConstructor′ : Type → TC (List SafeArg)
+  parseConstructor′ cty =
+    (fromMaybe ("parseConstructor′: Took to many parameters") (dropParams cty pc)) >>= λ cty′ →
+    let args,target = getArgs cty′ in
+    checkTarget (snd args,target) >>
+    mapM id (zipNats parseArg (fst args,target))
 
-quoteConstructor : (`dt `c : Name)(pc : ℕ)(pc≤ : pc ≤ paramCount (type `c)) →
-                   Error (NamedSafeProduct {pc})
-quoteConstructor `dt `c pc pc≤ = _,_ `c <$> termToConstructor `dt (type `c) pc pc≤
+-- quoteConstructor : (`dt `c : Name) → TC SomeNamedSafeProduct
+-- quoteConstructor `dt `c =
+--   getType `c >>= λ cty →
+--   getParameters `dt >>= λ pc →
+--   parseConstructor `dt pc cty >>= λ as →
+--   return (pc , `c , as)
+
+-- macro
+--   quoteConstructorᵐ : (`dt `c : Name) → Tactic
+--   quoteConstructorᵐ `dt `c = runTC (quoteConstructor `dt `c)
+
+quoteConstructor : (`dt : Name)(pc : Nat)(`c : Name) → TC NamedSafeProduct
+quoteConstructor `dt pc `c =
+  getType `c >>= λ cty →
+  parseConstructor `dt pc cty >>= λ as →
+  return (`c , as)
+
+macro
+  quoteConstructorᵐ : (`dt : Name)(pc : Nat)(`c : Name) → Tactic
+  quoteConstructorᵐ `dt pc `c = runTC (quoteConstructor `dt pc `c)
 
 module TestTermToConstructor where
   data Dummy : Set where
     dZ : Dummy
     dS : Dummy → Dummy
 
-  testZ : ok ((quote dZ) , []) ≡ quoteConstructor (quote Dummy) (quote dZ) 0 z≤n
+  -- testZ : (0 , quote dZ , []) ≡ quoteConstructorᵐ Dummy dZ
+  testZ : (quote dZ , []) ≡ quoteConstructorᵐ Dummy 0 dZ
   testZ = refl
 
-  testS : ok ((quote dS) , Srec ∷ []) ≡ quoteConstructor (quote Dummy) (quote dS) 0 z≤n
+  -- testS : (0 , quote dS , Srec ∷ []) ≡ quoteConstructorᵐ Dummy dS
+  testS : (quote dS , Srec ∷ []) ≡ quoteConstructorᵐ Dummy 0 dS
   testS = refl
 
   data Dummy2 (A : Set) : Set where
     dRec : A → Dummy2 A
 
-  testRec : ok (quote dRec , Spar (# 0) ∷ []) ≡ quoteConstructor (quote Dummy2) (quote dRec) 1 (s≤s z≤n)
+  -- testRec : (1 , quote dRec , Spar 0 ∷ []) ≡ quoteConstructorᵐ Dummy2 dRec
+  testRec : (quote dRec , Spar 0 ∷ []) ≡ quoteConstructorᵐ Dummy2 1 dRec
   testRec = refl
 
   data Dummy3 (A B : Set) : Set where
     dPair : A → B → Dummy3 A B
     dMulti : B → B → Dummy2 A → Dummy3 A B
 
-  testPair : ok (quote dPair , Spar (# 1) ∷ Spar (# 0) ∷ [])
-    ≡ quoteConstructor (quote Dummy3) (quote dPair) 2 (s≤s (s≤s z≤n))
+  -- testPair : ok (quote dPair , Spar (# 1) ∷ Spar (# 0) ∷ [])
+  --   ≡ quoteConstructor (quote Dummy3) (quote dPair) 2 (s≤s (s≤s z≤n))
+  -- testPair : (2 , quote dPair , Spar 1 ∷ Spar 0 ∷ []) ≡ quoteConstructorᵐ Dummy3 dPair
+  testPair : (quote dPair , Spar 1 ∷ Spar 0 ∷ []) ≡ quoteConstructorᵐ Dummy3 2 dPair
   testPair = refl
 
   -- type of dMulti : {A B : Set} → B → B → Dummy2 A → Dummy3 A B
