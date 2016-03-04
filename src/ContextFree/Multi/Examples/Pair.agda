@@ -1,19 +1,8 @@
 module ContextFree.Multi.Examples.Pair where
 
-
--- Reorganisation proposal
--- Move some things to Multi.Desc.Base
--- Move Multi.DescFunction to Multi.Desc.FromQuoted and rename descFun to descFromQuoted
--- Reexport all the important stuff (like descFromQuoted) in Multi.Desc.
--- Move EmbeddingProjection under Desc
-
-
-
 open import Common
 open import ContextFree.Multi.Desc
-open import ContextFree.Multi.DescEquality
-open import ContextFree.Multi.DescFunction
-open import ContextFree.Multi.EmbeddingProjection
+open import ContextFree.Multi.Quotable
 open import ContextFree.Multi.Quoted
 open import ContextFree.Multi.Quoting
 
@@ -47,7 +36,7 @@ module Manually where
   from-to A B (β a b) = refl
   from-to A B absurd-β
 
-  rec : ∀ A B → IsContextFree (Pair A B)
+  rec : ∀ A B → Quotable (Pair A B)
   rec A B = record { desc = desc ; to = to A B ; from = from A B
                    ; to-from = to-from A B ; from-to = from-to A B }
 
@@ -68,8 +57,8 @@ sdt = fst (unnameSafeDatatype nsdt)
 unquoteDecl qrec = defineRecord qrec nsdt
 
 module TestQrec (A B : Set) where
-  module Q = RawIsContextFree (qrec A B)
-  module M = IsContextFree (Manually.rec A B)
+  module Q = RawQuotable (qrec A B)
+  module M = Quotable (Manually.rec A B)
 
   test-desc : Q.desc ≡ M.desc
   test-desc = refl

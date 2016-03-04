@@ -1,9 +1,9 @@
-module ContextFree.Multi.EmbeddingProjection where
+module ContextFree.Multi.Quotable.Define where
 
 open import Common
 open import ContextFree.Multi.Desc
-open import ContextFree.Multi.DescFunction
 open import ContextFree.Multi.Params
+open import ContextFree.Multi.Quotable.Core
 open import ContextFree.Multi.Quoted
 open import Reflection
 open import Stuff using (zipNats; zipNatsDown)
@@ -130,13 +130,13 @@ module Record (`record `desc `to `from : Name) where
   module WithParams {pc : Nat}(params : Vec Param pc) where
     type : (`dt : Name) → Type
     type `dt = addParams (vecToList params) $
-               `def₁ (quote RawIsContextFree) (def `dt (paramVars 0 params))
+               `def₁ (quote RawQuotable) (def `dt (paramVars 0 params))
 
     makeClauses : List Clause
     makeClauses = [_] $ clause (paramPats params) $
-                  `con₃ (quote RawIsContextFree.mk) (def `desc [])
-                                                    (def `to (paramVars 0 params))
-                                                    (def `from (paramVars 0 params))
+                  `con₃ (quote RawQuotable.mk) (def `desc [])
+                                               (def `to (paramVars 0 params))
+                                               (def `from (paramVars 0 params))
 
   defineRecord : NamedSafeDatatype → TC ⊤
   defineRecord (mk `dt pc params sop) = define (vArg `record) (type `dt) makeClauses
@@ -145,19 +145,12 @@ module Record (`record `desc `to `from : Name) where
 defineDesc : (`desc : Name) → NamedSafeDatatype → TC ⊤
 defineDesc `desc nsdt =
   let sdt = fst (unnameSafeDatatype nsdt) in
-  do declareDef (vArg `desc) =<< quoteTC (DescFun sdt)
-  ~| term ← quoteTC (descFun sdt)
+  do declareDef (vArg `desc) =<< quoteTC (SafeDatatypeToDesc sdt)
+  ~| term ← quoteTC (safeDatatypeToDesc sdt)
   -| defineFun `desc [ clause [] term ]
 
 defineRecord : Name → NamedSafeDatatype → TC ⊤
 defineRecord `rec nsdt =
-  -- do `desc ← freshName "desc"
-  -- -| `to ← freshName "to"
-  -- -| `from ← freshName "from"
-  -- -| defineDesc `desc nsdt
-  -- ~| To.defineTo `to `desc nsdt
-  -- ~| From.defineFrom `from `desc nsdt
-  -- ~| Record.defineRecord `rec `desc `to `from nsdt
   do `desc ← freshName "desc"
   -| defineDesc `desc nsdt
   ~| `req ← freshName "req"

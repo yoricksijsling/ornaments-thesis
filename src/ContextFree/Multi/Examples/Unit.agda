@@ -2,9 +2,7 @@ module ContextFree.Multi.Examples.Unit where
 
 open import Common
 open import ContextFree.Multi.Desc
-open import ContextFree.Multi.DescEquality
-open import ContextFree.Multi.DescFunction
-open import ContextFree.Multi.EmbeddingProjection
+open import ContextFree.Multi.Quotable
 open import ContextFree.Multi.Quoted
 open import ContextFree.Multi.Quoting
 
@@ -35,7 +33,7 @@ from-to : ∀ x → to (from x) ≡ x
 from-to β = refl
 from-to absurd-β
 
-isContextFree-U : IsContextFree U
+isContextFree-U : Quotable U
 isContextFree-U = record { desc = desc ; to = to ; from = from
                          ; to-from = to-from ; from-to = from-to }
 
@@ -50,7 +48,7 @@ module TestNsdt where
 
 unquoteDecl qrec = defineRecord qrec nsdt
 
-module Q = RawIsContextFree qrec
+module Q = RawQuotable qrec
 
 testDesc : Q.desc ≡ desc
 testDesc = refl

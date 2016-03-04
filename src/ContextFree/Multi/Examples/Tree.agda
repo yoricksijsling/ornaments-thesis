@@ -2,9 +2,7 @@ module ContextFree.Multi.Examples.Tree where
 
 open import Common
 open import ContextFree.Multi.Desc
-open import ContextFree.Multi.DescEquality
-open import ContextFree.Multi.DescFunction
-open import ContextFree.Multi.EmbeddingProjection
+open import ContextFree.Multi.Quotable
 open import ContextFree.Multi.Quoted
 open import ContextFree.Multi.Quoting
 
@@ -51,7 +49,7 @@ module Manually where
   from-to A (node2-β v xs ys) = cong₂ (node2-β v) (from-to A xs) (from-to A ys)
   from-to A absurd-β
 
-  rec : ∀ A → IsContextFree (Tree A)
+  rec : ∀ A → Quotable (Tree A)
   rec A = record { desc = desc ; to = to A ; from = from A
                  ; to-from = to-from A ; from-to = from-to A }
 
@@ -72,8 +70,8 @@ module TestNsdt where
 unquoteDecl qrec = defineRecord qrec nsdt
 
 module TestQrec (A : Set) where
-  module Q = RawIsContextFree (qrec A)
-  module M = IsContextFree (Manually.rec A)
+  module Q = RawQuotable (qrec A)
+  module M = Quotable (Manually.rec A)
 
   test-desc : Q.desc ≡ M.desc
   test-desc = refl

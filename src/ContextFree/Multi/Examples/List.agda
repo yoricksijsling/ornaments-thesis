@@ -2,6 +2,7 @@ module ContextFree.Multi.Examples.List where
 
 open import Common
 open import ContextFree.Multi.Desc
+open import ContextFree.Multi.Quotable
 
 infixr 5 _∷_
 
@@ -45,12 +46,12 @@ module Manually where
   from-to A (cons-β x xs) = cong (λ xs′ → cons-β x xs′) (from-to A xs)
   from-to A absurd-β
 
-  rec : ∀ A → IsContextFree (ListP A)
+  rec : ∀ A → Quotable (ListP A)
   rec A = record { desc = desc ; to = to A ; from = from A
                  ; to-from = to-from A ; from-to = from-to A }
 
 
--- Our goal is to generate the IsContextFree record automatically from just the
+-- Our goal is to generate the Quotable record automatically from just the
 -- definition of ListP. First we look at the datatype and generate an
 -- intermediate representation of the datatype which is 'safe' in the sense
 -- that it can always be converted to a Desc.
@@ -81,23 +82,19 @@ module TestQdt where
 
 -- The description can easily be calculated from the NamedSafeDatatype
 
-open import ContextFree.Multi.DescFunction
-
 module TestDesc where
-  test-desc : descFun sdt ≡ Manually.desc
+  test-desc : safeDatatypeToDesc sdt ≡ Manually.desc
   test-desc = refl
 
 -- Unquote a record which contains the Desc and the embedding-projection pair.
-
-open import ContextFree.Multi.EmbeddingProjection
 
 unquoteDecl qrec = defineRecord qrec nsdt
 
 --
 
 module TestQrec (A : Set) where
-  module Q = RawIsContextFree (qrec A)
-  module M = IsContextFree (Manually.rec A)
+  module Q = RawQuotable (qrec A)
+  module M = Quotable (Manually.rec A)
 
   test-desc : Q.desc ≡ M.desc
   test-desc = refl
@@ -105,8 +102,6 @@ module TestQrec (A : Set) where
   test-req : (i : Fin 1) → Q.req i ≡ M.req i
   test-req zero = refl
   test-req (suc ())
-
-  open import ContextFree.Multi.DescEquality
 
   test-to : {{rs : Q.req ≡ M.req}} → ∀ x → DescEq (`fix Q.desc) (Q.to x) (M.to x)
   test-to [] = ⟨⟩-cong (left-cong tt-cong)

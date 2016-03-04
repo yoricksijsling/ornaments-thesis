@@ -2,9 +2,7 @@ module ContextFree.Multi.Examples.Nat where
 
 open import Common
 open import ContextFree.Multi.Desc
-open import ContextFree.Multi.DescEquality
-open import ContextFree.Multi.DescFunction
-open import ContextFree.Multi.EmbeddingProjection
+open import ContextFree.Multi.Quotable
 open import ContextFree.Multi.Quoted
 open import ContextFree.Multi.Quoting
 
@@ -39,7 +37,7 @@ module Manually where
   from-to (suc-β n) = cong suc-β (from-to n)
   from-to absurd-β
 
-  rec : IsContextFree Nat
+  rec : Quotable Nat
   rec = record { desc = desc ; to = to ; from = from
                ; to-from = to-from ; from-to = from-to }
 
@@ -58,8 +56,8 @@ module TestNsdt where
 unquoteDecl qrec = defineRecord qrec nsdt
 
 module TestQrec where
-  module Q = RawIsContextFree qrec
-  module M = IsContextFree Manually.rec
+  module Q = RawQuotable qrec
+  module M = Quotable Manually.rec
 
   test-desc : Q.desc ≡ M.desc
   test-desc = refl
