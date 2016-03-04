@@ -18,22 +18,31 @@ uncurry′ : ∀ {a b c} {A : Set a} {B : A → Set b} {C : Set c} →
             (∀ x → B x → C) → Σ A B → C
 uncurry′ = uncurry
 
+first : ∀ {a₁ a₂ b} {A₁ : Set a₁} {A₂ : Set a₂} {B : Set b} →
+          (A₁ → A₂) → A₁ × B → A₂ × B
+first f = map× f id
+
+second : ∀ {a b₁ b₂} {A : Set a} {B₁ : A → Set b₁} {B₂ : A → Set b₂} →
+           (∀ {x} → B₁ x → B₂ x) → Σ A B₁ → Σ A B₂
+second f = map× id f
+
 module _ where
-  -- In Prelude the pair is defined as a datatype, where it was a record in stdlib.
-  -- Now because functions like _***_ and uncurry do a pattern match they give some problems when we want to prove stuff.
-  -- For instance the following:
+  private
+    -- In Prelude the pair is defined as a datatype, where it was a record in stdlib.
+    -- Now because functions like _***_ and uncurry do a pattern match they give some problems when we want to prove stuff.
+    -- For instance the following:
 
-  f : (⊤ × List Nat) → List Nat
-  -- f (tt , y) = y
-  f p = snd p
+    f : (⊤ × List Nat) → List Nat
+    -- f (tt , y) = y
+    f p = snd p
 
-  g : List Nat → ⊤ × List Nat
-  g [] = tt , []
-  g (x ∷ xs) = map× id (_∷_ x) (g xs)
-  -- g (x ∷ xs) = _***_ id (_∷_ x) (g xs)
+    g : List Nat → ⊤ × List Nat
+    g [] = tt , []
+    g (x ∷ xs) = map× id (_∷_ x) (g xs)
+    -- g (x ∷ xs) = _***_ id (_∷_ x) (g xs)
 
-  fg : ∀ xs → f (g xs) ≡ xs
-  fg [] = refl
-  fg (x ∷ xs) = cong (_∷_ x) (fg xs) -- This does not work if we pattern match on the pair somewhere in f or g.
+    fg : ∀ xs → f (g xs) ≡ xs
+    fg [] = refl
+    fg (x ∷ xs) = cong (_∷_ x) (fg xs) -- This does not work if we pattern match on the pair somewhere in f or g.
 
 
