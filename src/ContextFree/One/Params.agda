@@ -2,6 +2,7 @@ module ContextFree.One.Params where
 
 open import Common
 open import Reflection
+open import Stuff using (zipNatsDown)
 open import Tactic.Nat
 
 pattern arg-pat a s t = pi (arg (arg-info visible relevant) a) (abs s t)
@@ -43,6 +44,7 @@ takeParams t (suc n) {{p}} with paramView t
 takeParams ._ (suc n) | param₀ v s t = map× (_∷_ (param₀ v s)) id (takeParams t n)
 takeParams ._ (suc n) {{}} | rest t
 
+-- Takes (p₁,p₂,..,pn) and some type `T` to `p₁ → p₂ → .. → pn → T`
 addParams : List Param → Type → Type
 addParams [] target = target
 addParams (param₀ v s ∷ args) target = param₀-pat v s (addParams args target)
@@ -53,6 +55,7 @@ dropParams t (suc n) with paramView t
 dropParams ._ (suc n) | param₀ v s t = dropParams t n
 dropParams ._ (suc n) | rest t = nothing
 
+-- Takes (p₁,p₂,..,pn) and some term `T` to `λ p₁ p₂ .. pn → T`
 addParamsTm : List Param → Term → Term
 addParamsTm [] target = target
 addParamsTm (param₀ v s ∷ ps) target = lam v (abs s (addParamsTm ps target))
@@ -63,3 +66,21 @@ module _ where
   addTakeParams t (suc n) p with paramView t
   addTakeParams ._ (suc n) p | param₀ v s t = cong (param₀-pat v s) (addTakeParams t n p)
   addTakeParams ._ (suc n) () | rest t
+
+
+paramVars : ∀{tp}(offset : Nat){pc : Nat} → Vec Param pc → List (Arg ⟦ tp ⟧tp)
+paramVars {tp} offset = zipNatsDown offset tm ∘ vecToList
+  where tm : Nat → Param → Arg ⟦ tp ⟧tp
+        tm offset (param₀ v s) = arg (arg-info v relevant) (`var₀ offset s)
+
+paramPats : {pc : Nat} → Vec Param pc → List (Arg Pattern)
+paramPats = paramVars 0 -- If it is used as a pattern, the offset is ignored
+
+module _ where
+  test-paramVars-t : paramVars {tp-term} 1 (param₀ visible "a" ∷ param₀ visible "b" ∷ [])
+                   ≡ vArg (var 2 []) ∷ vArg (var 1 []) ∷ []
+  test-paramVars-t = refl
+
+  test-paramVars-p : paramVars {tp-patt} 1 (param₀ visible "a" ∷ param₀ visible "b" ∷ [])
+                   ≡ vArg (var "a") ∷ vArg (var "b") ∷ []
+  test-paramVars-p = refl

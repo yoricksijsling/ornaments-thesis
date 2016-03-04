@@ -9,23 +9,6 @@ open import Reflection
 open import Stuff using (zipNats; zipNatsDown)
 
 private
-  paramArgs : ∀{tp}(offset : Nat){pc : Nat} → Vec Param pc → List (Arg ⟦ tp ⟧tp)
-  paramArgs {tp} offset = zipNatsDown offset tm ∘ vecToList
-    where tm : Nat → Param → Arg ⟦ tp ⟧tp
-          tm offset (param₀ v s) = arg (arg-info v relevant) (`var₀ offset s)
-
-  paramPats : {pc : Nat} → Vec Param pc → List (Arg Pattern)
-  paramPats = paramArgs 0 -- If it is used as a pattern, the offset is ignored
-
-  module _ where
-    test-paramArgs-t : paramArgs {tp-term} 1 (param₀ visible "a" ∷ param₀ visible "b" ∷ [])
-                     ≡ vArg (var 2 []) ∷ vArg (var 1 []) ∷ []
-    test-paramArgs-t = refl
-
-    test-paramArgs-p : paramArgs {tp-patt} 1 (param₀ visible "a" ∷ param₀ visible "b" ∷ [])
-                     ≡ vArg (var "a") ∷ vArg (var "b") ∷ []
-    test-paramArgs-p = refl
-
   right^_ : ∀{tp} → Nat → ⟦ tp ⟧tp → ⟦ tp ⟧tp
   right^_ zero = id
   right^_ (suc n) = `con₁ (quote right) ∘ (right^ n)
@@ -53,7 +36,7 @@ module ToFrom {pc : Nat}(params : Vec Param pc) where
     where
     termArg : Nat → SafeArg {pc} → Term
     termArg meᵢ (Spar i) = `var₀ meᵢ ""
-    termArg meᵢ Srec = def `f (paramArgs (length as) params ++ [ vArg (`var₀ meᵢ "") ])
+    termArg meᵢ Srec = def `f (paramVars (length as) params ++ [ vArg (`var₀ meᵢ "") ])
 
 module To (`to `desc : Name) where
   module WithParams {pc : Nat}(params : Vec Param pc) where
@@ -69,8 +52,8 @@ module To (`to `desc : Name) where
 
     type : (`dt : Name) → Type
     type `dt = addParams (vecToList params) $
-               def `dt (paramArgs 0 params)
-                 `→ `def₁ (quote μ) (def `desc (paramArgs 1 params))
+               def `dt (paramVars 0 params)
+                 `→ `def₁ (quote μ) (def `desc (paramVars 1 params))
 
   defineTo : NamedSafeDatatype → TC ⊤
   defineTo (mk `dt pc params sop) = define (vArg `to) (type `dt) (makeClauses sop)
@@ -100,8 +83,8 @@ module From (`from `desc : Name) where
 
     type : (`dt : Name) → Type
     type `dt = addParams (vecToList params) $
-               `def₁ (quote μ) (def `desc (paramArgs 0 params))
-                 `→ def `dt (paramArgs 1 params)
+               `def₁ (quote μ) (def `desc (paramVars 0 params))
+                 `→ def `dt (paramVars 1 params)
 
   defineFrom : NamedSafeDatatype → TC ⊤
   defineFrom (mk `dt pc params sop) = define (vArg `from) (type `dt) (makeClauses sop)
@@ -111,13 +94,13 @@ module Record (`record `desc `to `from : Name) where
   module WithParams {pc : Nat}(params : Vec Param pc) where
     type : (`dt : Name) → Type
     type `dt = addParams (vecToList params) $
-               `def₁ (quote RawIsContextFree) (def `dt (paramArgs 0 params))
+               `def₁ (quote RawIsContextFree) (def `dt (paramVars 0 params))
 
     makeClauses : List Clause
     makeClauses = [_] $ clause (paramPats params) $
-                  `con₃ (quote RawIsContextFree.mk) (def `desc (paramArgs 0 params))
-                                                    (def `to (paramArgs 0 params))
-                                                    (def `from (paramArgs 0 params))
+                  `con₃ (quote RawIsContextFree.mk) (def `desc (paramVars 0 params))
+                                                    (def `to (paramVars 0 params))
+                                                    (def `from (paramVars 0 params))
 
   defineRecord : NamedSafeDatatype → TC ⊤
   defineRecord (mk `dt pc params sop) = define (vArg `record) (type `dt) makeClauses

@@ -48,17 +48,6 @@ parseConstructor `dt pc = parseConstructor′
     checkTarget (snd args,target) >>
     mapM id (zipNats parseArg (fst args,target))
 
--- quoteConstructor : (`dt `c : Name) → TC SomeNamedSafeProduct
--- quoteConstructor `dt `c =
---   getType `c >>= λ cty →
---   getParameters `dt >>= λ pc →
---   parseConstructor `dt pc cty >>= λ as →
---   return (pc , `c , as)
-
--- macro
---   quoteConstructorᵐ : (`dt `c : Name) → Tactic
---   quoteConstructorᵐ `dt `c = runTC (quoteConstructor `dt `c)
-
 quoteConstructor : (`dt : Name)(pc : Nat)(`c : Name) → TC NamedSafeProduct
 quoteConstructor `dt pc `c =
   getType `c >>= λ cty →
@@ -74,18 +63,15 @@ module TestTermToConstructor where
     dZ : Dummy
     dS : Dummy → Dummy
 
-  -- testZ : (0 , quote dZ , []) ≡ quoteConstructorᵐ Dummy dZ
   testZ : (quote dZ , []) ≡ quoteConstructorᵐ Dummy 0 dZ
   testZ = refl
 
-  -- testS : (0 , quote dS , Srec ∷ []) ≡ quoteConstructorᵐ Dummy dS
   testS : (quote dS , Srec ∷ []) ≡ quoteConstructorᵐ Dummy 0 dS
   testS = refl
 
   data Dummy2 (A : Set) : Set where
     dRec : A → Dummy2 A
 
-  -- testRec : (1 , quote dRec , Spar 0 ∷ []) ≡ quoteConstructorᵐ Dummy2 dRec
   testRec : (quote dRec , Spar 0 ∷ []) ≡ quoteConstructorᵐ Dummy2 1 dRec
   testRec = refl
 
@@ -96,6 +82,7 @@ module TestTermToConstructor where
   -- testPair : ok (quote dPair , Spar (# 1) ∷ Spar (# 0) ∷ [])
   --   ≡ quoteConstructor (quote Dummy3) (quote dPair) 2 (s≤s (s≤s z≤n))
   -- testPair : (2 , quote dPair , Spar 1 ∷ Spar 0 ∷ []) ≡ quoteConstructorᵐ Dummy3 dPair
+
   testPair : (quote dPair , Spar 1 ∷ Spar 0 ∷ []) ≡ quoteConstructorᵐ Dummy3 2 dPair
   testPair = refl
 
