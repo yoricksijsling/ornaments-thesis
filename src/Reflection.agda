@@ -43,5 +43,13 @@ private
 `var₀ : ∀{tp} → Nat → String → ⟦ tp ⟧tp
 `var₀ n s = `varₓ n s []
 
+`defₓ : Name → List Term → Term
+`defₓ n = def n ∘ map vArg
+`def₀ : Name → Term
+`def₀ n = `defₓ n []
 `def₁ : Name → Term → Term
-`def₁ n t = def n (vArg t ∷ [])
+`def₁ n t₁ = `defₓ n (t₁ ∷ [])
+`def₂ : Name → Term → Term → Term
+`def₂ n t₁ t₂ = `defₓ n (t₁ ∷ t₂ ∷ [])
+`def₃ : Name → Term → Term → Term → Term
+`def₃ n t₁ t₂ t₃ = `defₓ n (t₁ ∷ t₂ ∷ t₃ ∷ [])

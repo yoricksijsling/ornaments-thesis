@@ -3,8 +3,12 @@ module Common where
 open import Prelude hiding ( _***_; _***′_; first; second
                            ; uncurry; uncurry′
                            ; getArgs) public
+open import HeterogeneousEquality public
 
-
+Extensionality : (a b : Level) → Set _
+Extensionality a b =
+  {A : Set a} {B : A → Set b} {f g : (x : A) → B x} →
+  (∀ x → f x ≡ g x) → f ≡ g
 
 map× : ∀ {a₁ a₂ b₁ b₂} {A₁ : Set a₁} {A₂ : Set a₂} {B₁ : A₁ → Set b₁} {B₂ : A₂ → Set b₂}
        (f : A₁ → A₂) → (∀ {x} → B₁ x → B₂ (f x)) → Σ A₁ B₁ → Σ A₂ B₂
