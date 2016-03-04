@@ -1,7 +1,7 @@
 module Stuff where
 
 open import Prelude
-open import Data.List
+open import Container.List
 
 private
   inject₁ : ∀ {m} → Fin m → Fin (suc m)
