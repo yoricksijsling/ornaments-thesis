@@ -10,8 +10,8 @@ data Pair (A B : Set) : Set where
   pair : (a : A) → (b : B) → Pair A B
 
 module Manually where
-  desc : IODesc (Either (Fin 2) ⊤) ⊤
-  desc = `var (left 0) `* `var (left 1) `* `1 `+ `0
+  desc : IODesc (Fin 2) ⊤
+  desc = `fix $ `var (left 0) `* `var (left 1) `* `1 `+ `0
 
   pattern α a b = pair a b
   pattern β a b = ⟨ left (a , b , tt) ⟩
@@ -22,10 +22,10 @@ module Manually where
   req A B (suc zero) = B
   req A B (suc (suc ()))
 
-  to : (A B : Set) → Pair A B → ⟦ `fix desc ⟧ (req A B) tt
+  to : (A B : Set) → Pair A B → ⟦ desc ⟧ (req A B) tt
   to A B (α a b) = β a b
 
-  from : (A B : Set) → ⟦ `fix desc ⟧ (req A B) tt → Pair A B
+  from : (A B : Set) → ⟦ desc ⟧ (req A B) tt → Pair A B
   from A B (β a b) = α a b
   from A B absurd-β
 
@@ -68,9 +68,9 @@ module TestQrec (A B : Set) where
   test-req (suc zero) = refl
   test-req (suc (suc ()))
 
-  test-to : {{rs : Q.req ≡ M.req}} → ∀ x → DescEq (`fix Q.desc) (Q.to x) (M.to x)
+  test-to : {{rs : Q.req ≡ M.req}} → ∀ x → DescEq Q.desc (Q.to x) (M.to x)
   test-to (pair a b) = ⟨⟩-cong (left-cong (,-cong (var-cong refl) (,-cong (var-cong refl) tt-cong)))
 
-  test-from : {{rs : Q.req ≡ M.req}} → ∀ {x y} → DescEq (`fix Q.desc) x y → Q.from x ≅ M.from y
+  test-from : {{rs : Q.req ≡ M.req}} → ∀ {x y} → DescEq Q.desc x y → Q.from x ≅ M.from y
   test-from (⟨⟩-cong (left-cong (,-cong (var-cong refl) (,-cong (var-cong refl) tt-cong)))) = refl
   test-from (⟨⟩-cong (right-cong ()))

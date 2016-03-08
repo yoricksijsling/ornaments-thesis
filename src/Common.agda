@@ -30,8 +30,8 @@ second : ∀ {a b₁ b₂} {A : Set a} {B₁ : A → Set b₁} {B₂ : A → Set
            (∀ {x} → B₁ x → B₂ x) → Σ A B₁ → Σ A B₂
 second f = map× id f
 
-module _ where
-  private
+private
+  module Test where
     -- In Prelude the pair is defined as a datatype, where it was a record in stdlib.
     -- Now because functions like _***_ and uncurry do a pattern match they give some problems when we want to prove stuff.
     -- For instance the following:

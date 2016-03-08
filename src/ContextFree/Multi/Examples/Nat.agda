@@ -13,17 +13,17 @@ pattern suc-β n = ⟨ right (left (n , tt)) ⟩
 pattern absurd-β = ⟨ right (right ()) ⟩
 
 module Manually where
-  desc : IODesc (Either (Fin 0) ⊤) ⊤
-  desc = `1 `+ (`var (right tt) `* `1) `+ `0
+  desc : IODesc (Fin 0) ⊤
+  desc = `fix $ `1 `+ (`var (right tt) `* `1) `+ `0
 
   req : Fin 0 → Set
   req ()
 
-  to : Nat → ⟦ `fix desc ⟧ req tt
+  to : Nat → ⟦ desc ⟧ req tt
   to zero-α = zero-β
   to (suc-α n) = suc-β (to n)
 
-  from : ⟦ `fix desc ⟧ req tt → Nat
+  from : ⟦ desc ⟧ req tt → Nat
   from zero-β = zero-α
   from (suc-β n) = suc-α (from n)
   from absurd-β
@@ -65,11 +65,11 @@ module TestQrec where
   test-req : ∀ x → Q.req x ≡ M.req x
   test-req ()
 
-  test-to : {{rs : Q.req ≡ M.req}} → ∀ x → DescEq (`fix Q.desc) (Q.to x) (M.to x)
+  test-to : {{rs : Q.req ≡ M.req}} → ∀ x → DescEq Q.desc (Q.to x) (M.to x)
   test-to zero = ⟨⟩-cong (left-cong tt-cong)
   test-to (suc n) = ⟨⟩-cong (right-cong (left-cong (,-cong (var-cong (DescEq-to-≅ (test-to n))) tt-cong)))
 
-  test-from : {{rs : Q.req ≡ M.req}} → ∀ {x y} → DescEq (`fix Q.desc) x y → Q.from x ≅ Q.from y
+  test-from : {{rs : Q.req ≡ M.req}} → ∀ {x y} → DescEq Q.desc x y → Q.from x ≅ Q.from y
   test-from (⟨⟩-cong (left-cong tt-cong)) = refl
   test-from (⟨⟩-cong (right-cong (left-cong (,-cong (var-cong refl) tt-cong)))) = refl
   test-from (⟨⟩-cong (right-cong (right-cong ())))

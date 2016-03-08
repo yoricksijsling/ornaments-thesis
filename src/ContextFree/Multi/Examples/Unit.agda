@@ -9,8 +9,8 @@ open import ContextFree.Multi.Quoting
 data U : Set where
   u : U
 
-desc : IODesc (Either (Fin 0) ⊤) ⊤
-desc = `1 `+ `0
+desc : IODesc (Fin 0) ⊤
+desc = `fix $ `1 `+ `0
 
 pattern α = u
 pattern β = ⟨ left tt ⟩
@@ -19,10 +19,10 @@ pattern absurd-β = ⟨ right () ⟩
 req : ISet (Fin 0)
 req ()
 
-to : U → ⟦ `fix desc ⟧ req tt
+to : U → ⟦ desc ⟧ req tt
 to α = β
 
-from : ⟦ `fix desc ⟧ req tt → U
+from : ⟦ desc ⟧ req tt → U
 from β = α
 from absurd-β
 
@@ -56,10 +56,10 @@ testDesc = refl
 test-req : ∀ x → Q.req x ≡ req x
 test-req ()
 
-test-to : {{rs : Q.req ≡ req}} → ∀ x → DescEq (`fix Q.desc) (Q.to x) (to x)
+test-to : {{rs : Q.req ≡ req}} → ∀ x → DescEq Q.desc (Q.to x) (to x)
 test-to u = ⟨⟩-cong $ left-cong tt-cong
 
-test-from : ∀ {x y} → DescEq (`fix Q.desc) x y → Q.from x ≡ from y
+test-from : ∀ {x y} → DescEq Q.desc x y → Q.from x ≡ from y
 test-from (⟨⟩-cong (left-cong tt-cong)) = refl
 test-from (⟨⟩-cong (right-cong ()))
 

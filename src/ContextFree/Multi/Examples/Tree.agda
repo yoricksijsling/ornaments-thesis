@@ -20,19 +20,22 @@ pattern node2-β v xs ys = ⟨ right (right (left (v , xs , ys , tt))) ⟩
 pattern absurd-β = ⟨ right (right (right ())) ⟩
 
 module Manually where
-  desc : IODesc (Either (Fin 1) ⊤) ⊤
-  desc = `1 `+ (`var (left 0) `* `var (right tt) `* `1) `+ (`var (left 0) `* `var (right tt) `* `var (right tt) `* `1) `+ `0
+  desc : IODesc (Fin 1) ⊤
+  desc = `fix $ `1 `+
+                (`var (left 0) `* `var (right tt) `* `1) `+
+                (`var (left 0) `* `var (right tt) `* `var (right tt) `* `1) `+
+                `0
 
   req : (A : Set) → ISet (Fin 1)
   req A zero = A
   req A (suc ())
 
-  to : (A : Set) → Tree A → ⟦ `fix desc ⟧ (req A) tt
+  to : (A : Set) → Tree A → ⟦ desc ⟧ (req A) tt
   to A leaf-α = leaf-β
   to A (node1-α v xs) = node1-β v (to A xs)
   to A (node2-α v xs ys) = node2-β v (to A xs) (to A ys)
 
-  from : (A : Set) → ⟦ `fix desc ⟧ (req A) tt → Tree A
+  from : (A : Set) → ⟦ desc ⟧ (req A) tt → Tree A
   from A leaf-β = leaf-α
   from A (node1-β v xs) = node1-α v (from A xs)
   from A (node2-β v xs ys) = node2-α v (from A xs) (from A ys)
@@ -80,7 +83,7 @@ module TestQrec (A : Set) where
   test-req zero = refl
   test-req (suc ())
 
-  test-to : {{rs : Q.req ≡ M.req}} → ∀ x → DescEq (`fix Q.desc) (Q.to x) (M.to x)
+  test-to : {{rs : Q.req ≡ M.req}} → ∀ x → DescEq Q.desc (Q.to x) (M.to x)
   test-to leaf = ⟨⟩-cong (left-cong tt-cong)
   test-to (node1 x xs) = ⟨⟩-cong $ right-cong $ left-cong $
                          ,-cong (var-cong refl) $
@@ -92,7 +95,7 @@ module TestQrec (A : Set) where
                             ,-cong (var-cong (DescEq-to-≅ (test-to ys))) $
                             tt-cong
 
-  test-from : {{rs : Q.req ≡ M.req}} → ∀ {x y} → DescEq (`fix Q.desc) x y → Q.from x ≅ Q.from y
+  test-from : {{rs : Q.req ≡ M.req}} → ∀ {x y} → DescEq Q.desc x y → Q.from x ≅ Q.from y
   test-from (⟨⟩-cong (left-cong tt-cong)) = refl
   test-from (⟨⟩-cong (right-cong (left-cong
     (,-cong (var-cong refl) (,-cong (var-cong refl) tt-cong))))) = refl

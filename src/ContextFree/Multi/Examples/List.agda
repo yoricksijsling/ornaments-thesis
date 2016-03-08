@@ -20,19 +20,21 @@ module Manually where
   -- Description of lists in our Desc universe. The extra `1 and `0 are not
   -- strictly necessary but make the structure of the sum-of-products more
   -- regular, which will be useful later.
-  desc : IODesc (Either (Fin 1) ⊤) ⊤
-  desc = `1 `+ (`var (left 0) `* `var (right tt) `* `1) `+ `0
+  desc : IODesc (Fin 1) ⊤
+  desc = `fix $ `1 `+
+                (`var (left 0) `* `var (right tt) `* `1) `+
+                `0
 
   req : (A : Set) → ISet (Fin 1)
   req A zero = A
   req A (suc ())
   
   -- Embedding-projection pair and proofs
-  to : (A : Set) → ListP A → ⟦ `fix desc ⟧ (req A) tt
+  to : (A : Set) → ListP A → ⟦ desc ⟧ (req A) tt
   to A nil-α = nil-β
   to A (cons-α x xs) = cons-β x (to A xs)
 
-  from : (A : Set) → ⟦ `fix desc ⟧ (req A) tt → ListP A
+  from : (A : Set) → ⟦ desc ⟧ (req A) tt → ListP A
   from A nil-β = []
   from A (cons-β x xs) = cons-α x (from A xs)
   from A absurd-β
@@ -103,12 +105,12 @@ module TestQrec (A : Set) where
   test-req zero = refl
   test-req (suc ())
 
-  test-to : {{rs : Q.req ≡ M.req}} → ∀ x → DescEq (`fix Q.desc) (Q.to x) (M.to x)
+  test-to : {{rs : Q.req ≡ M.req}} → ∀ x → DescEq (Q.desc) (Q.to x) (M.to x)
   test-to [] = ⟨⟩-cong (left-cong tt-cong)
   test-to (x ∷ xs) = ⟨⟩-cong $ right-cong $ left-cong $
                      ,-cong (var-cong refl) $ ,-cong (var-cong (DescEq-to-≅ (test-to xs))) $ tt-cong
   
-  test-from : {{rs : Q.req ≡ M.req}} → ∀ {x y} → DescEq (`fix Q.desc) x y → Q.from x ≅ M.from y
+  test-from : {{rs : Q.req ≡ M.req}} → ∀ {x y} → DescEq (Q.desc) x y → Q.from x ≅ M.from y
   test-from (⟨⟩-cong (left-cong tt-cong)) = refl
   test-from (⟨⟩-cong (right-cong (left-cong (,-cong (var-cong refl) (,-cong (var-cong eq) tt-cong))))) = ≅-cong (_∷_ _) (test-from (DescEq-from-≅ eq))
   test-from (⟨⟩-cong (right-cong (right-cong ())))

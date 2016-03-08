@@ -82,7 +82,7 @@ module To (`to `desc `req : Name) where
     type `dt = addParams (vecToList params) $
                def `dt (paramVars 0 params)
                  `→ `def₃ (quote ⟦_⟧)
-                          (`con₁ (quote `fix) (`def₀ `desc))
+                          (`def₀ `desc)
                           (def `req (paramVars 1 params))
                           (`con₀ (quote ⊤.tt))
 
@@ -115,7 +115,7 @@ module From (`from `desc `req : Name) where
     type : (`dt : Name) → Type
     type `dt = addParams (vecToList params) $
                def (quote ⟦_⟧)
-                   ( vArg (`con₁ (quote `fix) (`def₀ `desc))
+                   ( vArg (`def₀ `desc)
                    ∷ hArg (`def₀ (quote ω))
                    ∷ vArg (def `req (paramVars 0 params))
                    ∷ vArg (`con₀ (quote ⊤.tt))

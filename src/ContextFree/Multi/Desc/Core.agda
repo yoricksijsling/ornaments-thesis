@@ -40,6 +40,7 @@ mutual
     --      (p : ⟦ C ⟧ ⊥-elim tt → IODesc I O) → IODesc I O
     -- `iso : ∀{O} → (C : IODesc ⊥ O) → (D : IOFunc ⊥ O) → IODesc ⊥ O
            -- ((r : ISet I) → (o : O) → D r o ≡ ⟦ C ⟧ r o) → IODesc I O
+    `ΣK : ∀{I O} → (S : Set) → (p : S → IODesc I O) → IODesc I O
     `fix : ∀{I O} → (C : IODesc (Either I O) O) → IODesc I O
 
     -- Or should the index be ⊤??
@@ -53,6 +54,7 @@ mutual
   ⟦_⟧ (`! o′) r o = o ≡ o′
   -- ⟦_⟧ (`Σ p) r o = Σ _ (λ i → ⟦ p i ⟧ r o)
   -- ⟦_⟧ (`iso _ D) _ o = D ⊥-elim o
+  ⟦_⟧ (`ΣK S p) r o = Σ S (λ i → ⟦ p i ⟧ r o)
   ⟦_⟧ (`fix F) {sz} r o = μ F r o {sz}
 
   -- The use of sizes here seems to be somewhat similar to that of Conor McBride in Turing-completeness totally free
@@ -75,4 +77,5 @@ desc-map (`var i) f o = f i
 desc-map (`! o′) f o = id
 -- desc-map (`Σ p) f o = map× id (λ {x} → desc-map (p x) f o)
 -- desc-map (`iso C D) f o = id
+desc-map (`ΣK S p) f o = map× id (λ {x} → desc-map (p x) f o)
 desc-map (`fix F) f o ⟨ x ⟩ = ⟨ desc-map F (map∣ f (desc-map (`fix F) f)) o x ⟩

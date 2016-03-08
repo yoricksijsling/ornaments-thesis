@@ -10,10 +10,10 @@ open import Stuff using (finReverse)
 module SD = SafeDatatype
 
 SafeDatatypeToDesc : (sdt : SafeDatatype) → Set₁
-SafeDatatypeToDesc (mk pc _ _) = IODesc (Either (Fin pc) ⊤) ⊤
+SafeDatatypeToDesc (mk pc _ _) = IODesc (Fin pc) ⊤
 
 safeDatatypeToDesc : (sdt : SafeDatatype) → SafeDatatypeToDesc sdt
-safeDatatypeToDesc (mk pc params sop) = sumDesc sop
+safeDatatypeToDesc (mk pc params sop) = `fix (sumDesc sop)
   where
   argDesc : SafeArg → IODesc (Either (Fin pc) ⊤) ⊤
   argDesc (Spar i) = `var (left (finReverse i))
@@ -34,11 +34,14 @@ private
                    (Spar zero ∷ Srec ∷ Srec ∷ []) ∷ [])
 
 
-    treeDesc : IODesc (Either (Fin 1) ⊤) ⊤
+    treeDesc : IODesc (Fin 1) ⊤
     treeDesc = safeDatatypeToDesc treeSdt
 
     testTreeDesc : safeDatatypeToDesc treeSdt
-                 ≡ (`1 `+ `var (left 0) `* `var (right tt) `* `1 `+ `var (left 0) `* `var (right tt) `* `var (right tt) `* `1 `+ `0)
+                 ≡ (`fix $ `1 `+
+                           `var (left 0) `* `var (right tt) `* `1 `+
+                           `var (left 0) `* `var (right tt) `* `var (right tt) `* `1 `+
+                           `0)
     testTreeDesc = refl
 
     pairSdt : SafeDatatype
@@ -46,5 +49,6 @@ private
                    ((Spar 1 ∷ Spar 0 ∷ []) ∷ [])
 
     testPairDesc : safeDatatypeToDesc pairSdt
-                 ≡ (`var (left 0) `* `var (left 1) `* `1 `+ `0)
+                 ≡ (`fix $ `var (left 0) `* `var (left 1) `* `1 `+
+                           `0)
     testPairDesc = refl
