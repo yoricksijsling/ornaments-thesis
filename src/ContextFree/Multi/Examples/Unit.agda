@@ -43,7 +43,7 @@ nsdt = quoteDatatypeᵐ U
 module TestNsdt where
   open import Builtin.Reflection
   open import ContextFree.Multi.Params
-  test-nsdt : nsdt ≡ mk (quote U) 0 [] ((quote u , []) ∷ [])
+  test-nsdt : nsdt ≡ mk (quote U) [] [] ((quote u , []) ∷ [])
   test-nsdt = refl
 
 unquoteDecl qrec = defineRecord qrec nsdt

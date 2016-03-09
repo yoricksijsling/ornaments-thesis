@@ -47,7 +47,7 @@ nsdt = quoteDatatypeᵐ Nat
 module TestNsdt where
   open import Builtin.Reflection
   open import ContextFree.Multi.Params
-  test-nsdt : nsdt ≡ mk (quote Nat) 0 []
+  test-nsdt : nsdt ≡ mk (quote Nat) [] []
                       ((quote Nat.zero , []) ∷
                        (quote Nat.suc , Srec ∷ []) ∷
                        [])

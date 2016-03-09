@@ -10,10 +10,10 @@ open import Stuff using (finReverse)
 module SD = SafeDatatype
 
 SafeDatatypeToDesc : (sdt : SafeDatatype) → Set₁
-SafeDatatypeToDesc (mk pc _ _) = IODesc (Fin pc) ⊤
+SafeDatatypeToDesc (mk {pc} _ _ _) = IODesc (Fin pc) ⊤
 
 safeDatatypeToDesc : (sdt : SafeDatatype) → SafeDatatypeToDesc sdt
-safeDatatypeToDesc (mk pc params sop) = `fix (sumDesc sop)
+safeDatatypeToDesc (mk {pc} params indices sop) = `fix (sumDesc sop)
   where
   argDesc : SafeArg → IODesc (Either (Fin pc) ⊤) ⊤
   argDesc (Spar i) = `var (left (finReverse i))
@@ -28,10 +28,11 @@ safeDatatypeToDesc (mk pc params sop) = `fix (sumDesc sop)
 private
   module Test where
     treeSdt : SafeDatatype
-    treeSdt = mk 1 (param₀ visible "" ∷ [])
-                   ([] ∷
-                   (Spar zero ∷ Srec ∷ []) ∷
-                   (Spar zero ∷ Srec ∷ Srec ∷ []) ∷ [])
+    treeSdt = mk (param₀ visible "" ∷ [])
+                 []
+                 ([] ∷
+                 (Spar zero ∷ Srec ∷ []) ∷
+                 (Spar zero ∷ Srec ∷ Srec ∷ []) ∷ [])
 
 
     treeDesc : IODesc (Fin 1) ⊤
@@ -45,8 +46,9 @@ private
     testTreeDesc = refl
 
     pairSdt : SafeDatatype
-    pairSdt = mk 2 (param₀ visible "" ∷ param₀ visible "" ∷ [])
-                   ((Spar 1 ∷ Spar 0 ∷ []) ∷ [])
+    pairSdt = mk (param₀ visible "" ∷ param₀ visible "" ∷ [])
+                 []
+                 ((Spar 1 ∷ Spar 0 ∷ []) ∷ [])
 
     testPairDesc : safeDatatypeToDesc pairSdt
                  ≡ (`fix $ `var (left 0) `* `var (left 1) `* `1 `+

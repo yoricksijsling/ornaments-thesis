@@ -65,21 +65,21 @@ nsdt : NamedSafeDatatype
 nsdt = quoteDatatypeᵐ ListP
 
 sdt : SafeDatatype
-sdt = fst $ unnameSafeDatatype $ nsdt
+sdt = fst $ removeNames $ nsdt
 
 module TestQdt where
   open import Builtin.Reflection
   open import ContextFree.Multi.Params
-  test-nsdt : nsdt ≡ mk (quote ListP) 1 (param₀ visible "A" ∷ [])
+  test-nsdt : nsdt ≡ mk (quote ListP) (param₀ visible "A" ∷ []) []
                         ((quote ListP.[]  , []) ∷
                          (quote ListP._∷_ , Spar 0 ∷ Srec ∷ []) ∷
                          [])
   test-nsdt = refl
 
-  test-sdt : sdt ≡ mk 1 (param₀ visible "A" ∷ [])
-                        ([] ∷
-                         (Spar 0 ∷ Srec ∷ []) ∷
-                         [])
+  test-sdt : sdt ≡ mk (param₀ visible "A" ∷ []) []
+                      ([] ∷
+                       (Spar 0 ∷ Srec ∷ []) ∷
+                       [])
   test-sdt = refl
 
 -- The description can easily be calculated from the NamedSafeDatatype

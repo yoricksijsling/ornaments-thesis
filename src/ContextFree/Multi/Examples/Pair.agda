@@ -46,13 +46,10 @@ nsdt = quoteDatatypeᵐ Pair
 module TestNsdt where
   open import Builtin.Reflection
   open import ContextFree.Multi.Params
-  test-nsdt : nsdt ≡ mk (quote Pair) 2 (param₀ visible "A" ∷ param₀ visible "B" ∷ [])
+  test-nsdt : nsdt ≡ mk (quote Pair) (param₀ visible "A" ∷ param₀ visible "B" ∷ []) []
                       ((quote pair , Spar 1 ∷ Spar 0 ∷ []) ∷
                        [])
   test-nsdt = refl
-
-sdt : SafeDatatype
-sdt = fst (unnameSafeDatatype nsdt)
 
 unquoteDecl qrec = defineRecord qrec nsdt
 

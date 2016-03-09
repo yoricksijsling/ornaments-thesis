@@ -16,7 +16,7 @@ quoteDatatype `dt =
   -| pc ← getParameters `dt
   -| params ← iguard (fst $ takeParams dtty pc) "Too many parameters for datatype"
   -| cnames ← getConstructors `dt
-  -| (mk `dt pc params) <$> mapM (quoteConstructor `dt pc) cnames
+  -| (mk `dt params []) <$> mapM (quoteConstructor `dt pc) cnames
 
 macro
   quoteDatatypeᵐ : (`dt : Name) → Tactic

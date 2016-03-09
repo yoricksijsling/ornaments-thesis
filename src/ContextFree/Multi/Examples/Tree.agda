@@ -63,7 +63,7 @@ nsdt = quoteDatatypeᵐ Tree
 module TestNsdt where
   open import Builtin.Reflection
   open import ContextFree.Multi.Params
-  test-nsdt : nsdt ≡ mk (quote Tree) 1 (param₀ visible "A" ∷ [])
+  test-nsdt : nsdt ≡ mk (quote Tree) (param₀ visible "A" ∷ []) []
                       ((quote leaf , []) ∷
                        (quote node1 , Spar 0 ∷ Srec ∷ []) ∷
                        (quote node2 , Spar 0 ∷ Srec ∷ Srec ∷ []) ∷

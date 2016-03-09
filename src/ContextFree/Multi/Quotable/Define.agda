@@ -47,13 +47,13 @@ module Req (`req `desc : Name) where
     suc^_ zero = id
     suc^_ (suc n) = `con₁ (quote Fin.suc) ∘ (suc^ n)
 
-    makeClause : Nat → Param → Clause
-    makeClause i (param₀ v s) =
+    makeClause : Nat → ⊤ → Clause
+    makeClause i tt =
       clause (paramPats params ++ [ vArg (suc^ i $ `con₀ (quote Fin.zero)) ])
-             (var (pc -N (suc i)) [])
+             (var (pc - (suc i)) [])
 
     makeClauses : List Clause
-    makeClauses = zipNats makeClause (vecToList params) ++
+    makeClauses = zipNats makeClause (replicate pc tt) ++
                   [ absurd-clause (paramPats params ++ [ vArg (suc^ pc $ absurd) ]) ]
 
     type : Type
@@ -63,7 +63,7 @@ module Req (`req `desc : Name) where
                         (lit (nat pc)))
 
   defineReq : NamedSafeDatatype → TC ⊤
-  defineReq (mk `dt pc params sop) = define (vArg `req) type makeClauses
+  defineReq (mk `dt params indices sop) = define (vArg `req) type makeClauses
     where open WithParams params
 
 module To (`to `desc `req : Name) where
@@ -71,11 +71,11 @@ module To (`to `desc `req : Name) where
     open AlphaBeta
     open ToFrom params
 
-    makeClause : Nat → NamedSafeProduct {pc} → Clause
+    makeClause : Nat → Named {SafeProduct {pc}} → Clause
     makeClause i (`con , as) = clause (paramPats params ++ [ vArg (α `con $ patArgs as) ])
                                       (β i $ termArgs `to as)
 
-    makeClauses : NamedSafeSum → List Clause
+    makeClauses : Named {SafeSum {pc}} → List Clause
     makeClauses = zipNats makeClause
 
     type : (`dt : Name) → Type
@@ -87,7 +87,7 @@ module To (`to `desc `req : Name) where
                           (`con₀ (quote ⊤.tt))
 
   defineTo : NamedSafeDatatype → TC ⊤
-  defineTo (mk `dt pc params sop) = define (vArg `to) (type `dt) (makeClauses sop)
+  defineTo (mk `dt params indices sop) = define (vArg `to) (type `dt) (makeClauses sop)
     where open WithParams params
 
 module From (`from `desc `req : Name) where
@@ -95,20 +95,20 @@ module From (`from `desc `req : Name) where
     open AlphaBeta
     open ToFrom params
 
-    α-term : NamedSafeProduct {pc} → Term
+    α-term : Named {SafeProduct {pc}} → Term
     α-term (`con , as) = α `con (termArgs `from as)
 
-    β-pattern : Nat → NamedSafeProduct {pc} → Pattern
+    β-pattern : Nat → Named {SafeProduct {pc}} → Pattern
     β-pattern i (`con , as) = β i (patArgs as)
 
     β-last : Nat → Pattern
     β-last n = `con₁ (quote ⟨_⟩) ((right^ n) absurd)
 
-    makeClause : Nat → NamedSafeProduct {pc} → Clause
+    makeClause : Nat → Named {SafeProduct {pc}} → Clause
     makeClause i (`con , as) = clause (paramPats params ++ [ vArg (β i $ patArgs as) ])
                                       (α `con $ termArgs `from as)
 
-    makeClauses : NamedSafeSum → List Clause
+    makeClauses : Named {SafeSum {pc}} → List Clause
     makeClauses ps = zipNats makeClause ps
                    ++ [ absurd-clause (paramPats params ++ [ vArg (β-last (length ps)) ]) ]
 
@@ -123,7 +123,7 @@ module From (`from `desc `req : Name) where
                  `→ def `dt (paramVars 1 params)
 
   defineFrom : NamedSafeDatatype → TC ⊤
-  defineFrom (mk `dt pc params sop) = define (vArg `from) (type `dt) (makeClauses sop)
+  defineFrom (mk `dt params indices sop) = define (vArg `from) (type `dt) (makeClauses sop)
     where open WithParams params
 
 module Record (`record `desc `to `from : Name) where
@@ -139,12 +139,12 @@ module Record (`record `desc `to `from : Name) where
                                                (def `from (paramVars 0 params))
 
   defineRecord : NamedSafeDatatype → TC ⊤
-  defineRecord (mk `dt pc params sop) = define (vArg `record) (type `dt) makeClauses
+  defineRecord (mk `dt params indices sop) = define (vArg `record) (type `dt) makeClauses
     where open WithParams params
 
 defineDesc : (`desc : Name) → NamedSafeDatatype → TC ⊤
 defineDesc `desc nsdt =
-  let sdt = fst (unnameSafeDatatype nsdt) in
+  let sdt = fst (removeNames nsdt) in
   do declareDef (vArg `desc) =<< quoteTC (SafeDatatypeToDesc sdt)
   ~| term ← quoteTC (safeDatatypeToDesc sdt)
   -| defineFun `desc [ clause [] term ]

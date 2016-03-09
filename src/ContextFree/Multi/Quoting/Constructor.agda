@@ -9,10 +9,6 @@ open import ContextFree.Multi.Params
 open import ContextFree.Multi.Quoted
 open import Stuff using (zipNats)
 
-private
-  SomeNamedSafeProduct : Set
-  SomeNamedSafeProduct = Σ Nat (λ pc → NamedSafeProduct {pc})
-
 checkArginfovr : ArgInfo → TC ⊤
 checkArginfovr (arg-info visible relevant) = return tt
 checkArginfovr (arg-info _ _) = fail "Arg is not visible and relevant"
@@ -48,7 +44,7 @@ parseConstructor `dt pc = parseConstructor′
     checkTarget (snd args,target) >>
     mapM id (zipNats parseArg (fst args,target))
 
-quoteConstructor : (`dt : Name)(pc : Nat)(`c : Name) → TC NamedSafeProduct
+quoteConstructor : (`dt : Name)(pc : Nat)(`c : Name) → TC (Named {SafeProduct {pc}})
 quoteConstructor `dt pc `c =
   getType `c >>= λ cty →
   parseConstructor `dt pc cty >>= λ as →
