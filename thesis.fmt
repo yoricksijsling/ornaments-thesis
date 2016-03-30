@@ -1,0 +1,47 @@
+%include lhs2TeX.fmt
+%include polycode.fmt
+
+%subst keyword a = "\K{" a "}"
+%subst conid a = "\D{" a "}"
+%subst varid a = "\V{" a "}"
+%subst consym a = "\mathsf{" a "}"
+%subst varsym a = "\mathsf{" a "}"
+
+%format constructor = "\K{constructor}"
+%format indexfirst = "\K{indexfirst}"
+%format quote = "\K{quote}"
+%format quoteTerm = "\K{quoteTerm}"
+%format unquote = "\K{unquote}"
+%format unquoteDecl = "\K{unquotedecl}"
+%format quoteGoal = "\K{quoteGoal}"
+%format tactic = "\K{tactic}"
+
+%format pargs = "\overline{\V{p}}"
+%format A_n = "\D{Aₙ}"
+%format x_n = "\V{xₙ}"
+%format y_n = "\V{yₙ}"
+%format cong_n = "\V{congₙ}"
+%format `fmap` = "\V{<\$>}"
+%format Expr^evalAlg = "\D{Expr}^{\D{evalAlg}}"
+%format ++ = "\V{++}"
+
+% 
+% %subst keyword a = "\textxits{" a "}"
+% %subst conid a = "\V{" a "}"
+% %subst varid a = "\V{" a "}"
+% %subst numeral a = "\CC{" a "}"
+% 
+% %format `+ = "\AI{`+}"
+% %format `* = "\AI{`*}"
+% %format _`+_ = "\AI{\_`+\_}"
+% %format _`*_ = "\AI{\_`*\_}"
+% %format `var = "\AI{`var}"
+% %format `0 = "\AI{`0}"
+% %format `1 = "\AI{`1}"
+% 
+% %format Set = "\AD{Set}"
+% %format Set₀ = "\AD{Set₀}"
+% %format Set₁ = "\AD{Set₁}"
+% %format Desc = "\AD{Desc}"
+% 
+% 

@@ -1,8 +1,12 @@
 .projectile
 *.agdai
 agda-stdlib
+src-tex
+.DS_Store
 proposal/auto
 proposal/out
-src-tex
 proposal/main.pdf
-.DS_Store
+thesis/auto
+thesis/out
+thesis/main.pdf
+thesis/*.tex

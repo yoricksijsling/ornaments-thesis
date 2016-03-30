@@ -51,6 +51,34 @@ proposal/main.pdf: $(PROPOSAL_TEX:%=proposal/%.tex) $(MODULES:%=src-tex/%.tex) p
 cleanproposal:
 	rm -rf src-tex
 	rm -rf proposal/out
+	rm -rf $(PROPOSAL_TEX:%=proposal/%.tex)
+	rm -rf proposal/literature.rel
+
+# Thesis --------------------
+
+THESIS_TEX=main introduction usage descriptions ornaments implementation reflection discussion conclusion
+
+thesis: AGDA_PARAMS = $(INCLUDE_PARAMS) --latex-dir=src-tex --latex --allow-unsolved-metas
+thesis: thesis/main.pdf
+
+src-tex:
+	mkdir -p src-tex
+src-tex/%.tex: $(SRC)/%.lagda src-tex thesis.fmt
+	lhs2TeX --agda -o $@ $<
+
+thesis/%.tex: thesis/%.lagda thesis.fmt
+	lhs2TeX --agda -o $@ $<
+
+thesis/main.pdf: $(THESIS_TEX:%=thesis/%.tex) $(MODULES:%=src-tex/%.tex) thesis/agda.sty thesis/main.bib
+	cd thesis; latexmk -xelatex -outdir=out main.tex
+	cp thesis/out/main.pdf thesis/main.pdf
+	rm thesis/out/main.pdf
+
+cleanthesis:
+	rm -rf src-tex
+	rm -rf thesis/out
+	rm -rf $(THESIS_TEX:%=thesis/%.tex)
+	rm -rf thesis/literature.rel
 
 
-.PHONY: default all clean code cleancode proposal cleanproposal
+.PHONY: default all clean code cleancode proposal cleanproposal thesis cleanthesis
