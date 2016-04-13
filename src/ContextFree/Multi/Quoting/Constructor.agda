@@ -52,7 +52,7 @@ quoteConstructor `dt pc `c =
 
 macro
   quoteConstructorᵐ : (`dt : Name)(pc : Nat)(`c : Name) → Tactic
-  quoteConstructorᵐ `dt pc `c = runTC (quoteConstructor `dt pc `c)
+  quoteConstructorᵐ `dt pc `c = evalTC (quoteConstructor `dt pc `c)
 
 module TestTermToConstructor where
   data Dummy : Set where

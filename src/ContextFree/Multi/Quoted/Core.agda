@@ -18,21 +18,25 @@ open Names {{...}} public
 ----------------------------------------
 -- Args
 
-data SafeArg {pc : Nat} : Set where
-  Spar : Fin pc → SafeArg -- The type of the param is only stored in the Param List
+data SafeArg {p# : Nat} : Set where
+  Spar : Fin p# → SafeArg -- The type of the param is only stored in the Param List
   Srec : SafeArg
---  Srec : Vec Term ic → SafeArg
+  -- Srec : Vec Term 1000 → SafeArg
+  -- Sk : Type → SafeArg
+
+-- Bij een 'Term' kunnen we opslaan welke DeBruijn indices gebruikt worden, en de term omzetten naar een lambda.
+-- Het type van die lambda is moeilijk, omdat het afhankelijk is van de types van params/indices/args
 
 ----------------------------------------
 -- Products
 
-SafeProduct : {pc : Nat} → Set
-SafeProduct {pc} = List (SafeArg {pc})
+SafeProduct : {p# : Nat} → Set
+SafeProduct {p#} = List (SafeArg {p#})
 
 instance
-  safeProductNames : ∀ {pc} → Names (SafeProduct {pc})
-  safeProductNames {pc} =
-    record { Named = Name × List (SafeArg {pc}) ; NamesFor = λ _ → Name
+  safeProductNames : ∀ {p#} → Names (SafeProduct {p#})
+  safeProductNames {p#} =
+    record { Named = Name × List (SafeArg {p#}) ; NamesFor = λ _ → Name
            ; addNames = flip _,_ ; removeNames = λ { (nm , p) → p , nm}
            ; addRemoveNames = λ { (_ , _) → refl} ; removeAddNames = λ _ _ → refl
            }
@@ -40,19 +44,19 @@ instance
 ----------------------------------------
 -- Sums
 
-SafeSum : {pc : Nat} → Set
-SafeSum {pc} = List (SafeProduct {pc})
+SafeSum : {p# : Nat} → Set
+SafeSum {p#} = List (SafeProduct {p#})
 
 instance
-  safeSumNames : ∀ {pc} → Names (SafeSum {pc})
-  safeSumNames {pc} =
+  safeSumNames : ∀ {p#} → Names (SafeSum {p#})
+  safeSumNames {p#} =
     record { Named = named ; NamesFor = namesFor
            ; addNames = add ; removeNames = remove
            ; addRemoveNames = addRemove ; removeAddNames = removeAdd
            }
     where
     named : Set
-    named = List (Named {SafeProduct {pc}})
+    named = List (Named {SafeProduct {p#}})
     namesFor : SafeSum → Set
     namesFor = foldr (λ p acc → NamesFor p × acc) ⊤
     add : (x : SafeSum) → namesFor x → named
@@ -73,20 +77,20 @@ instance
 
 record SafeDatatype : Set where
   constructor mk
-  field {pc} : Nat
-        params : Vec Param pc
+  field {p#} : Nat
+        params : Vec Param p#
         {ic} : Nat
         indices : Vec Param ic
-        sop : SafeSum {pc}
+        sop : SafeSum {p#}
 
 record NamedSafeDatatype : Set where
   constructor mk
   field `dt : Name
-        {pc} : Nat
-        params : Vec Param pc
+        {p#} : Nat
+        params : Vec Param p#
         {ic} : Nat
         indices : Vec Param ic
-        sop : Named {SafeSum {pc}}
+        sop : Named {SafeSum {p#}}
 
 instance
   safeDatatypeNames : Names SafeDatatype

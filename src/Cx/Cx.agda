@@ -17,7 +17,7 @@ open _▶_ public
 mutual
   data Cx : Set₂ where
     _▷Set : (Γ : Cx) → Cx
-    _▷_ : (Γ : Cx)(S : ⟦ Γ ⟧Cx → Set) → Cx
+    _▷_ : (Γ : Cx)(S : (γ : ⟦ Γ ⟧Cx) → Set) → Cx
     ε : Cx
 
   ⟦_⟧Cx : Cx → Set₁

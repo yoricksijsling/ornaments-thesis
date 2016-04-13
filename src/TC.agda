@@ -3,8 +3,8 @@ module TC where
 open import Prelude
 open import Builtin.Reflection
 
-runTC : ∀ {a} {A : Set a} → TC A → Tactic
-runTC {A = A} c hole =
+evalTC : ∀ {a} {A : Set a} → TC A → Tactic
+evalTC {A = A} c hole =
   do v ← c
   =| `v ← quoteTC v
   -| `A ← quoteTC A

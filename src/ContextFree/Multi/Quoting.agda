@@ -20,7 +20,7 @@ quoteDatatype `dt =
 
 macro
   quoteDatatypeᵐ : (`dt : Name) → Tactic
-  quoteDatatypeᵐ `dt = runTC (quoteDatatype `dt)
+  quoteDatatypeᵐ `dt = evalTC (quoteDatatype `dt)
 
 
 
