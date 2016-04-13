@@ -36,7 +36,10 @@ record Cxf (Γ Δ : Cx) : Set₁ where
   constructor mk
   field
     apply : ⟦ Γ ⟧ → ⟦ Δ ⟧
-open Cxf
+-- Circumventing a bug which occurs in Cx.Named.Ornament. Something with passing
+-- parameters to modules in combination with records and datatypes...
+apply : {Γ Δ : Cx} → Cxf Γ Δ → ⟦ Γ ⟧ → ⟦ Δ ⟧
+apply = Cxf.apply
 
 cxf-make : ∀ Γ Δ → (⟦ Γ ⟧ → ⟦ Δ ⟧) → Cxf Γ Δ
 cxf-make _ _ = mk
