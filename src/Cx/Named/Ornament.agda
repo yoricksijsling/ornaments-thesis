@@ -1,10 +1,8 @@
 
+module Cx.Named.Ornament where
+
 open import Common
-
-module Cx.Named.Ornament {Ident : Set} (ShowIdent : Show Ident) where
-
-open import Cx.Named.Desc ShowIdent public
-
+open import Cx.Named.Desc public
 
 infixr 3 _∣_⊕_
 infixr 4 -⊗_ rec_⊗_ insert_/_⊗_ insert_/rec_⊗_
@@ -85,3 +83,4 @@ module _ {I J : Set}{u : J → I} where
   forget : ∀{Γ Δ #c}{c : Cxf Δ Γ}{D : DatDesc I Γ #c} (o : Orn u c D) →
            ∀{δ j} → μ (ornToDesc o) δ j → μ D (apply c δ) (u j)
   forget o = fold (forgetAlg o)
+  

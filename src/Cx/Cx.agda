@@ -4,7 +4,7 @@ module Cx.Cx where
 open import Prelude
 open import Common
 
-infixl 0 _▷_ _▷Set _▶_
+infixl 0 _▷_ _▷₁_ _▶_
 
 -- Exactly Σ, but looks better with the nesting produced by Cx.
 record _▶_ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
@@ -16,12 +16,12 @@ open _▶_ public
 
 mutual
   data Cx : Set₂ where
-    _▷Set : (Γ : Cx) → Cx
+    _▷₁_ : (Γ : Cx)(S : (γ : ⟦ Γ ⟧Cx) → Set₁) → Cx
     _▷_ : (Γ : Cx)(S : (γ : ⟦ Γ ⟧Cx) → Set) → Cx
     ε : Cx
 
   ⟦_⟧Cx : Cx → Set₁
-  ⟦ Γ ▷Set ⟧Cx = (⟦ Γ ⟧Cx ▶ const Set)
+  ⟦ Γ ▷₁ S ⟧Cx = (⟦ Γ ⟧Cx ▶ S)
   ⟦ Γ ▷ S ⟧Cx = (⟦ Γ ⟧Cx ▶ S)
   ⟦ ε ⟧Cx = ⊤′
 
@@ -59,5 +59,5 @@ cxf-forget f S = mk λ δ → apply f (pop δ)
 cxf-instantiate : ∀{Γ Δ S} → (f : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → S (apply f γ)) → Cxf Δ (Γ ▷ S)
 cxf-instantiate f s = mk λ δ → (apply f δ) , s δ
 
-cxf-instantiateSet : ∀{Γ Δ} → (f : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → Set) → Cxf Δ (Γ ▷Set)
+cxf-instantiateSet : ∀{Γ Δ S} → (f : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → S (apply f γ)) → Cxf Δ (Γ ▷₁ S)
 cxf-instantiateSet f s = mk λ δ → (apply f δ) , s δ

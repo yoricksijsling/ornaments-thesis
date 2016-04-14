@@ -4,8 +4,6 @@ module Cx.Extended.Ornament where
 open import Common
 open import Cx.Extended.Desc public
 
-open Cxf using (apply)
-
 infixr 3 _⊕_
 infixr 4 -⊗_ rec_⊗_ insert_⊗_ insert-rec_⊗_
 -- The `u` function tells us how the ornament changes the indices of the current Desc.

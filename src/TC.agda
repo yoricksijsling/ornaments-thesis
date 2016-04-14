@@ -1,7 +1,7 @@
 module TC where
 
 open import Prelude
-open import Builtin.Reflection
+open import Reflection
 
 evalTC : ∀ {a} {A : Set a} → TC A → Tactic
 evalTC {A = A} c hole =

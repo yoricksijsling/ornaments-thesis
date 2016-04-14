@@ -4,8 +4,6 @@ module Cx.Extended.AlgebraicOrnament where
 open import Common
 open import Cx.Extended.Ornament public
 
-open Cxf using (apply)
-
 
 ----------------------------------------
 -- Algebraic ornament

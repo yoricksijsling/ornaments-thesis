@@ -1,9 +1,11 @@
 
+module Cx.Named.Desc where
+
 open import Common
-
-module Cx.Named.Desc {Ident : Set} (ShowIdent : Show Ident) where
-
 open import Cx.Cx public
+
+Ident : Set
+Ident = String
 
 infixr 3 _∣_⊕_
 infixr 4 _/_⊗_ _/rec_⊗_

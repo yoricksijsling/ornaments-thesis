@@ -3,6 +3,11 @@ module Reflection where
 open import Common
 open import Builtin.Reflection public
 
+{-# DISPLAY arg (arg-info visible relevant) x = vArg x #-}
+{-# DISPLAY arg (arg-info hidden relevant) x = hArg x #-}
+{-# DISPLAY arg (arg-info instance′ relevant) x = iArg x #-}
+
+
 pattern set₀ = agda-sort (lit 0)
 
 infixr 4 _`→_
@@ -53,3 +58,36 @@ private
 `def₂ n t₁ t₂ = `defₓ n (t₁ ∷ t₂ ∷ [])
 `def₃ : Name → Term → Term → Term → Term
 `def₃ n t₁ t₂ t₃ = `defₓ n (t₁ ∷ t₂ ∷ t₃ ∷ [])
+
+
+----------------------------------------
+-- TC convenience functions
+
+fail : ∀{a}{A : Set a} → String → TC A
+fail s = typeErrorS s
+
+fromMaybe : ∀{a}{A : Set a} → String → Maybe A → TC A
+fromMaybe s (just x) = return x
+fromMaybe s nothing = fail s
+
+tryUnquoteTC : ∀ {a} {A : Set a} → String → Term → TC A
+tryUnquoteTC {A = A} s tm = catchTC (unquoteTC tm) (quoteTC A >>=′ λ `A →
+  typeError (strErr s ∷ strErr "failed to unquote" ∷ termErr tm ∷ strErr "to type" ∷ termErr `A ∷ []))
+
+
+----------------------------------------
+-- Telescopes which remember names
+
+AbsTelescope = List (Abs (Arg Type))
+
+absTelescope : Type → AbsTelescope × Type
+absTelescope (pi (arg i x) (abs s xs)) = first (_∷_ (abs s (arg i x))) (absTelescope xs)
+absTelescope xs = [] , xs
+
+absTelPi : AbsTelescope → Type → Type
+absTelPi tel xs = foldr (λ { (abs s (arg i x)) xs → pi (arg i x) (abs s xs)}) xs tel
+
+absTelView : (t : Type) → Σ AbsTelescope λ tel → Σ Type λ xs → absTelPi tel xs ≡ t
+absTelView (pi (arg i x) (abs s xs)) with absTelView xs
+absTelView (pi (arg i x) (abs s _)) | rtel , rxs , refl = (abs s (arg i x)) ∷ rtel , rxs , refl
+absTelView xs = [] , xs , refl
