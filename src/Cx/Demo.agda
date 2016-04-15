@@ -124,7 +124,10 @@ module E where
 
     vecD′ : DatDesc (⊤ × Nat) (ε ▷₁ (λ γ → Set)) 2
     vecD′ = ι (λ _ → (tt , 0))
-          ⊕ top ⊗ (λ _ → Nat) ⊗ rec (λ γ → tt , top γ) ⊗ ι (λ γ → tt , suc (top γ))
+          ⊕ top ⊗
+             (λ _ → Nat) ⊗
+             rec (λ γ → tt , top γ) ⊗
+             ι (λ γ → tt , suc (top γ))
           ⊕ `0
 
     test-list→vec : ornToDesc list→vec ≡ vecD′
@@ -160,59 +163,53 @@ module N where
   module QuoteNat where
 
     natD : DatDesc ⊤ ε 2
-    natD = "zero" ∣ ι (λ _ → tt)
-         ⊕ "suc" ∣ "n" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
+    natD = ι (λ _ → tt)
+         ⊕ "n" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
          ⊕ `0
 
-    natD-zero : μ natD tt tt
-    natD-zero = ⟨ 0 , refl ⟩
-
-    natD-suc : μ natD tt tt → μ natD tt tt
-    natD-suc n = ⟨ 1 , n , refl ⟩
-
-    q : SomeDatDesc
+    q : QuotedDesc
     q = quoteDatatypeᵐ Nat
 
-    test-desc : SomeDatDesc.desc q ≡ natD
+    test-desc : QuotedDesc.desc q ≡ natD
     test-desc = refl
 
-
+    test-dtname : q ≡ mk (quote Nat) (quote Nat.zero ∷ quote Nat.suc ∷ []) natD
+    test-dtname = refl
 
 
   module QuoteList where
 
     listD : DatDesc ⊤ (ε ▷₁ (λ _ → Set)) 2
-    listD = "nil" ∣ ι (λ _ → tt)
-          ⊕ "cons" ∣ "x" / top ⊗ "xs" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
+    listD = ι (λ _ → tt)
+          ⊕ "x" / top ⊗ "xs" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
           ⊕ `0
-
-    listD-nil : ∀{A} → μ listD (tt , A) tt
-    listD-nil = ⟨ 0 , refl ⟩
-
-    listD-cons : ∀{A} → A → μ listD (tt , A) tt → μ listD (tt , A) tt
-    listD-cons x xs = ⟨ 1 , x , xs , refl ⟩
-
 
     data PList (A : Set) : Set where
       nil : PList A
       cons : (x : A) → (xs : PList A) → PList A
 
-
-    q : SomeDatDesc
+    q : QuotedDesc
     q = quoteDatatypeᵐ PList
 
-    test-desc : SomeDatDesc.desc q ≡ listD
+    test-desc : QuotedDesc.desc q ≡ listD
     test-desc = refl
 
-    
+
+  module NatToList where
+
+    nat→list : DefOrn ⊤ id (ε ▷₁ (λ _ → Set)) (mk (λ _ → tt)) QuoteNat.natD
+    nat→list = ι (λ _ → inv tt)
+             ⊕ "x" / top +⊗ "xs" /rec (λ _ → inv tt) ⊗ (ι (λ _ → inv tt))
+             ⊕ `0
+
+    test-nat→list : ornToDesc nat→list ≡ QuoteList.listD
+    test-nat→list = refl
 
 
-
-  
   module QuoteVec where
     vecD : DatDesc (Nat × ⊤) (ε ▷₁ (λ γ → Set)) 2
-    vecD = "nil"  ∣ ι (λ _ → 0 , tt)
-         ⊕ "cons" ∣ "n" / (λ γ → Nat)
+    vecD = ι (λ _ → 0 , tt)
+         ⊕ "n" / (λ γ → Nat)
                   ⊗ "x" / (λ γ → top (pop γ))
                   ⊗ "xs" /rec (λ γ → top (pop γ) , tt)
                   ⊗ ι (λ γ → suc (top (pop γ)) , tt)
@@ -222,10 +219,10 @@ module N where
       nil : MyVec A 0
       cons : ∀ n → (x : A) → (xs : MyVec A n) → MyVec A (suc n)
 
-    q : SomeDatDesc
+    q : QuotedDesc
     q = quoteDatatypeᵐ MyVec
 
-    test-desc : SomeDatDesc.desc q ≡ vecD
+    test-desc : QuotedDesc.desc q ≡ vecD
     test-desc = refl
 
 

@@ -3,19 +3,17 @@ module Cx.Named.Desc where
 
 open import Common
 open import Cx.Cx public
+open import Reflection
 
-Ident : Set
-Ident = String
-
-infixr 3 _∣_⊕_
+infixr 3 _⊕_
 infixr 4 _/_⊗_ _/rec_⊗_
 data ConDesc (I : Set) : (Γ : Cx) → Set₁ where
   ι : ∀{Γ} → (o : (γ : ⟦ Γ ⟧) → I) → ConDesc I Γ
-  _/_⊗_ : ∀{Γ} → Ident → (S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc I (Γ ▷ S)) → ConDesc I Γ
-  _/rec_⊗_ : ∀{Γ} → Ident → (i : (γ : ⟦ Γ ⟧) → I) → (xs : ConDesc I Γ) → ConDesc I Γ
+  _/_⊗_ : ∀{Γ} → (nm : String) → (S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc I (Γ ▷ S)) → ConDesc I Γ
+  _/rec_⊗_ : ∀{Γ} → (nm : String) → (i : (γ : ⟦ Γ ⟧) → I) → (xs : ConDesc I Γ) → ConDesc I Γ
 data DatDesc (I : Set)(Γ : Cx) : (#c : Nat) → Set₁ where
   `0 : DatDesc I Γ 0
-  _∣_⊕_ : ∀{#c} → Ident → (x : ConDesc I Γ) → (xs : DatDesc I Γ #c) → DatDesc I Γ (suc #c)
+  _⊕_ : ∀{#c} → (x : ConDesc I Γ) → (xs : DatDesc I Γ #c) → DatDesc I Γ (suc #c)
 
 
 ----------------------------------------
@@ -31,8 +29,8 @@ Desc I Γ (isDat #c) = DatDesc I Γ #c
 
 lookupCtor : ∀{I Γ #c}(D : DatDesc I Γ #c) → Fin #c → ConDesc I Γ
 lookupCtor `0 ()
-lookupCtor (_ ∣ x ⊕ _) zero = x
-lookupCtor (_ ∣ _ ⊕ xs) (suc k) = lookupCtor xs k
+lookupCtor (x ⊕ _) zero = x
+lookupCtor (_ ⊕ xs) (suc k) = lookupCtor xs k
 
 private
   ⟦_⟧conDesc : ∀{I Γ} → ConDesc I Γ → ⟦ Γ ⟧ → Pow I → Pow I
@@ -61,7 +59,7 @@ descmap {dt = isCon} f (ι o) refl = refl
 descmap {dt = isCon} f (_ / S ⊗ xs) (s , v) = s , descmap f xs v
 descmap {dt = isCon} f (_ /rec i ⊗ xs) (s , v) = f s , descmap f xs v
 descmap {dt = isDat _} f `0 (() , _)
-descmap {dt = isDat _} f (nm ∣ x ⊕ xs) (k , v) = k , descmap f (lookupCtor (nm ∣ x ⊕ xs) k) v
+descmap {dt = isDat _} f (x ⊕ xs) (k , v) = k , descmap f (lookupCtor (x ⊕ xs) k) v
 
 
 ----------------------------------------
@@ -87,5 +85,5 @@ module Fold {I Γ #c}{D : DatDesc I Γ #c}{γ X} (α : Alg D γ X) where
     descmap-fold {isCon} (_ / S ⊗ xs) (s , v) = s , descmap-fold xs v
     descmap-fold {isCon} (_ /rec i′ ⊗ xs) (s , v) = fold s , descmap-fold xs v
     descmap-fold {isDat _} `0 (() , _)
-    descmap-fold {isDat _} (nm ∣ x ⊕ xs) (k , v) = k , descmap-fold (lookupCtor (nm ∣ x ⊕ xs) k) v
+    descmap-fold {isDat _} (x ⊕ xs) (k , v) = k , descmap-fold (lookupCtor (x ⊕ xs) k) v
 open Fold using (fold) public
