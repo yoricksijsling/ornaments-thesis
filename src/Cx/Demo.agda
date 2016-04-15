@@ -35,7 +35,7 @@ module S where
 
   module Nat→List where
     nat→slist : DatOrn natD
-    nat→slist = ι ⊕ (insert (λ δ → String) ⊗ rec-⊗ ι) ⊕ `0
+    nat→slist = ι ⊕ ((λ δ → String) +⊗ rec-⊗ ι) ⊕ `0
 
     test-nat→slist : ornToDesc nat→slist ≡ listD String
     test-nat→slist = refl
@@ -91,7 +91,7 @@ module E where
     
     nat→list : DefOrn ⊤ id (ε ▷₁ (λ γ → Set)) (mk (λ _ → tt)) natD
     nat→list = ι (λ δ → inv tt)
-             ⊕ insert top ⊗ rec (λ δ → inv tt) ⊗ ι (λ δ → inv tt)
+             ⊕ top +⊗ rec (λ δ → inv tt) ⊗ ι (λ δ → inv tt)
              ⊕ `0
 
     test-nat→list : ornToDesc nat→list ≡ listD
