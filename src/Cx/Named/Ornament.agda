@@ -5,7 +5,7 @@ open import Common
 open import Cx.Named.Desc public
 
 infixr 3 _∣_⊕_
-infixr 4 -⊗_ rec_⊗_ insert_/_⊗_ insert_/rec_⊗_
+infixr 4 -⊗_ rec_⊗_ _/_+⊗_ _/rec_+⊗_
 -- The `u` function tells us how the ornament changes the indices of the current Desc.
 -- The `c` function specifies how the context outside the current Desc has changed.
 data Orn {I J : Set}(u : J → I) : ∀{Γ Δ dt} (c : Cxf Δ Γ) (D : Desc I Γ dt) → Set₁ where
@@ -14,10 +14,10 @@ data Orn {I J : Set}(u : J → I) : ∀{Γ Δ dt} (c : Cxf Δ Γ) (D : Desc I Γ
   rec_⊗_ : ∀{Γ Δ nm i xs}{c : Cxf Δ Γ} →
             (j : (δ : ⟦ Δ ⟧) → u ⁻¹ (i (apply c δ))) → (xs⁺ : Orn u c xs) → Orn u c (nm /rec i ⊗ xs)
 
-  insert_/_⊗_ : ∀{Γ Δ}{c : Cxf Δ Γ}{xs : ConDesc I Γ} →
-                (nm : Ident) (S : (δ : ⟦ Δ ⟧) → Set) (xs⁺ : Orn u (cxf-forget c S) xs) → Orn u c xs
-  insert_/rec_⊗_ : ∀{Γ Δ}{c : Cxf Δ Γ}{xs : ConDesc I Γ} →
-                   (nm : Ident) (j : (δ : ⟦ Δ ⟧) → J) (xs⁺ : Orn u c xs) → Orn u c xs
+  _/_+⊗_ : ∀{Γ Δ}{c : Cxf Δ Γ}{xs : ConDesc I Γ} →
+            (nm : Ident) (S : (δ : ⟦ Δ ⟧) → Set) (xs⁺ : Orn u (cxf-forget c S) xs) → Orn u c xs
+  _/rec_+⊗_ : ∀{Γ Δ}{c : Cxf Δ Γ}{xs : ConDesc I Γ} →
+               (nm : Ident) (j : (δ : ⟦ Δ ⟧) → J) (xs⁺ : Orn u c xs) → Orn u c xs
   give-K : ∀{Γ Δ S xs nm}{c : Cxf Δ Γ} →
            (s : (δ : ⟦ Δ ⟧) → S (apply c δ)) →
            (xs⁺ : Orn u (cxf-instantiate c s) xs) →
@@ -39,8 +39,8 @@ module _ {I J : Set}{u : J → I} where
   ornToDesc {c = c} (ι j) = ι (uninv ∘ j)
   ornToDesc (-⊗_ {nm = nm} {S} {c = c} xs⁺) = nm / S ∘ apply c ⊗ ornToDesc xs⁺
   ornToDesc (rec_⊗_ {nm = nm} j xs⁺) = nm /rec (uninv ∘ j) ⊗ ornToDesc xs⁺
-  ornToDesc (insert_/_⊗_ nm S xs⁺) = nm / S ⊗ ornToDesc xs⁺
-  ornToDesc (insert_/rec_⊗_ nm j xs⁺) = nm /rec j ⊗ ornToDesc xs⁺
+  ornToDesc (_/_+⊗_ nm S xs⁺) = nm / S ⊗ ornToDesc xs⁺
+  ornToDesc (_/rec_+⊗_ nm j xs⁺) = nm /rec j ⊗ ornToDesc xs⁺
   ornToDesc (give-K s xs⁺) = ornToDesc xs⁺
   ornToDesc `0 = `0
   ornToDesc (_∣_⊕_ {nm = nm} nmf x⁺ xs⁺) = nmf nm ∣ ornToDesc x⁺ ⊕ ornToDesc xs⁺
@@ -69,8 +69,8 @@ module _ {I J : Set}{u : J → I} where
   forgetNT {c = c} (ι j) {δ} refl = sym (inv-eq (j δ))
   forgetNT (-⊗ xs⁺) (s , v) = s , forgetNT xs⁺ v
   forgetNT (rec j ⊗ xs⁺) {δ} {X} (s , v) = transport X (inv-eq (j δ)) s , forgetNT xs⁺ v
-  forgetNT (insert_/_⊗_ _ _ xs⁺) (_ , v) = forgetNT xs⁺ v
-  forgetNT (insert_/rec_⊗_ _ _ xs⁺) (_ , v) = forgetNT xs⁺ v
+  forgetNT (_/_+⊗_ _ _ xs⁺) (_ , v) = forgetNT xs⁺ v
+  forgetNT (_/rec_+⊗_ _ _ xs⁺) (_ , v) = forgetNT xs⁺ v
   forgetNT (give-K s xs⁺) {δ} v = s δ , forgetNT xs⁺ v
   forgetNT `0 (() , _)
   forgetNT (_ ∣ x⁺ ⊕ xs⁺) (zero , v) = zero , forgetNT x⁺ v
