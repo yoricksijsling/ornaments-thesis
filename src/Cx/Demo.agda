@@ -55,11 +55,11 @@ module S where
 
 module E where
   open import Cx.Extended.AlgebraicOrnament
-  
-  natD : DatDesc ⊤ ε 2
+
+  natD : DatDesc ε ε 2
   natD = ι (λ _ → tt)
-         ⊕ rec (λ _ → tt) ⊗ ι (λ _ → tt)
-         ⊕ `0
+       ⊕ rec (λ _ → tt) ⊗ ι (λ _ → tt)
+       ⊕ `0
 
   natD-zero : μ natD tt tt
   natD-zero = ⟨ 0 , refl ⟩
@@ -68,7 +68,7 @@ module E where
   natD-suc n = ⟨ 1 , n , refl ⟩
 
 
-  listD : DatDesc ⊤ (ε ▷₁ (λ γ → Set)) 2
+  listD : DatDesc ε (ε ▷₁′ Set) 2
   listD = ι (λ _ → tt)
         ⊕ (λ γ → top γ) ⊗ rec (λ _ → tt) ⊗ ι (λ _ → tt)
         ⊕ `0
@@ -80,16 +80,19 @@ module E where
   listD-cons x xs = ⟨ 1 , x , xs , refl ⟩
 
 
-  vecD : DatDesc Nat (ε ▷₁ (λ γ → Set)) 2
-  vecD = ι (λ _ → 0)
-       ⊕ (λ _ → Nat) ⊗ (top ∘ pop) ⊗ rec (top ∘ pop) ⊗ ι (suc ∘ top ∘ pop)
+  vecD : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
+  vecD = ι (λ _ → tt , 0)
+       ⊕ (λ _ → Nat) ⊗
+         (top ∘ pop) ⊗
+         rec (λ γ → tt , top (pop γ)) ⊗
+         ι (λ γ → tt , suc (top (pop γ)))
        ⊕ `0
 
 
   module NatToList where
-    -- Index stays ⊤. Parameters become (ε ▷₁ (λ γ → Set)).
+    -- Index stays ⊤. Parameters become (ε ▷₁′ Set).
     
-    nat→list : DefOrn ⊤ id (ε ▷₁ (λ γ → Set)) (mk (λ _ → tt)) natD
+    nat→list : DefOrn ε (cxf-id ε) (ε ▷₁′ Set) (mk (λ _ → tt)) natD
     nat→list = ι (λ δ → inv tt)
              ⊕ top +⊗ rec (λ δ → inv tt) ⊗ ι (λ δ → inv tt)
              ⊕ `0
@@ -104,7 +107,7 @@ module E where
     list-ex : μ listD (tt , Nat) tt
     list-ex = ⟨ 1 , 100 , ⟨ 1 , 33 , ⟨ 0 , refl ⟩ , refl ⟩ , refl ⟩
 
-    list→natlist : DefOrn ⊤ id ε (mk (λ x → x , Nat)) listD
+    list→natlist : DefOrn ε (cxf-id ε) ε (mk (λ x → x , Nat)) listD
     list→natlist = ι (λ _ → inv tt)
                  ⊕ -⊗ rec (λ _ → inv tt) ⊗ ι (λ _ → inv tt)
                  ⊕ `0
@@ -119,10 +122,10 @@ module E where
     lengthAlg (suc zero , x , xs , refl) = suc xs
     lengthAlg (suc (suc ()) , _)
 
-    list→vec : DefOrn (⊤ × Nat) fst (ε ▷₁ (λ γ → Set)) (cxf-id _) listD
+    list→vec : DefOrn (ε ▷′ Nat) (mk pop) (ε ▷₁′ Set) (cxf-id _) listD
     list→vec = algOrn listD lengthAlg
 
-    vecD′ : DatDesc (⊤ × Nat) (ε ▷₁ (λ γ → Set)) 2
+    vecD′ : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
     vecD′ = ι (λ _ → (tt , 0))
           ⊕ top ⊗
              (λ _ → Nat) ⊗
@@ -137,12 +140,15 @@ module E where
   module ReornamentNatToList where
     open NatToList
 
-    nat→vec : DefOrn (⊤ × μ natD tt tt) fst (ε ▷₁ (λ γ → Set)) (mk (λ _ → tt)) natD
+    nat→vec : DefOrn (ε ▷ (λ γ → μ natD tt tt)) (mk (λ _ → tt)) (ε ▷₁′ Set) (mk (λ _ → tt)) natD
     nat→vec = reornament nat→list
 
-    vecD′ : DatDesc (⊤ × μ natD tt tt) (ε ▷₁ (λ γ → Set)) 2
+    vecD′ : DatDesc (ε ▷ (λ γ → μ natD tt tt)) (ε ▷₁′ Set) 2
     vecD′ = ι (λ _ → (tt , natD-zero))
-          ⊕ top ⊗ (λ _ → μ natD tt tt) ⊗ rec (λ γ → tt , top γ) ⊗ ι (λ γ → tt , natD-suc (top γ))
+          ⊕ top ⊗
+            (λ _ → μ natD tt tt) ⊗
+            rec (λ γ → tt , top γ) ⊗
+            ι (λ γ → tt , natD-suc (top γ))
           ⊕ `0
 
     test-nat→vec : ornToDesc nat→vec ≡ vecD′
@@ -157,12 +163,11 @@ module E where
 
 module N where
   open import Cx.Named
-  open import Cx.Quotable.Core
   open import Cx.Quoting
   
   module QuoteNat where
 
-    natD : DatDesc ⊤ ε 2
+    natD : DatDesc ε ε 2
     natD = ι (λ _ → tt)
          ⊕ "n" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
          ⊕ `0
@@ -179,7 +184,7 @@ module N where
 
   module QuoteList where
 
-    listD : DatDesc ⊤ (ε ▷₁ (λ _ → Set)) 2
+    listD : DatDesc ε (ε ▷₁′ Set) 2
     listD = ι (λ _ → tt)
           ⊕ "x" / top ⊗ "xs" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
           ⊕ `0
@@ -197,7 +202,7 @@ module N where
 
   module NatToList where
 
-    nat→list : DefOrn ⊤ id (ε ▷₁ (λ _ → Set)) (mk (λ _ → tt)) QuoteNat.natD
+    nat→list : DefOrn ε (cxf-id _) (ε ▷₁′ Set) (mk (λ _ → tt)) QuoteNat.natD
     nat→list = ι (λ _ → inv tt)
              ⊕ "x" / top +⊗ "xs" /rec (λ _ → inv tt) ⊗ (ι (λ _ → inv tt))
              ⊕ `0
@@ -207,12 +212,12 @@ module N where
 
 
   module QuoteVec where
-    vecD : DatDesc (Nat × ⊤) (ε ▷₁ (λ γ → Set)) 2
-    vecD = ι (λ _ → 0 , tt)
+    vecD : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
+    vecD = ι (λ _ → tt , 0)
          ⊕ "n" / (λ γ → Nat)
                   ⊗ "x" / (λ γ → top (pop γ))
-                  ⊗ "xs" /rec (λ γ → top (pop γ) , tt)
-                  ⊗ ι (λ γ → suc (top (pop γ)) , tt)
+                  ⊗ "xs" /rec (λ γ → tt , top (pop γ))
+                  ⊗ ι (λ γ → tt , suc (top (pop γ)))
          ⊕ `0
 
     data MyVec (A : Set) : Nat → Set where
@@ -226,3 +231,16 @@ module N where
     test-desc = refl
 
 
+  module MultiIndex where
+    -- Limitation: Indices can not depend on parameters
+    data Multi : (n : Nat) → Fin n → Set where
+      fo : (n : Nat) → (k : Fin n) → Multi n k
+    data MultiP (A : Set) : (n : Nat) → Vec A n → Set where
+      fo : (n : Nat) → (xs : Vec A n) → MultiP A n xs
+
+    q : QuotedDesc
+    q = quoteDatatypeᵐ Multi
+
+    open import Reflection using (ShouldFailᵐ)
+    qp : ShouldFailᵐ (quoteDatatype (quote MultiP))
+    qp = tt

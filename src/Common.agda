@@ -66,8 +66,8 @@ record Semantics {α β : Level}(A : Set α) : Set (α ⊔ lsuc β) where
     ⟦_⟧ : A → ⟦⟧-Type
 open Semantics {{...}} public
 
-Pow : Set → Set₁
-Pow I = I → Set
+Pow : ∀{a} → Set a → Set _
+Pow {a} I = I → Set
 
 -- (f ⁻¹ y) contains an x such that (f x ≡ y)
 data _⁻¹_ {a b}{A : Set a}{B : Set b}(f : A → B) : B → Set (a ⊔ b) where

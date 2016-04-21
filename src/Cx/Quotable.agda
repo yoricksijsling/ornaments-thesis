@@ -1,3 +1,0 @@
-
-module Cx.Quotable where
-

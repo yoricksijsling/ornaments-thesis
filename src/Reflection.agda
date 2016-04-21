@@ -2,17 +2,11 @@ module Reflection where
 
 open import Common
 open import Builtin.Reflection public
+open import Tactic.Reflection public
 
 {-# DISPLAY arg (arg-info visible relevant) x = vArg x #-}
 {-# DISPLAY arg (arg-info hidden relevant) x = hArg x #-}
 {-# DISPLAY arg (arg-info instance′ relevant) x = iArg x #-}
-
-
-pattern set₀ = agda-sort (lit 0)
-
-infixr 4 _`→_
-_`→_ : Type → Type → Type
-_`→_  a b = pi (vArg a) (abs "_" b)
 
 -- Some things can be used as both a term or a pattern, the TP universe is used
 -- to encode this fact.
@@ -70,10 +64,16 @@ fromMaybe : ∀{a}{A : Set a} → String → Maybe A → TC A
 fromMaybe s (just x) = return x
 fromMaybe s nothing = fail s
 
-tryUnquoteTC : ∀ {a} {A : Set a} → String → Term → TC A
+tryUnquoteTC : ∀{a}{A : Set a} → String → Term → TC A
 tryUnquoteTC {A = A} s tm = catchTC (unquoteTC tm) (quoteTC A >>=′ λ `A →
   typeError (strErr s ∷ strErr "failed to unquote" ∷ termErr tm ∷ strErr "to type" ∷ termErr `A ∷ []))
 
+ShouldFail : ∀{a}{A : Set a} → TC A → TC Set
+ShouldFail tc = catchTC (tc >>=′ λ _ → return ⊥) (return ⊤)
+
+macro
+  ShouldFailᵐ : ∀{a}{A : Set a} → TC A → Tactic
+  ShouldFailᵐ tc = evalTC (ShouldFail tc)
 
 ----------------------------------------
 -- Telescopes which remember names

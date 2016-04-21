@@ -5,7 +5,7 @@ open import Cx.Cx public
 
 infixr 3 _⊕_
 infixr 4 _⊗_ rec-⊗_
-data ConDesc : Cx → Set₁ where
+data ConDesc : Cx₁ → Set₁ where
   ι : ∀{Γ} → ConDesc Γ
   _⊗_ : ∀{Γ}(S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc (Γ ▷ S)) → ConDesc Γ
   rec-⊗_ : ∀{Γ}(xs : ConDesc Γ) → ConDesc Γ

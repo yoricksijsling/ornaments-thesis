@@ -9,17 +9,7 @@ open import Common
 open import Cx.Named
 open import Cx.Quoting.Constructor
 open import Cx.Quoting.Cx
-open import Cx.Quoting.Indices
-
-record QuotedDesc : Set₂ where
-  constructor mk
-  field
-    {I} : Set
-    {Γ} : Cx
-    {#c} : Nat
-    `datatypeName : Name
-    `constructorNames : Vec Name #c
-    desc : DatDesc I Γ #c
+open import Cx.Quoting.QuotedDesc public
 
 quoteConstructors : (`dt : Name) (#p : Nat) → ∀ I Γ → (cnames : List Name) → TC (DatDesc I Γ (length cnames))
 quoteConstructors `dt #p I Γ [] = return `0
@@ -32,8 +22,8 @@ quoteDatatype : (`dt : Name) → TC QuotedDesc
 quoteDatatype `dt =
   do dttype ← getType `dt
   =| #p ← getParameters `dt
-  =| I ← getIndices #p dttype
-  =| Γ ← paramCx #p dttype
+  =| I ← typeToCx #p nothing dttype
+  =| Γ ← typeToCx 0 (just #p) dttype
   =| `cnames ← getConstructors `dt
   =| datdesc ← quoteConstructors `dt #p I Γ `cnames
   =| return (mk `dt (listToVec `cnames) datdesc)

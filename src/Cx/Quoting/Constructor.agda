@@ -13,13 +13,14 @@ instance
   DeBruijnAbs : {A : Set} {{_ : DeBruijn A}} → DeBruijn (Abs A)
   DeBruijnAbs = DeBruijnTraversable
 
-module _ (`dt : Name) (#p : Nat) (I : Set) where
-  -- May be wrong for multiple indices?
-  indicesInCx : (offset : Nat) (Γ : Cx) → List (Arg Term) → TC (⟦ Γ ⟧ → I)
+module _ (`dt : Name) (#p : Nat) (I : Cx₀) where
+  -- from: `p₀ , `p₁ , .. , `pn , `a₀ , `a₁ , .. , `an
+  -- to:   (λ γ → tt , a₀ , a₁ , .. , an)
+  indicesInCx : (offset : Nat) (Γ : Cx₁) → List (Arg Term) → TC (⟦ Γ ⟧ → ⟦ I ⟧)
   indicesInCx o Γ is = tryUnquoteTC "indicesInCx" $ termInCx o $
-    foldr (con₂ (quote Σ._,_)) (con₀ (quote ⊤.tt)) $ map unArg $ drop #p is
+    foldl (con₂ (quote _▶_._,_)) (con₀ (quote ⊤′.tt)) $ map unArg $ drop #p is
 
-  parseTarget : (offset : Nat) (Γ : Cx) → Term → TC (⟦ Γ ⟧ → I)
+  parseTarget : (offset : Nat) (Γ : Cx) → Term → TC (⟦ Γ ⟧ → ⟦ I ⟧)
   parseTarget o Γ (def `f args) with `f == `dt
   parseTarget o Γ (def _ args) | yes _ = indicesInCx o Γ args
   parseTarget o Γ (def `f args) | no _ = typeError $
@@ -68,45 +69,71 @@ module _ (`dt : Name) (#p : Nat) (I : Set) where
     quoteConstructorᵐ : (Γ : Cx) (`c : Name) → Tactic
     quoteConstructorᵐ Γ `c = evalTC (quoteConstructor Γ `c)
 
-    maybeQuoteConstructorᵐ : (Γ : Cx) (`c : Name) → Tactic
-    maybeQuoteConstructorᵐ Γ `c = evalTC $ catchTC (quoteConstructor Γ `c >>= return ∘ just)
-                                                   (return nothing)
+    quoteConstructorFailsᵐ : (Γ : Cx) (`c : Name) → Tactic
+    quoteConstructorFailsᵐ Γ `c = evalTC (ShouldFail (quoteConstructor Γ `c))
+
 
 module _ where
   private
     data Dummy : Set where
       dZ : Dummy
       dS : Dummy → Dummy
+      dHigh : (Bool → Dummy) → Dummy -- fails
+      dWrapFin : (n : Nat) → Fin n → Dummy
+      dStrengthen : (n : Nat) → Dummy → Fin n → Dummy
 
-    testZ : quoteConstructorᵐ Dummy 0 ⊤ ε dZ ≡ ι (λ γ → tt)
+    testZ : quoteConstructorᵐ Dummy 0 ε ε dZ ≡ ι (λ γ → tt)
     testZ = refl
 
-    testS : quoteConstructorᵐ Dummy 0 ⊤ ε dS ≡ ("_" /rec (λ γ → tt) ⊗ ι (λ γ → tt))
+    testS : quoteConstructorᵐ Dummy 0 ε ε dS ≡ ("_" /rec (λ γ → tt) ⊗ ι (λ γ → tt))
     testS = refl
 
-    data Dummy2 (A : Set) : Set where
-      dRec : A → Dummy2 A
-      dOther : Dummy → Dummy2 A
+    testHigh : quoteConstructorFailsᵐ Dummy 0 ε ε dHigh
+    testHigh = tt
 
-    testRec : quoteConstructorᵐ Dummy2 1 ⊤ (ε ▷₁ (const Set)) dRec
-              ≡ ("_" / (λ γ → top γ) ⊗ ι (λ γ → tt))
+    testWrapFin : quoteConstructorᵐ Dummy 0 ε ε dWrapFin
+      ≡ ("n" / (λ _ → Nat) ⊗ "_" / (Fin ∘ top) ⊗ ι (λ _ → tt))
+    testWrapFin = refl
+
+    testStrengthen : quoteConstructorᵐ Dummy 0 ε ε dStrengthen
+      ≡ ("n" / (λ _ → Nat) ⊗ "_" /rec (λ _ → tt) ⊗ "_" / (Fin ∘ top) ⊗ ι (λ _ → tt))
+    testStrengthen = refl
+
+    data DummyA (A : Set) : Set where
+      dRec : A → DummyA A
+      dOther : Dummy → DummyA A
+
+    testRec : quoteConstructorᵐ DummyA 1 ε (ε ▷₁′ Set) dRec
+      ≡ ("_" / (λ γ → top γ) ⊗ ι (λ γ → tt))
     testRec = refl
 
-    testOther : quoteConstructorᵐ Dummy2 1 ⊤ (ε ▷₁ (const Set)) dOther
-                ≡ ("_" / (λ γ → Dummy) ⊗ ι (λ γ → tt))
+    testOther : quoteConstructorᵐ DummyA 1 ε (ε ▷₁′ Set) dOther
+      ≡ ("_" / (λ γ → Dummy) ⊗ ι (λ γ → tt))
     testOther = refl
 
-    data Dummy3 (A B : Set) : Set where
-      dPair : A → B → Dummy3 A B
+    data DummyAB (A B : Set) : Set where
+      dPair : A → B → DummyAB A B
 
-    testPair : quoteConstructorᵐ Dummy3 2 ⊤ (ε ▷₁ (const Set) ▷₁ (const Set)) dPair
-               ≡ ("_" / (top ∘ pop) ⊗
-                  "_" / (top ∘ pop) ⊗ ι (λ γ → tt))
+    testPair : quoteConstructorᵐ DummyAB 2 ε (ε ▷₁′ Set ▷₁′ Set) dPair
+      ≡ ("_" / (top ∘ pop) ⊗ "_" / (top ∘ pop) ⊗ ι (λ γ → tt))
     testPair = refl
 
+    data DummyN (A : Set) : Nat → Set where
+      dNil : ∀ {n} → DummyN A n
+      dCons : ∀ {n} → A → DummyN A n → DummyN A (suc n)
 
-    data DummyF : Set where
-      dHigh : (Bool → DummyF) → DummyF
+    testNil : quoteConstructorᵐ DummyN 1 (ε ▷ (λ γ → Nat)) (ε ▷₁′ Set) dNil
+      ≡ ("n" / (λ γ → Nat) ⊗ ι (λ γ → tt , top γ))
+    testNil = refl
 
-    testHigh : maybeQuoteConstructorᵐ DummyF 0 ⊤ ε dHigh ≡ nothing
-    testHigh = refl
+    testCons : quoteConstructorᵐ DummyN 1 (ε ▷′ Nat) (ε ▷₁′ Set) dCons
+      ≡ ("n" / (λ γ → Nat) ⊗ "_" / (λ γ → top (pop γ)) ⊗
+         "_" /rec (λ γ → tt , top (pop γ)) ⊗ ι (λ γ → tt , suc (top (pop γ))))
+    testCons = refl
+
+    data DummyNB : (n : Nat) → Fin n → Set where
+      dIFin : ∀ {n k} → DummyNB n k
+
+    testIFin : quoteConstructorᵐ DummyNB 0 (ε ▷′ Nat ▷ (Fin ∘ top)) ε dIFin
+      ≡ (("n" / (λ γ → Nat) ⊗ "k" / (Fin ∘ top) ⊗ ι (λ γ → (tt , top (pop γ)) , top γ)))
+    testIFin = refl
