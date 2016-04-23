@@ -18,7 +18,7 @@ module _ (`dt : Name) (#p : Nat) (I : Cx₀) where
   -- to:   (λ γ → tt , a₀ , a₁ , .. , an)
   indicesInCx : (offset : Nat) (Γ : Cx₁) → List (Arg Term) → TC (⟦ Γ ⟧ → ⟦ I ⟧)
   indicesInCx o Γ is = tryUnquoteTC "indicesInCx" $ termInCx o $
-    foldl (con₂ (quote _▶_._,_)) (con₀ (quote ⊤′.tt)) $ map unArg $ drop #p is
+    foldl (con₂ (quote _▶₀_._,_)) (con₀ (quote ⊤′.tt)) $ map unArg $ drop #p is
 
   parseTarget : (offset : Nat) (Γ : Cx) → Term → TC (⟦ Γ ⟧ → ⟦ I ⟧)
   parseTarget o Γ (def `f args) with `f == `dt
