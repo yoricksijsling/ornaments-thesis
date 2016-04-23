@@ -24,7 +24,7 @@ getArgs ._ | rest t = [] , t
 data Param : Set where
   param : (v : Visibility)(s : String)(ty : Type) → Param
 
-pattern param₀ v s = param v s set₀
+pattern param₀ v s = param v s (agda-sort (lit 0))
 
 private
   pattern param-pat v s ty r = pi (arg (arg-info v relevant) ty) (abs s r)
