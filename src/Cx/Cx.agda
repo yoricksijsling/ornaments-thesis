@@ -63,11 +63,6 @@ Cx₀ = Cx {lzero}
 Cx₁ : Set₂
 Cx₁ = Cx {lsuc lzero}
 
-cxLength : {Γ : Cx₀} → (γ : ⟦ Γ ⟧) → Nat
-cxLength {Γ ▷₁ S} (γ , s) = suc (cxLength γ)
-cxLength {Γ ▷ S} (γ , s) = suc (cxLength γ)
-cxLength {ε} γ = 0
-
 Cxf : ∀{a}(Γ Δ : Cx {a}) → Set a
 Cxf Γ Δ = ⟦ Γ ⟧ → ⟦ Δ ⟧
 
@@ -82,3 +77,20 @@ cxf-instantiate f s δ = f δ , s δ
 
 cxf-instantiateSet : ∀{Γ Δ : Cx₁}{S} → (f : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → S (f γ)) → Cxf Δ (Γ ▷₁ S)
 cxf-instantiateSet f s δ = f δ , s δ
+
+
+Cx-walk : {A B : Set} → A → (d₁ : A → A) → (d₀ : A → A) →
+        (fε : A → B) → (u₁ : A → B → B) → (u₀ : A → B → B) →
+        ∀{ℓ} → Cx {ℓ} → B
+Cx-walk {A} {B} a d₁ d₀ fε u₁ u₀ = helper a
+  where
+  helper : A → Cx → B
+  helper a (Γ ▷₁ S) = u₁ a (helper (d₁ a) Γ)
+  helper a (Γ ▷ S) = u₀ a (helper (d₀ a) Γ)
+  helper a ε = fε a
+
+Cx-iter : {B : Set} → (f : B → B) → (x : B) → ∀{a} → Cx {a} → B
+Cx-iter {B} f x = Cx-walk {⊤} {B} tt id id (const x) (const f) (const f)
+
+CxLength : ∀{ℓ} → Cx {ℓ} → Nat
+CxLength = Cx-iter {Nat} suc 0

@@ -87,3 +87,12 @@ module Fold {I Γ #c}{D : DatDesc I Γ #c}{γ X} (α : Alg D γ X) where
     descmap-fold {isDat _} `0 (() , _)
     descmap-fold {isDat _} (x ⊕ xs) (k , v) = k , descmap-fold (lookupCtor (x ⊕ xs) k) v
 open Fold using (fold) public
+
+
+----------------------------------------
+-- Walking over actual descriptions
+
+ConDesc-fold : ∀{A : Set}{I Γ} → A → (A → A) → (A → A) → ConDesc I Γ → A
+ConDesc-fold fι f frec (ι o) = fι
+ConDesc-fold fι f frec (nm / S ⊗ xs) = f (ConDesc-fold fι f frec xs)
+ConDesc-fold fι f frec (nm /rec i ⊗ xs) = frec (ConDesc-fold fι f frec xs)

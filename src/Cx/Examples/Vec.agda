@@ -3,7 +3,7 @@ module Cx.Examples.Vec where
 
 open import Common
 open import Cx.Named
-open import Cx.HasDesc.Core
+open import Cx.HasDesc
 open import Cx.Quoting
 
 data MyVec (A : Set) : Nat → Set where
@@ -17,7 +17,6 @@ pattern cons-β n x xs = ⟨ suc zero , n , x , xs , refl ⟩
 pattern absurd-β = ⟨ suc (suc ()) , _ ⟩
 
 module Manually where
-  -- desc : DatDesc (Nat × ⊤) (ε ▷₁ (λ γ → Set)) 2
   desc : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
   desc = ι (λ _ → tt , 0)
        ⊕ "n" / (λ γ → Nat)
@@ -35,9 +34,8 @@ module Manually where
   from (cons-β n x xs) = cons-α n x (from xs)
   from absurd-β
 
-  re : ∀ A n → HasDesc (MyVec A n)
-  re A n = mk (quote MyVec) (quote MyVec.nil ∷ quote MyVec.cons ∷ [])
-           desc to from
+  re : ∀ {A n} → HasDesc (MyVec A n)
+  re = mk (mk (quote MyVec) (quote MyVec.nil ∷ quote MyVec.cons ∷ []) desc) to from
 
 
 module Auto where
@@ -46,3 +44,15 @@ module Auto where
 
   test-desc : QuotedDesc.desc q ≡ Manually.desc
   test-desc = refl
+
+  unquoteDecl myVecHasDesc = deriveHasDesc myVecHasDesc q
+  open HasDesc {{...}}
+
+  test-to : ∀ {A n} → (xs : MyVec A n) → Manually.to xs ≡ to xs
+  test-to nil-α = refl
+  test-to (cons-α n x xs) = cong (cons-β n x) (test-to xs)
+
+  test-from : ∀ {A n} → (xs : μ Manually.desc (tt , A) (tt , n)) → Manually.from xs ≡ from xs
+  test-from nil-β = refl
+  test-from (cons-β n x xs) = cong (cons-α n x) (test-from xs)
+  test-from absurd-β
