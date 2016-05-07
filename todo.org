@@ -1,0 +1,151 @@
+* Todo
+**  Vraag: Je kan descriptions droppen naar een eenvoudiger soort. Kan je ornaments ook liften naar moeilijkere?
+
+
+* Dimensies
+** Kennisniveau
+*** Beginner
+    Alleen types van descriptions en ornaments. Gebruik van high-level
+    mutaties zoals addParameter en renameArguments.
+*** Advanced
+    Begrip van hoe descriptions eruit zien en het maken van ornaments
+    daarvoor.
+*** Expert
+    Snapt de volledige implementatie van descriptions en ornaments
+** Featureset: Simple, extended, named
+** Topics: Description, algebra/fold, ornament, ornamental algebras, algebraic ornaments, quoting/unquoting
+
+
+* Literatuur [0/8]
+*** TODO Morris 2007: Constructing universes for generic programming
+*** TODO Altenkirch, McBride, Morris 2007: Generic programming with dependent types
+*** TODO Yakushev, Holdermans, Löh, Jeuring 2009: Generic programming with fixed points for mutually recursive datatypes
+*** TODO Chapman, Dagand, McBride, Morris 2010: The gentle art of levitation
+*** TODO Löh, Magalhães 2011: Generic programming with indexed functors
+*** TODO Magalhães, Löh 2012: A formal comparison of approaches to datatype-generic programming
+*** TODO Magalhães 2012: Less is more - Generic programming theory and practice
+*** TODO Weirich, Casinghino: Generic programming with dependent types
+
+*** TODO McBride 2011: Ornamental algebras, algebraic ornaments
+*** TODO Dagand, McBride 2012: A categorical treatment of ornaments
+*** TODO Dagand 2014: The essence of ornaments
+*** TODO Dagand, McBride 2014: Transporting functions across ornaments
+*** TODO Ko, Gibbons 2014: Categorical organisation of the ornament-refinement framework
+*** TODO Williams, Dagand, Remy 2014: Ornaments in practice
+
+
+
+-------- OUDE OUTLINE
+
+* 3. Descriptions
+
+  Benoem variaties die
+  we niet gekozen hebben en waarom dan niet. Observaties over closed
+  under fixpoints, mutual recursion ↔ indices, higher-order abstract
+  syntax vs DeBruijn passen hier ook.
+
+  Ook iets over sized types..
+
+  Discussie voornamelijk verplaatsen naar eind van thesis, omdat de
+  gebruiker eerst wil lezen over ornaments.
+
+** Achtergrond
+   Gebruik finite types als een korte introductie voor universes.
+
+** Discussion and related work [0/2]
+   
+*** TODO Redundante constructors
+    In principe zijn de constructors 0, 1 en + redundant, ze kunnen
+    ook met Σ geimplementeerd worden. Op deze manier blijven we dicht
+    bij de oorspronkelijke datatypes. * is first-order en soms
+    makkelijker te gebruiken dan Σ (als je geen dependent types nodig
+    hebt), maar voor consistentie genereerd het systeem altijd Σ's,
+    daarom is * nu niet geimplementeerd. K is redundant als de Σ met
+    Sets geimplementeerd worden (met ΣK).
+    
+
+*** TODO Andere fixpoints
+    Onze descriptions zijn closed onder fixpoints. Benoem de
+    alternatieven. (verschuif naar einddiscussie?)
+
+
+* 5. Implementatiedetails [1/5]
+
+** TODO Prelude ipv stdlib
+** DONE Reflection met Agda [4/4]
+   
+*** DONE Representation of terms
+*** DONE Names and definitions
+*** DONE TC monad and how to run it
+    Quote/quoteTerm/unquote. Macros
+*** DONE Reflection on reflection
+
+
+** TODO Genereren van to/from
+
+** TODO Equality van descriptions
+   Equality kan op vele manieren, maar sowieso moet het isomorf zijn
+   met ≅. Voor functies waar een equality in gestopt wordt is het
+   handig als je op de equality zelf kan pattern matchen (ipv op de
+   losse descriptions). Je kan de equality met *-cong dan ook zien
+   als een view.
+
+** TODO 
+
+
+* Discussion and related work [0/6]
+
+** TODO Signatures/indexed containers
+    Leg uit wat het is. Onze descriptions zijn grotendeels
+    first-order, en de verbinding met echte datatypes is
+    duidelijk. Dit is relevant omdat de gebruiker met deze
+    descriptions moet werken en er ornaments voor moet maken.
+
+** TODO Waarom hebben we voor opgesplitste descriptions gekozen?
+    In syntactische niveaus opgedeeld (atoms/products/sums). Om
+    omzetbaarheid naar een echt datatype te garanderen.
+
+** TODO Generic programming with dependent types en Constructing universes for generic programming
+    Hierin wordt ook een universe voor strictly positive inductive types
+    beschreven. Er wordt een natural gebruikt om het aantal variabelen
+    waarnaar verwezen wordt te specificeren, en er kan maar één
+    datatype tegelijk worden beschreven. Hun universe correspondeert
+    met 'IODesc (Fin n) ⊤' waarbij de fixpoint 'IOFunc (Fin (suc n)) ⊤
+    → IOFunc (Fin n) ⊤' i. Het toepassen van een telescope daar is
+    vergelijkbaar met het toepassen van een (of meer??) request
+    functions.
+
+** TODO Gebruik van Set
+    Vanuit een theoretisch oogpunt is het mooi om geen verwijzingen
+    naar Set te hebben, maar enkel naar descriptions. Sommigen hebben
+    beargumenteerd dat je door het toevoegen van arbitraire Sets geen
+    decidable equality e.d. hebt (Morris 2007, Löh 2011). Wij hebben
+    dat niet nodig en hebben geen praktische bezwaren hiertegen.
+    Het voornaamste alternatief voor verwijzingen naar Set is om iso
+    te gebruiken, daarmee is het mogelijk om descriptions te
+    interpreteren als het native type waarmee ze corresponderen,
+    waarmee ze significant makkelijker worden om te gebruiken in Σ
+    (dependent types, geef voorbeeld). De interpretatie van iso geeft
+    echter problemen met de termination checker (mailing list).
+    
+** TODO Williams, Dagand, Remy 2014: Ornaments in practice
+** TODO Tekortkomingen
+
+
+** Wat te doen om het echt mooi te maken
+*** Keybindings voor macros
+*** Prompten voor input van macros?
+*** unquote... aanroepen
+
+    data Prompt (A : Set) : String → Set
+      ret : a → Prompt A s
+    Of bijv
+
+    Makkelijkere manieren om ornaments te bouwen, voor mensen die geen
+    kennis hebben van descriptions..
+    insertArg
+    insertParameter type (true ∷ true ∷ []) front
+    ..
+
+    Je kan descriptions droppen naar een eenvoudiger soort. Kan je
+    ornaments ook liften naar moeilijkere?

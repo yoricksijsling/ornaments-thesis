@@ -1,0 +1,127 @@
+* 1. Introduction
+
+** Praktisch voorbeeld van iets wat gewoonlijk slecht werkt.
+
+   We zeggen dat wij een oplossing hebben en noemen onze bijdrages:
+
+** Bijdrage 1
+   Implementatie van descriptions
+** Bijdrage 1
+   Implementatie van een framework waarmee een significant gedeelte
+   van Agda's datatypes kunnen worden gequote. Met name nuttig voor
+   metaprogrammeren in Agda. De mogelijkheden van het framework worden
+   beschreven in (2). De gekozen representatie van datatypes wordt
+   toegelicht in (3). Een overzicht van metaprogrammeren met Agda is
+   gegeven in (5). Een aantal details van de implementatie worden
+   uitgelicht in (6).
+
+** Bijdrage 2
+   Implementatie van een framework waarmee we operaties op bestaande
+   Agda datatypes kunnen uitvoeren die resulteren in nieuwe
+   datatypes. De implementatie is volledig binnen Agda en is gebaseerd
+   op de theorie achter ornaments. Voor ons framework hoeven de
+   termination en strict positivity checkers niet te worden
+   uitgeschakeld en we hebben geen set-in-set nodig.
+
+
+* 2. Gebruik van framework (descriptions én ornaments)
+
+  Overzicht van hoe je het framework kan gebruiken. Hoe je iets kan
+  quoten, wat je dan krijgt, hoe je hier een ornament op toepast. Hier
+  leg je dus al kort uit hoe de descriptions gemaakt en gebruikt
+  kunnen worden, maar niet hoe ze geimplementeerd zijn.
+
+** deriven van HasDesc
+** generieke functies
+** mutaties zoals addParameter en renameArguments
+
+
+* 3. Simple descriptions and ornaments
+
+** Achtergrond: Sum-of-products, fixpoints
+** Contexts
+** Gebruik van simple descriptions en ornaments
+   Klopt het dat dit enkel sum-of-product met contexts is?
+   Laat hier ook zien hoe de descriptions en ornaments eruit zien.
+** Description-definities
+*** Algebras/folds
+** Ornament-definities
+*** Ornamental algebras (forget)
+** Relatie met ornaments zoals in transporting functions
+   Daarin is een iets eenvoud
+** Discussie
+*** Waarom de Dat/Con splitsing?
+*** Vergelijk met Σ descriptions
+    Met de Σ constructor is de hele tail van een description het
+    resultaat van een functie. Hierdoor is bijvoorbeeld countArguments
+    niet mogelijk.
+*** Keuze van ornaments
+    De essentiele om een ornament te kunnen zijn is dat ze leiden tot
+    een ornamental algebra. De interpretatie van een ornament is
+    altijd een refinement (?). In 'transporting functions' worden
+    Σdescs gebruikt, elk van onze ornaments is daaruit te
+    herleiden. We missen nog wel een `reconstructor` ornament die
+    insert/delete op het hoogste niveau doet.
+
+
+* 4. Extended descriptions and ornaments
+
+** Gebruik van extended descriptions en ornaments
+   Parameters en indices komen erbij. Laat zien hoe mutual recursion
+   hier ook binnen valt.
+** Description-definities
+** Ornament-definities
+** Algebraic ornaments
+** Reornaments
+** Discussie
+*** Indices kunnen niet afhankelijk zijn van parameters
+*** 
+
+
+* 5. Quoted descriptions
+
+** Gebruik van quoting
+   Nu zie je ook hoe de namen in descriptions zijn verwerkt.
+   Laat ook dumpDatatype zien?
+   
+** Description/ornament-definities
+** QuotedDesc
+   Komt overeen met de declaratie van een datatype
+** HasDesc
+** Generieke functies en algebras
+** Mutations
+** Discussie
+*** 
+
+* 6. Implementatie van quoting en unquoting
+
+** Reflection in Agda
+** Quoten van datatypes
+** Unquoten van datatypes
+** Deriven van HasDesc
+
+* Discussie en related work
+
+** Signatures/indexed containers
+   Leg uit wat het is. Onze descriptions zijn grotendeels first-order,
+   en de verbinding met echte datatypes is duidelijk. Dit is relevant
+   omdat de gebruiker met deze descriptions moet werken en er
+   ornaments voor moet maken.
+** Invloed van ornaments op keuze description
+** Vergelijk met IODesc?
+** Williams, Dagand, Remy 2014: Ornaments in practice
+
+
+* Conclusie
+
+  Beargumenteer dat onze geclaimde bijdrages kloppen.
+
+** Future work
+*** Indices afhankelijk van parameters maken
+*** Namen in contexts
+*** Echt unquoten van datatypes
+*** Interactieve dingen
+    Keybindings voor macros
+    Prompten voor input van macros?
+    data Prompt (A : Set) : String → Set
+      ret : a → Prompt A s
