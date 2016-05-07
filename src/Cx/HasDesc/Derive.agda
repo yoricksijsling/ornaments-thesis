@@ -106,4 +106,4 @@ deriveHasDesc `hasDesc q =
   -| DeriveTo.deriveTo `to `desc q
   ~| DeriveFrom.deriveFrom `from `desc q
   ~| define (iArg `hasDesc) (hasDescType q)
-            [ clause [] (con₃ (quote HasDesc.mk) `q (def₀ `to) (def₀ `from)) ]
+            [ clause [] (con₃ (quote HasDesc.mk) `desc (def₀ `to) (def₀ `from)) ]

@@ -9,9 +9,10 @@ open import Cx.Named
 
 record HasDesc (A : Set) : Set₂ where
   constructor mk
-  field quotedDesc : QuotedDesc Name
-  open QuotedDesc quotedDesc public
   field
+    {I Γ} : Cx
+    {#c} : Nat
+    desc : DatDesc I Γ #c
     {γ} : ⟦ Γ ⟧
     {i} : ⟦ I ⟧
     to : A → μ desc γ i
