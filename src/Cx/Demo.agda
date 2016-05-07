@@ -170,10 +170,8 @@ module N where
 
   module QuoteNat where
 
-    quotedNat : QuotedDesc Name
-    quotedNat = quoteDatatypeᵐ Nat
-
-    unquoteDecl natHasDesc = deriveHasDesc natHasDesc quotedNat
+    unquoteDecl quotedNat natHasDesc =
+      deriveHasDesc quotedNat natHasDesc (quote Nat)
 
     natDesc : DatDesc ε ε 2
     natDesc = QuotedDesc.desc quotedNat
@@ -188,14 +186,41 @@ module N where
     test-dtname = refl
 
 
+  module ListHasDesc where
+
+    listDesc : DatDesc ε (ε ▷₁′ Set) 2
+    listDesc = ( ι (λ _ → tt)
+            ⊕ "x" / top ⊗ "xs" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
+            ⊕ `0 )
+
+    listTo : ∀{A} → List A → μ listDesc (tt , A) tt
+    listTo [] = ⟨ 0 , refl ⟩
+    listTo (x ∷ xs) = ⟨ 1 , x , listTo xs , refl ⟩
+
+    listFrom : ∀{A} → μ listDesc (tt , A) tt → List A
+    listFrom ⟨ zero , refl ⟩ = []
+    listFrom ⟨ suc zero , x , xs , refl ⟩ = x ∷ listFrom xs
+    listFrom ⟨ suc (suc ()) , _ ⟩
+
+    instance
+      listHasDesc : ∀{A} → HasDesc (List A)
+      listHasDesc = mk listDesc listTo listFrom
+
+    list-ex : List Nat
+    list-ex = 10 ∷ 20 ∷ 30 ∷ []
+
+    test-list-depth : gdepth list-ex ≡ 3
+    test-list-depth = refl
+
+
   module QuoteList where
 
     data MyList (A : Set) : Set where
       nil : MyList A
       cons : (x : A) → (xs : MyList A) → MyList A
 
-    quotedList : QuotedDesc Name
-    quotedList = quoteDatatypeᵐ MyList
+    unquoteDecl quotedList listHasDesc =
+      deriveHasDesc quotedList listHasDesc (quote MyList)
 
     listDesc : DatDesc ε (ε ▷₁′ Set) 2
     listDesc = QuotedDesc.desc quotedList
@@ -205,8 +230,6 @@ module N where
       ⊕ "x" / top ⊗ "xs" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
       ⊕ `0 )
     test-desc = refl
-
-    unquoteDecl listHasDesc = deriveHasDesc listHasDesc quotedList
 
     ex-list : MyList Bool
     ex-list = cons true $ cons false $ cons true nil
@@ -291,8 +314,8 @@ module N where
       nil : MyVec A 0
       cons : ∀ n → (x : A) → (xs : MyVec A n) → MyVec A (suc n)
 
-    quotedVec : QuotedDesc Name
-    quotedVec = quoteDatatypeᵐ MyVec
+    unquoteDecl quotedVec vecHasDesc =
+      deriveHasDesc quotedVec vecHasDesc (quote MyVec)
 
     test-desc : QuotedDesc.desc quotedVec ≡ vecDesc
     test-desc = refl
@@ -315,7 +338,7 @@ module N where
       fo : (n : Nat) → (xs : Vec A n) → MultiP A n xs
 
     q : QuotedDesc Name
-    q = quoteDatatypeᵐ Multi
+    q = evalT (quoteDatatype (quote Multi))
 
     open import Reflection using (ShouldFailᵐ)
     qp : ShouldFailᵐ (quoteDatatype (quote MultiP))

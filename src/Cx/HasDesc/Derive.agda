@@ -92,18 +92,28 @@ module DeriveFrom (`from : Name)(`desc : Term) where
     define (vArg `from) (type Γ I `datatypeName)
            (makeClauses Γ I 0 `constructorNames desc)
 
--- ∀{ps is} → HasDesc (`dt ps is)
-hasDescType : QuotedDesc Name → Type
-hasDescType (mk {I} {Γ} `dt _ desc) = cxType Γ $ cxType I $
-                                      def₁ (quote HasDesc) (def `dt (ΓIVars 0 Γ I))
+private
+  -- ∀{ps is} → HasDesc (`dt ps is)
+  hasDescType : QuotedDesc Name → Type
+  hasDescType (mk {I} {Γ} `dt _ desc) = cxType Γ $ cxType I $
+                                        def₁ (quote HasDesc) (def `dt (ΓIVars 0 Γ I))
 
-deriveHasDesc : (`hasDesc : Name) → QuotedDesc Name → TC ⊤
-deriveHasDesc `hasDesc q =
-  do `q ← quoteTC q
-  -| let `desc = def₁ (quote QuotedDesc.desc) `q in
-     `to ← freshName "to"
-  -| `from ← freshName "from"
-  -| DeriveTo.deriveTo `to `desc q
-  ~| DeriveFrom.deriveFrom `from `desc q
-  ~| define (iArg `hasDesc) (hasDescType q)
-            [ clause [] (con₃ (quote HasDesc.mk) `desc (def₀ `to) (def₀ `from)) ]
+  deriveHasDesc′ : (`hasDesc : Name) → (`desc : Term) → QuotedDesc Name → TC ⊤
+  deriveHasDesc′ `hasDesc `desc q =
+    do `to ← freshName "to"
+    -| `from ← freshName "from"
+    -| DeriveTo.deriveTo `to `desc q
+    ~| DeriveFrom.deriveFrom `from `desc q
+    ~| define (iArg `hasDesc) (hasDescType q)
+              [ clause [] (con₃ (quote HasDesc.mk) `desc (def₀ `to) (def₀ `from)) ]
+
+
+deriveHasDesc : (`quotedDesc `hasDesc `dt : Name) → TC ⊤
+deriveHasDesc `quotedDesc `hasDesc `dt =
+  do q ← quoteDatatype `dt
+  =| `q ← quoteTC q
+  -| define (vArg `quotedDesc) (quoteTerm (QuotedDesc Name))
+            [ clause [] `q ]
+  ~| `desc := def₁ (quote QuotedDesc.desc) (def₀ `quotedDesc)
+  -| deriveHasDesc′ `hasDesc `desc q
+  where open import Cx.Quoting

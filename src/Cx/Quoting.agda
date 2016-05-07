@@ -25,10 +25,6 @@ quoteDatatype `dt =
   =| datdesc ← quoteConstructors `dt #p I Γ `cnames
   =| return (mk `dt (listToVec `cnames) datdesc)
 
-macro
-  quoteDatatypeᵐ : (`dt : Name) → Tactic
-  quoteDatatypeᵐ `dt = evalTC (quoteDatatype `dt)
-
 private
   tcEq : ∀{a}{A : Set a} → (x y : A) → TC (x ≡ y)
   tcEq x y = catchTC (unquoteTC (con₀ (quote _≡_.refl))) $
