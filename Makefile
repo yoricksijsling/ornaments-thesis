@@ -14,7 +14,7 @@ INCLUDE_PARAMS=$(INCLUDES:%=-i%$)
 
 default: code
 all: code proposal
-clean: cleancode cleanproposal
+clean: cleancode cleanproposal cleanthesis
 
 # Code --------------------
 code: $(SOURCEFILES:%=%.agdai)
@@ -56,7 +56,7 @@ cleanproposal:
 
 # Thesis --------------------
 
-THESIS_TEX=main introduction usage descriptions ornaments implementation reflection discussion conclusion
+THESIS_TEX=main introduction usage simple extended named implementation reflection discussion conclusion
 
 thesis: AGDA_PARAMS = $(INCLUDE_PARAMS) --latex-dir=src-tex --latex --allow-unsolved-metas
 thesis: thesis/main.pdf

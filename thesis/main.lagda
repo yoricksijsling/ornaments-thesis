@@ -178,10 +178,12 @@
 \end{flushright}
 
 % \listoftodos
+\tableofcontents
 \input{introduction.tex}
 \input{usage.tex}
-\input{descriptions.tex}
-\input{ornaments.tex}
+\input{simple.tex}
+\input{extended.tex}
+\input{named.tex}
 \input{implementation.tex}
 \input{discussion.tex}
 \input{conclusion.tex}

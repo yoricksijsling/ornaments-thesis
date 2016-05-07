@@ -1,6 +1,7 @@
 * Todo
-**  Vraag: Je kan descriptions droppen naar een eenvoudiger soort. Kan je ornaments ook liften naar moeilijkere?
+** Vraag: Je kan descriptions droppen naar een eenvoudiger soort. Kan je ornaments ook liften naar moeilijkere?
 
+** Vraag: Hoe zit het ook alweer met Π-types in onze universe?
 
 * Dimensies
 ** Kennisniveau
@@ -36,6 +37,25 @@
 
 
 -------- OUDE OUTLINE
+
+* 1. Introduction
+** Bijdrage 1
+   Implementatie van een framework waarmee een significant gedeelte
+   van Agda's datatypes kunnen worden gequote. Met name nuttig voor
+   metaprogrammeren in Agda. De mogelijkheden van het framework worden
+   beschreven in (2). De gekozen representatie van datatypes wordt
+   toegelicht in (3). Een overzicht van metaprogrammeren met Agda is
+   gegeven in (5). Een aantal details van de implementatie worden
+   uitgelicht in (6).
+
+** Bijdrage 2
+   Implementatie van een framework waarmee we operaties op bestaande
+   Agda datatypes kunnen uitvoeren die resulteren in nieuwe
+   datatypes. De implementatie is volledig binnen Agda en is gebaseerd
+   op de theorie achter ornaments. Voor ons framework hoeven de
+   termination en strict positivity checkers niet te worden
+   uitgeschakeld en we hebben geen set-in-set nodig.
+
 
 * 3. Descriptions
 
