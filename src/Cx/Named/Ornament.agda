@@ -51,24 +51,6 @@ module _ {I J}{u : Cxf J I} where
 
 
 ----------------------------------------
--- Identity ornament
-
-idOrn : ∀{I Γ dt}{D : Desc I Γ dt} → Orn id id D
-idOrn {dt = isCon} {ι o} = ι (λ δ → inv (o δ))
-idOrn {dt = isCon} {nm / S ⊗ xs} = nm /-⊗ idOrn
-idOrn {dt = isCon} {nm /rec i ⊗ xs} = nm /rec (λ δ → inv (i δ)) ⊗ idOrn
-idOrn {dt = isDat _} {`0} = `0
-idOrn {dt = isDat _} {x ⊕ xs} = idOrn ⊕ idOrn
-
-idOrn-sound : ∀{I Γ dt} → (D : Desc I Γ dt) → ornToDesc (idOrn {D = D}) ≡ D
-idOrn-sound {dt = isCon} (ι o) = refl
-idOrn-sound {dt = isCon} (nm / S ⊗ xs) = cong (_/_⊗_ nm S) (idOrn-sound xs)
-idOrn-sound {dt = isCon} (nm /rec i ⊗ xs) = cong (_/rec_⊗_ nm i) (idOrn-sound xs)
-idOrn-sound {dt = isDat .0} `0 = refl
-idOrn-sound {dt = isDat _} (x ⊕ xs) = cong₂ _⊕_ (idOrn-sound x) (idOrn-sound xs)
-
-
-----------------------------------------
 -- Ornamental algebra
 
 module _ {I J}{u : Cxf J I} where

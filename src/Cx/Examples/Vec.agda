@@ -2,7 +2,7 @@
 module Cx.Examples.Vec where
 
 open import Common
-open import Cx.Named
+open import Reflection
 open import Cx.HasDesc
 open import Cx.Quoting
 
@@ -39,10 +39,10 @@ module Manually where
 
 
 module Auto where
-  q : QuotedDesc
+  q : DescWith Name
   q = quoteDatatypeᵐ MyVec
 
-  test-desc : QuotedDesc.desc q ≡ Manually.desc
+  test-desc : DescWith.desc q ≡ Manually.desc
   test-desc = refl
 
   unquoteDecl myVecHasDesc = deriveHasDesc myVecHasDesc q

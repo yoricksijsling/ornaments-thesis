@@ -6,12 +6,18 @@ open import Reflection
 
 open import Cx.Named
 
-record QuotedDesc : Set₂ where
+-- Represents a datatype declaration including names
+record QuotedDesc (Nm : Set) : Set₂ where
   constructor mk
   field
     {I} : Cx
     {Γ} : Cx
     {#c} : Nat
-    `datatypeName : Name
-    `constructorNames : Vec Name #c
+    `datatypeName : Nm
+    `constructorNames : Vec Nm #c
     desc : DatDesc I Γ #c
+
+instance
+  QuotedDesc-functor : Functor QuotedDesc
+  QuotedDesc-functor =
+    record { fmap = λ { f (mk `dt `cs desc) → mk (f `dt) (fmap f `cs) desc } }

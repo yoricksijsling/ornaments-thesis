@@ -5,7 +5,7 @@ open import Common
 
 module S where
 
-  open import Cx.Simple.Ornament
+  open import Cx.Simple
 
 
   natD : DatDesc 2
@@ -33,7 +33,7 @@ module S where
 
 
 
-  module Nat→List where
+  module NatToList where
     nat→slist : DatOrn natD
     nat→slist = ι ⊕ ((λ δ → String) +⊗ rec-⊗ ι) ⊕ `0
 
@@ -54,7 +54,7 @@ module S where
 
 
 module E where
-  open import Cx.Extended.AlgebraicOrnament
+  open import Cx.Extended
 
   natD : DatDesc ε ε 2
   natD = ι (λ _ → tt)
@@ -162,58 +162,125 @@ module E where
 
 
 module N where
-  open import Cx.Named
+  open import Cx.HasDesc
   open import Cx.Quoting
-  
+  open import Cx.GenericOperations
+  open import Reflection
+  open HasDesc {{...}} using (to; from)
+
   module QuoteNat where
 
-    natD : DatDesc ε ε 2
-    natD = ι (λ _ → tt)
-         ⊕ "n" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
-         ⊕ `0
+    quotedNat : QuotedDesc Name
+    quotedNat = quoteDatatypeᵐ Nat
 
-    q : QuotedDesc
-    q = quoteDatatypeᵐ Nat
+    unquoteDecl natHasDesc = deriveHasDesc natHasDesc quotedNat
 
-    test-desc : QuotedDesc.desc q ≡ natD
+    natDesc : DatDesc ε ε 2
+    natDesc = QuotedDesc.desc quotedNat
+
+    test-desc : natDesc ≡
+      ( ι (λ _ → tt)
+      ⊕ "n" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
+      ⊕ `0 )
     test-desc = refl
 
-    test-dtname : q ≡ mk (quote Nat) (quote Nat.zero ∷ quote Nat.suc ∷ []) natD
+    test-dtname : quotedNat ≡ mk (quote Nat) (quote Nat.zero ∷ quote Nat.suc ∷ []) natDesc
     test-dtname = refl
 
 
   module QuoteList where
 
-    listD : DatDesc ε (ε ▷₁′ Set) 2
-    listD = ι (λ _ → tt)
-          ⊕ "x" / top ⊗ "xs" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
-          ⊕ `0
+    data MyList (A : Set) : Set where
+      nil : MyList A
+      cons : (x : A) → (xs : MyList A) → MyList A
 
-    data PList (A : Set) : Set where
-      nil : PList A
-      cons : (x : A) → (xs : PList A) → PList A
+    quotedList : QuotedDesc Name
+    quotedList = quoteDatatypeᵐ MyList
 
-    q : QuotedDesc
-    q = quoteDatatypeᵐ PList
+    listDesc : DatDesc ε (ε ▷₁′ Set) 2
+    listDesc = QuotedDesc.desc quotedList
 
-    test-desc : QuotedDesc.desc q ≡ listD
+    test-desc : listDesc ≡
+      ( ι (λ _ → tt)
+      ⊕ "x" / top ⊗ "xs" /rec (λ _ → tt) ⊗ ι (λ _ → tt)
+      ⊕ `0 )
     test-desc = refl
 
+    unquoteDecl listHasDesc = deriveHasDesc listHasDesc quotedList
+
+    ex-list : MyList Bool
+    ex-list = cons true $ cons false $ cons true nil
+    ex-to : to ex-list ≡ ⟨ 1 , true
+                             , ⟨ 1 , false
+                                   , ⟨ 1 , true
+                                         , ⟨ zero , refl ⟩
+                                         , refl ⟩
+                                   , refl ⟩
+                             , refl ⟩
+    ex-to = refl
+
+    myLength′ : ∀{A} → MyList A → Nat
+    myLength′ nil = 0
+    myLength′ (cons x xs) = suc (myLength′ xs)
+
+    myLength : ∀{A} → MyList A → Nat
+    myLength = gdepth
+
+    test-length : ∀{A} → (xs : MyList A) → myLength xs ≡ myLength′ xs
+    test-length nil = refl
+    test-length (cons x xs) = cong suc (test-length xs)
 
   module NatToList where
+    open import Cx.Conversions
+    open QuoteNat
+    open QuoteList
 
-    nat→list : DefOrn ε id (ε ▷₁′ Set) (λ _ → tt) QuoteNat.natD
-    nat→list = ι (λ _ → inv tt)
-             ⊕ "x" / top +⊗ "xs" /rec (λ _ → inv tt) ⊗ (ι (λ _ → inv tt))
-             ⊕ `0
+    nat→list : Orn _ _ natDesc
+    nat→list = renameArguments 1 (just "xs" ∷ [])
+           >>⁺ addParameterArg 1 "x"
 
-    test-nat→list : ornToDesc nat→list ≡ QuoteList.listD
+    listDescByOrnament : DatDesc ε (ε ▷₁′ Set) 2
+    listDescByOrnament = ornToDesc nat→list
+
+    test-nat→list : listDescByOrnament ≡ listDesc
     test-nat→list = refl
+
+    nat→list′ : DefOrn ε id (ε ▷₁′ Set) (λ _ → tt) natDesc
+    nat→list′ = ι (λ _ → inv tt)
+              ⊕ "x" / top +⊗ "xs" /rec (λ _ → inv tt) ⊗ (ι (λ _ → inv tt))
+              ⊕ `0
+    test-nat→list′ : nat→list′ ≡ nat→list
+    test-nat→list′ = refl
+
+    -- Without renaming the other argument
+    nat→list-without-renaming : ornToDesc (addParameterArg {D = natDesc} 1 "x") ≡ⁿ listDesc
+    nat→list-without-renaming = refl
+
+    -- a = {!evalT (quoteDatatypeTo (quote MyList) listDescByOrnament)!}
+
+
+  module NatToListByDepth where
+    open QuoteList
+
+    list→vec : DefOrn (ε ▷′ Nat) (λ _ → tt) (ε ▷₁′ Set) id listDesc
+    list→vec = algOrn listDesc (depthAlg listDesc)
+
+    vecD′ : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
+    vecD′ = ι (λ _ → tt , 0)
+          ⊕ "x" / top ⊗
+            "_" / (λ γ → Nat) ⊗
+            "xs" /rec (λ γ → tt , top γ) ⊗
+            ι (λ γ → tt , suc (top γ))
+          ⊕ `0
+
+    test-list→vec : ornToDesc list→vec ≡ vecD′
+    test-list→vec = refl
+
 
 
   module QuoteVec where
-    vecD : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
-    vecD = ι (λ _ → tt , 0)
+    vecDesc : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
+    vecDesc = ι (λ _ → tt , 0)
          ⊕ "n" / (λ γ → Nat)
                   ⊗ "x" / (λ γ → top (pop γ))
                   ⊗ "xs" /rec (λ γ → tt , top (pop γ))
@@ -224,11 +291,20 @@ module N where
       nil : MyVec A 0
       cons : ∀ n → (x : A) → (xs : MyVec A n) → MyVec A (suc n)
 
-    q : QuotedDesc
-    q = quoteDatatypeᵐ MyVec
+    quotedVec : QuotedDesc Name
+    quotedVec = quoteDatatypeᵐ MyVec
 
-    test-desc : QuotedDesc.desc q ≡ vecD
+    test-desc : QuotedDesc.desc quotedVec ≡ vecDesc
     test-desc = refl
+
+    open import Cx.Unquoting
+
+    -- dn = dumpDatatypeᵐ quotedVec
+    -- ds = dumpDatatypeᵐ (fmap showNameInModule quotedVec)
+
+    data UVec (A : Set) : unquoteDat vecDesc where
+      nil : unquoteCon vecDesc 0 UVec
+      cons : unquoteCon vecDesc 1 UVec
 
 
   module MultiIndex where
@@ -238,7 +314,7 @@ module N where
     data MultiP (A : Set) : (n : Nat) → Vec A n → Set where
       fo : (n : Nat) → (xs : Vec A n) → MultiP A n xs
 
-    q : QuotedDesc
+    q : QuotedDesc Name
     q = quoteDatatypeᵐ Multi
 
     open import Reflection using (ShouldFailᵐ)

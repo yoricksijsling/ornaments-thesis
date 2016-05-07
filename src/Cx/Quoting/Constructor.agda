@@ -7,7 +7,7 @@ open import Tactic.Reflection
 open import Common
 open import Reflection
 open import Cx.Named
-open import Cx.Quoting.Cx
+open import Cx.Cx.Reflection
 
 instance
   DeBruijnAbs : {A : Set} {{_ : DeBruijn A}} → DeBruijn (Abs A)

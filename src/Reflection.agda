@@ -53,6 +53,24 @@ private
 `def₃ : Name → Term → Term → Term → Term
 `def₃ n t₁ t₂ t₃ = `defₓ n (t₁ ∷ t₂ ∷ t₃ ∷ [])
 
+forceType : ∀{a} (A : Set a) → A → A
+forceType A x = x
+
+`forceType : Type → Term → Term
+`forceType `A `x = def₂ (quote forceType) `A `x
+
+forceTypeTC : ∀{a}{A : Set a} → A → Term → TC Term
+forceTypeTC A tm = flip `forceType tm <$> quoteTC A
+
+private
+  beforeDot : List Char → List Char
+  beforeDot [] = []
+  beforeDot (c ∷ cs) = if eqChar c '.'
+                       then []
+                       else c ∷ beforeDot cs
+showNameInModule : Name → String
+showNameInModule = packString ∘ reverse ∘ beforeDot ∘ reverse ∘ unpackString ∘ show
+
 
 ----------------------------------------
 -- TC convenience functions
@@ -74,6 +92,14 @@ ShouldFail tc = catchTC (tc >>=′ λ _ → return ⊥) (return ⊤)
 macro
   ShouldFailᵐ : ∀{a}{A : Set a} → TC A → Tactic
   ShouldFailᵐ tc = evalTC (ShouldFail tc)
+
+giveTC : TC Term → Tactic
+giveTC tm hole = tm >>= give hole
+
+macro
+  giveT : TC Term → Tactic
+  giveT = giveTC
+
 
 ----------------------------------------
 -- Telescopes which remember names

@@ -5,7 +5,6 @@ module Cx.HasDesc.Derive where
 
 open import Common
 open import Reflection
--- open import Tactic.Reflection
 
 open import Cx.Named
 open import Cx.HasDesc.Core
@@ -31,30 +30,8 @@ private
   absurd-β : (i : Nat) → Pattern
   absurd-β i = `con₁ (quote ⟨_⟩) $ `con₂ (quote Σ._,_) (`suc^ i absurd) (var "_")
 
-
-  -- Takes (ε ▷ p₁ ▷ p₂ ▷ .. ▷ pn) and `T
-  -- Returns `(∀{p₁ p₂ .. pn} → T)
-  cxType : ∀{a} → Cx {a} → Type → Type
-  cxType Γ ty = Cx-iter (pi (hArg unknown) ∘ abs "_") ty Γ
-
-  -- Takes an offset and (ε ▷ p₁ ▷ p₂ ▷ .. ▷ pn)
-  -- Returns [var (n+o) , .. , var (1+o) , var o]
-  cxVars : (offset : Nat) → ∀{a} → Cx {a} → List (Arg Term)
-  cxVars offset = let f = λ { (o , ts) → suc o , vArg (var₀ o) ∷ ts } in
-                  snd ∘ Cx-iter f (offset , [])
-
   ΓIVars : (offset : Nat) → (Γ : Cx₁) → (I : Cx₀) → List (Arg Term)
   ΓIVars offset Γ I = cxVars (offset + CxLength I) Γ ++ cxVars offset I
-
-  cxPats : ∀{a} → Cx {a} → List (Arg Pattern)
-  cxPats = Cx-iter (_∷_ (vArg (var "_"))) []
-
-  -- Takes an offset and (ε ▷ p₁ ▷ p₂ ▷ .. ▷ pn)
-  -- Returns `((((tt , var (n+o)) , ..) , var (1+o)) , var o)
-  cxVal : ∀ (offset : Nat) {a} → Cx {a} → Term
-  cxVal offset = Cx-walk {Nat} {Term} offset suc suc (const (con₀ (quote ⊤′.tt)))
-                         (λ n tm → con₂ (quote _▶₁_._,_) tm (`var₀ n ""))
-                         (λ n tm → con₂ (quote _▶₀_._,_) tm (`var₀ n ""))
 
   -- Takes a ConDesc (a ⊗ rec x ⊗ rec y ⊗ b ⊗ rec z ⊗ ι)
   -- Returns a list of patterns [a, x, y, b, z]
@@ -89,7 +66,7 @@ module DeriveTo (`to : Name)(`desc : Term) where
     makeClauses i [] `0 = []
     makeClauses i (`c ∷ `cs) (D ⊕ DS) = makeClause i `c D  ∷ makeClauses (suc i) `cs DS
   
-  deriveTo : QuotedDesc → TC ⊤
+  deriveTo : QuotedDesc Name → TC ⊤
   deriveTo (mk {I} {Γ} `datatypeName `constructorNames desc) =
     define (vArg `to) (type Γ I `datatypeName) (makeClauses Γ I 0 `constructorNames desc)
 
@@ -110,17 +87,17 @@ module DeriveFrom (`from : Name)(`desc : Term) where
     makeClauses i [] `0 = [ absurd-clause [ vArg (absurd-β i) ] ]
     makeClauses i (`c ∷ `cs) (D ⊕ DS) = makeClause i `c D ∷ makeClauses (suc i) `cs DS
 
-  deriveFrom : QuotedDesc → TC ⊤
+  deriveFrom : QuotedDesc Name → TC ⊤
   deriveFrom (mk {I} {Γ} `datatypeName `constructorNames desc) =
     define (vArg `from) (type Γ I `datatypeName)
            (makeClauses Γ I 0 `constructorNames desc)
 
 -- ∀{ps is} → HasDesc (`dt ps is)
-hasDescType : QuotedDesc → Type
+hasDescType : QuotedDesc Name → Type
 hasDescType (mk {I} {Γ} `dt _ desc) = cxType Γ $ cxType I $
                                       def₁ (quote HasDesc) (def `dt (ΓIVars 0 Γ I))
 
-deriveHasDesc : (`hasDesc : Name) → QuotedDesc → TC ⊤
+deriveHasDesc : (`hasDesc : Name) → QuotedDesc Name → TC ⊤
 deriveHasDesc `hasDesc q =
   do `q ← quoteTC q
   -| let `desc = def₁ (quote QuotedDesc.desc) `q in
