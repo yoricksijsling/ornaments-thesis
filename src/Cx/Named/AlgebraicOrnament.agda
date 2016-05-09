@@ -23,14 +23,22 @@ module _ {I : Cx}{J : Pow ⟦ I ⟧} where
   algOrn′ {dt = isDat _} `0 α = `0
   algOrn′ {dt = isDat _} (x ⊕ xs) α = algOrn′ x (curry α 0) ⊕ algOrn′ xs (α ∘ (suc *** id))
 
-  algOrn : ∀{Γ dt}(D : Desc I Γ dt) →
+  algOrn : ∀{Γ dt}{D : Desc I Γ dt} →
            ({γ : ⟦ Γ ⟧} → Alg D γ J) → DefOrn (I ▷ J) pop Γ id D
-  algOrn = algOrn′
+  algOrn {D = D} = algOrn′ D
 
   -- A 'remember' operation should be possible, see McBrides
   -- Ornamental Algebras/Algebraic Ornaments
   -- remember : ∀{Γ #c}(D : DatDesc I Γ #c) → (α : {γ : ⟦ Γ ⟧} → Alg D γ J) →
   --            ∀{γ i} → μ D γ (pop i) → μ (ornToDesc (algOrn D α)) γ i
+
+  -- Also, the recomputation lemma should hold. Meaning that the
+  -- forgetting over an algOrn and folding the algebra should result
+  -- in the original index.
+  -- E.g. (xs : Vec A n) → length (toList xs) ≡ n.
+  -- recomputation : ∀{Γ #c}(D : DatDesc I Γ #c) → (α : {γ : ⟦ Γ ⟧} → Alg D γ J) →
+  --                 ∀{γ j} → (x : μ (ornToDesc (algOrn D α)) γ j) →
+  --                 fold α (forget (algOrn D α) x) ≡ top j
 
 
 ----------------------------------------
@@ -98,4 +106,4 @@ module _ {I J K}{u : Cxf J I}{v : Cxf K J} where
 
 reornament : ∀{I J Δ}{u : Cxf J I}{c : Cxf Δ ε}{#c}{D : DatDesc I ε #c} →
              (o : Orn u c D) → Orn (u ∘ pop) c D
-reornament o = o >>⁺ algOrn (ornToDesc o) (λ {δ} → forgetAlg o {δ})
+reornament o = o >>⁺ algOrn (λ {δ} → forgetAlg o {δ})

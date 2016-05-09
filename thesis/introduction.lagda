@@ -1,31 +1,43 @@
 %include thesis.fmt
 
-% \section{Abstract}\label{sec:abstract}
-
-% Todo.
-
 \section{Introduction}\label{sec:introduction}
 
-Something something
+Modern dependently typed functional programming languages like Agda
+and Idris support datatypes with dependent types and indexes. These
+allow programmers to encode invariants of their programs within their
+datatypes. Building your datatypes such that they precisely match
+the logic of the program is an essential aspect of writing
+correct-by-construction software in these languages.
 
-We present the following contributions:
-\begin{itemize}
-\item We built a universe of descriptions which can encode
-  datatypes. It supports datatypes with parameters, indices and
-  dependent types. Contrary to common approaches, our universe is
-  conservative in the sense that only datatypes which can exist in the
-  host language can be encoded in the universe. This allows us to
-  perform mutations on descriptions freely, while still being certain
-  that we can convert it back to an actual datatype. We explain how
-  the universe is used in section \todo{ref}.
-\item We have implemented a framework which uses metaprogramming to
-  derive descriptions of real datatypes. The embedding-projection pair
-  is also derived, allowing us to convert values of the original
-  datatype to elements in our universe and back. Our implementation
-  does not require the user to enable set-in-set or to disable
-  strict-positivity checking, ensuring usability within existing
-  systems. \todo{ref}.
-\item We have implemented a way to extend and refine descriptions,
-  based on the theory of ornaments. These are explained in section
-  \todo{ref}.
-\end{itemize}
+This specialization of datatypes can however be a significant obstacle
+to code reuse. Programmers frequently define practically the same
+functions for slightly different datatypes. For example; vectors are
+the same as lists with an extra length index, but the append (++)
+function for lists does not work for vectors. Having to write this
+function for both types violates the 'don't repeat yourself' software
+development principle.
+
+To start solving this problem, we have to capture the relationships
+between different-but-similar datatypes. Ornaments have been invented
+to do this; they formalise the notions of extension en refinements of
+datatypes \todo{cite mcbride}. They can be generated in various ways
+and can be used to build new datatypes. An ornament can guide the
+implementation of functions which work on the work on the ornamented
+datatype based on the implementation of that function on the
+non-ornamented datatype \cite{dagand14-transporting, williams14}.
+
+This topic has been explored and formalized using category theory
+\cite{dagand12, kogibbons13} and in Agda \cite{dagand14-transporting,
+  dagand14-essence}.  The Agda implementations require you to describe
+your datatypes within a universe of descriptions, so to use it the
+user is always working with generic representations of datatypes, not
+with the datatypes themselves. This hinders usability and easy
+experimentation.
+
+A technology like ornaments has to be experimented with to reach its
+potential. To facilitate this, we have implemented a more practical
+way to use ornaments in Agda based on metaprogramming. With this
+implementation, we can use actual Agda datatypes and define ornaments
+for them. Along the way we have implemented a mechanism to derive
+generic descriptions of datatypes supporting indices, parameters and
+dependent types.

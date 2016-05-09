@@ -1,7 +1,13 @@
 * Todo
+** Reconstructor ergens benoemen
+   Mergen en splitten van constructors. Example: Toevoegen van types aan een lambda calculus. (`lit : Exp) wordt dan bijvoorbeeld (`bool : Exp Bool) en (`nat : Exp Nat).
+** Het gebruik van Contexts voor indices discussieren.
 ** Vraag: Je kan descriptions droppen naar een eenvoudiger soort. Kan je ornaments ook liften naar moeilijkere?
 
 ** Vraag: Hoe zit het ook alweer met Π-types in onze universe?
+** Vraag: Kunnen we ornaments gebruiken om een interface naar haskell mooier te maken?
+** Vraag: Kunnen we zoiets als McBride's 'How to keep your neighbors in order' doen?
+   Iets met addLimitingIndex ofzo, die overal een index toevoegt.
 
 * Dimensies
 ** Kennisniveau
@@ -17,7 +23,7 @@
 ** Topics: Description, algebra/fold, ornament, ornamental algebras, algebraic ornaments, quoting/unquoting
 
 
-* Literatuur [0/8]
+* Literatuur [0/15]
 *** TODO Morris 2007: Constructing universes for generic programming
 *** TODO Altenkirch, McBride, Morris 2007: Generic programming with dependent types
 *** TODO Yakushev, Holdermans, Löh, Jeuring 2009: Generic programming with fixed points for mutually recursive datatypes
@@ -28,11 +34,14 @@
 *** TODO Weirich, Casinghino: Generic programming with dependent types
 
 *** TODO McBride 2011: Ornamental algebras, algebraic ornaments
+**** Use this one: http://plv.mpi-sws.org/plerg/papers/mcbride-ornaments-2up.pdf
+**** How about the Hutton's Razor example? Compiling code to a stack machine
 *** TODO Dagand, McBride 2012: A categorical treatment of ornaments
 *** TODO Dagand 2014: The essence of ornaments
 *** TODO Dagand, McBride 2014: Transporting functions across ornaments
 *** TODO Ko, Gibbons 2014: Categorical organisation of the ornament-refinement framework
 *** TODO Williams, Dagand, Remy 2014: Ornaments in practice
+*** TODO David Christiansen thesis
 
 
 

@@ -37,7 +37,10 @@
 ** Description-definities
 ** Ornament-definities
 ** Algebraic ornaments
+*** Remember
+*** Recomputation lemma
 ** Reornaments
+*** Composition
 ** Discussie
 *** Indices kunnen niet afhankelijk zijn van parameters
 *** 

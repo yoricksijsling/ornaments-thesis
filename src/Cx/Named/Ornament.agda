@@ -54,17 +54,18 @@ module _ {I J}{u : Cxf J I} where
 -- Ornamental algebra
 
 module _ {I J}{u : Cxf J I} where
-  forgetNT : ∀{Γ Δ dt}{c : Cxf Δ Γ}{D : Desc I Γ dt} (o : Orn u c D) →
-             ∀ {δ X j} → ⟦ o ⟧ δ (X ∘ u) j → ⟦ D ⟧ (c δ) X (u j)
-  forgetNT {c = c} (ι j) {δ} refl = sym (inv-eq (j δ))
-  forgetNT (_/-⊗_ _ xs⁺) (s , v) = s , forgetNT xs⁺ v
-  forgetNT (_/rec_⊗_ _ j xs⁺) {δ} {X} (s , v) = transport X (inv-eq (j δ)) s , forgetNT xs⁺ v
-  forgetNT (_/_+⊗_ _ _ xs⁺) (_ , v) = forgetNT xs⁺ v
-  forgetNT (_/rec_+⊗_ _ _ xs⁺) (_ , v) = forgetNT xs⁺ v
-  forgetNT (give-K s xs⁺) {δ} v = s δ , forgetNT xs⁺ v
-  forgetNT `0 (() , _)
-  forgetNT (x⁺ ⊕ xs⁺) (zero , v) = zero , forgetNT x⁺ v
-  forgetNT (x⁺ ⊕ xs⁺) (suc k , v) = (suc *** id) (forgetNT xs⁺ (k , v))
+  private
+    forgetNT : ∀{Γ Δ dt}{c : Cxf Δ Γ}{D : Desc I Γ dt} (o : Orn u c D) →
+               ∀ {δ X j} → ⟦ o ⟧ δ (X ∘ u) j → ⟦ D ⟧ (c δ) X (u j)
+    forgetNT {c = c} (ι j) {δ} refl = sym (inv-eq (j δ))
+    forgetNT (_/-⊗_ _ xs⁺) (s , v) = s , forgetNT xs⁺ v
+    forgetNT (_/rec_⊗_ _ j xs⁺) {δ} {X} (s , v) = transport X (inv-eq (j δ)) s , forgetNT xs⁺ v
+    forgetNT (_/_+⊗_ _ _ xs⁺) (_ , v) = forgetNT xs⁺ v
+    forgetNT (_/rec_+⊗_ _ _ xs⁺) (_ , v) = forgetNT xs⁺ v
+    forgetNT (give-K s xs⁺) {δ} v = s δ , forgetNT xs⁺ v
+    forgetNT `0 (() , _)
+    forgetNT (x⁺ ⊕ xs⁺) (zero , v) = zero , forgetNT x⁺ v
+    forgetNT (x⁺ ⊕ xs⁺) (suc k , v) = (suc *** id) (forgetNT xs⁺ (k , v))
 
   forgetAlg : ∀{Γ Δ #c}{c : Cxf Δ Γ}{D : DatDesc I Γ #c} (o : Orn u c D) →
               ∀{δ} → Alg (ornToDesc o) δ (μ D (c δ) ∘ u)

@@ -178,6 +178,7 @@
 \end{flushright}
 
 % \listoftodos
+\input{abstract.tex}
 \tableofcontents
 \input{introduction.tex}
 \input{usage.tex}

@@ -123,7 +123,7 @@ module E where
     lengthAlg (suc (suc ()) , _)
 
     list→vec : DefOrn (ε ▷′ Nat) (λ _ → tt) (ε ▷₁′ Set) id listD
-    list→vec = algOrn listD lengthAlg
+    list→vec = algOrn lengthAlg
 
     vecD′ : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
     vecD′ = ι (λ _ → (tt , 0))
@@ -286,7 +286,7 @@ module N where
     open QuoteList
 
     list→vec : Orn _ _ listDesc
-    list→vec = algOrn listDesc (depthAlg listDesc)
+    list→vec = algOrn (depthAlg listDesc)
 
     vecD′ : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
     vecD′ = ι (λ _ → tt , 0)

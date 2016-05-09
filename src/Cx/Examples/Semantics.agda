@@ -40,11 +40,12 @@ SemAlg (suc (suc (suc (suc ()))) , _)
 ⟦_⟧Exp tm = gfold SemAlg tm
 
 semExpOrn : Orn _ _ expDesc
-semExpOrn = algOrn expDesc SemAlg
+semExpOrn = algOrn SemAlg
 
 semExpDesc : DatDesc (ε ▷′ Ty ▷ (λ γ → ⟦ top γ ⟧Ty)) ε 4
 semExpDesc = ornToDesc semExpOrn
 
+-- Unquoting datatypes is somewhat verbose right now:
 data SemExp : unquoteDat semExpDesc where
   `nat : unquoteCon semExpDesc 0 SemExp
   `≤ : unquoteCon semExpDesc 1 SemExp
@@ -52,7 +53,9 @@ data SemExp : unquoteDat semExpDesc where
   `if : unquoteCon semExpDesc 3 SemExp
 unquoteDecl quotedSemExp semExpHasDesc =
   deriveHasDescExisting quotedSemExp semExpHasDesc (quote SemExp) semExpDesc
-
+-- Ideally, one would be able to define datatypes within TC:
+--   unquoteDecl quotedSemExp semExpHasDesc SemExp `nat `≤ `+ `if =
+--     unquoteDatatype semExpDesc quotedSemExp semExpHasDesc SemExp (`nat ∷ `≤ ∷ `+ ∷ `if)
 
 
 -- (if 3 ≤ 4 then 10 else 20) + 7
