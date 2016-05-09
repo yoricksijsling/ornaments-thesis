@@ -34,19 +34,18 @@ module Manually where
   from (cons-β n x xs) = cons-α n x (from xs)
   from absurd-β
 
-  re : ∀ {A n} → HasDesc (MyVec A n)
-  re = mk (mk (quote MyVec) (quote MyVec.nil ∷ quote MyVec.cons ∷ []) desc) to from
+  vecHasDesc : ∀ {A n} → HasDesc (MyVec A n)
+  vecHasDesc = mk desc to from
 
 
 module Auto where
-  q : DescWith Name
-  q = quoteDatatypeᵐ MyVec
+  open HasDesc {{...}} using (to; from)
 
-  test-desc : DescWith.desc q ≡ Manually.desc
+  unquoteDecl quotedVec vecHasDesc = deriveHasDesc quotedVec vecHasDesc (quote MyVec)
+
+  test-desc : QuotedDesc.desc quotedVec ≡ Manually.desc
   test-desc = refl
 
-  unquoteDecl myVecHasDesc = deriveHasDesc myVecHasDesc q
-  open HasDesc {{...}}
 
   test-to : ∀ {A n} → (xs : MyVec A n) → Manually.to xs ≡ to xs
   test-to nil-α = refl

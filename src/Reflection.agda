@@ -75,12 +75,12 @@ showNameInModule = packString ∘ reverse ∘ beforeDot ∘ reverse ∘ unpackSt
 ----------------------------------------
 -- TC convenience functions
 
-fail : ∀{a}{A : Set a} → String → TC A
-fail s = typeErrorS s
+fromMaybe′ : ∀{a}{A : Set a} → List ErrorPart → Maybe A → TC A
+fromMaybe′ e (just x) = return x
+fromMaybe′ e nothing = typeError e
 
 fromMaybe : ∀{a}{A : Set a} → String → Maybe A → TC A
-fromMaybe s (just x) = return x
-fromMaybe s nothing = fail s
+fromMaybe s = fromMaybe′ [ strErr s ]
 
 tryUnquoteTC : ∀{a}{A : Set a} → String → Term → TC A
 tryUnquoteTC {A = A} s tm = catchTC (unquoteTC tm) (quoteTC A >>=′ λ `A →

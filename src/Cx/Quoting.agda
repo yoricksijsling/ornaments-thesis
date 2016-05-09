@@ -42,5 +42,7 @@ quoteDatatypeTo `dt {I} {Γ} {#c} D =
   =| Γeq ← tcEq Γ (QuotedDesc.Γ dw)
   =| #ceq ← tcEq #c (QuotedDesc.#c dw)
   =| D′ := transport id (DatDesc $≡ Ieq *≡ Γeq *≡ #ceq) D
-  -| _ ← tcEq D′ (QuotedDesc.desc dw)
+  -| _ ← tcEq (toExtended D′) (toExtended (QuotedDesc.desc dw))
   =| return (mk (QuotedDesc.`datatypeName dw) (QuotedDesc.`constructorNames dw) D′)
+  where open import Cx.Conversions
+        open Extended↔Named

@@ -6,6 +6,18 @@ open import Cx.Named
 open import Cx.HasDesc
 open HasDesc
 
+gfold : ∀{A}{{R : HasDesc A}} → ∀{X} → Alg (desc R) (γ R) X → A → X (i R)
+gfold {{R}} α = fold α ∘ to R
+
+gforget : ∀{A}{{AR : HasDesc A}}{B}{{BR : HasDesc B}} →
+          {u : Cxf (I BR) (I AR)}{c : Cxf (Γ BR) (Γ AR)} →
+          (o : Orn u c (desc AR)) →
+          {{ieq : i AR ≡ u (i BR)}} {{γeq : γ AR ≡ c (γ BR)}} {{#ceq : #c AR ≡ #c BR}}
+          {{deq : transport (DatDesc (I BR) (Γ BR)) #ceq (ornToDesc o) ≡ desc BR}} →
+          B → A
+gforget {{AR = mk desc Ato Afrom}} {{BR = mk .(ornToDesc o) Bto Bfrom}} o
+  {{refl}} {{refl}} {{refl}} {{refl}} = Afrom ∘ forget o ∘ Bto
+
 
 ----------------------------------------
 -- Depth
@@ -17,7 +29,7 @@ depthAlg {dt = isCon} (nm /rec i ⊗ xs) (s , v) = max (suc s) (depthAlg xs v)
 depthAlg {dt = isDat _} D (k , v) = depthAlg (lookupCtor D k) v
 
 gdepth : ∀{A} → {{R : HasDesc A}} → A → Nat
-gdepth {{R}} = fold (depthAlg (desc R)) ∘ to R
+gdepth {{R}} = gfold (depthAlg (desc R))
 
 -- ----------------------------------------
 -- -- Last

@@ -29,35 +29,45 @@ module _ (`dt : Name) (#p : Nat) (I : Cx₀) where
     strErr "parseTarget: Invalid constructor target" ∷ termErr tm ∷ []
   
   data ShapeView : Abs (Arg Term) → Set where
-    shape-rec : ∀ s i args → ShapeView (abs s (arg i (def `dt args)))
-    shape-⊗ : ∀ s i tm → ShapeView (abs s (arg i tm))
+    shape-rec : ∀ s args → ShapeView (abs s (vArg (def `dt args)))
+    shape-⊗ : ∀ s tm → ShapeView (abs s (vArg tm))
     shape-fail : ∀ s i tm → String → ShapeView (abs s (arg i tm))
 
   shapeView : (tm : Abs (Arg Term)) → ShapeView tm
-  shapeView (abs s (arg i tm)) with absTelView tm
-  shapeView (abs s (arg i _)) | ttel  , def `f args , refl with `f == `dt
-  shapeView (abs s (arg i _)) | []    , def `f args , refl | yes p rewrite p = shape-rec s i args
-  shapeView (abs s (arg i _)) | _ ∷ _ , def `f args , refl | yes p = shape-fail s i _ "Π-types are not supported"
-  shapeView (abs s (arg i _)) | ttel  , def `f args , refl | no ¬p = shape-⊗ s i _
-  shapeView (abs s (arg i _)) | ttel  , ttarget , refl = shape-⊗ s i _
-    
+  shapeView (abs s (vArg tm)) with absTelView tm
+  shapeView (abs s (vArg _)) | ttel  , def `f args , refl with `f == `dt
+  shapeView (abs s (vArg _)) | []    , def `f args , refl | yes p rewrite p = shape-rec _ _
+  shapeView (abs s (vArg _)) | _ ∷ _ , def `f args , refl | yes p = shape-fail _ _ _ "Π-types are not supported"
+  shapeView (abs s (vArg _)) | ttel  , def `f args , refl | no ¬p = shape-⊗ _ _
+  shapeView (abs s (vArg _)) | ttel  , ttarget , refl = shape-⊗ _ _
+  shapeView (abs s (arg i tm)) = shape-fail _ _ _ "Only visible relevant arguments are supported"
+
+  telStrengthenFrom : Nat → List (Abs (Arg Term)) → Maybe (List (Abs (Arg Term)))
+  telStrengthenFrom from [] = just []
+  telStrengthenFrom from (x ∷ xs) = _∷_ <$> strengthenFrom from 1 x <*> telStrengthenFrom (suc from) xs
+  telStrengthen : List (Abs (Arg Term)) → Maybe (List (Abs (Arg Term)))
+  telStrengthen = telStrengthenFrom 0
+
   {-# TERMINATING #-}
   parseConstructor : (offset : Nat) (Γ : Cx) (ctel : AbsTelescope) (ctarget : Type) → TC (ConDesc I Γ)
   parseConstructor o Γ [] ctarget = ι <$> parseTarget o Γ ctarget
   parseConstructor o Γ (tm ∷ ctel) ctarget with shapeView tm
-  parseConstructor o Γ (_ ∷ ctel) ctarget | shape-rec s i args =
+  parseConstructor o Γ (_ ∷ ctel) ctarget | shape-rec s args =
     do is ← indicesInCx o Γ args
-    =| stel ← fromMaybe "Can't strengthen telescope" (strengthen 1 ctel)
-    =| starget ← fromMaybe "Can't strengthen target" (strengthen 1 ctarget)
+    =| stel ← fromMaybe "Can't strengthen telescope" (telStrengthen ctel)
+    =| starget ← fromMaybe "Can't strengthen target" (strengthenFrom (length ctel) 1 ctarget)
     =| rest ← parseConstructor o Γ stel starget
     =| return (s /rec is ⊗ rest)
-  parseConstructor o Γ (_ ∷ ctel) ctarget | shape-⊗ s i tm =
+  parseConstructor o Γ (_ ∷ ctel) ctarget | shape-⊗ s tm =
     do tm′ ← tryUnquoteTC "termInCx" (termInCx o tm)
     =| rest ← parseConstructor (suc o) (Γ ▷ tm′) ctel ctarget
     =| return (s / tm′ ⊗ rest)
-  parseConstructor o Γ (_ ∷ ctel) ctarget | shape-fail s i tm msg = typeError $
-    strErr "Failed to parse constructor argument (" ∷ strErr s ∷ strErr ":" ∷ termErr tm ∷ strErr ")." ∷
-    strErr msg ∷ []
+  parseConstructor o Γ (_ ∷ ctel) ctarget | shape-fail s (arg-info hidden relevant) tm msg =
+    typeError $ strErr "Failed to parse constructor argument {" ∷ strErr s ∷
+                strErr ":" ∷ termErr tm ∷ strErr "}." ∷ strErr msg ∷ []
+  parseConstructor o Γ (_ ∷ ctel) ctarget | shape-fail s i tm msg =
+    typeError $ strErr "Failed to parse constructor argument (" ∷ strErr s ∷
+                strErr ":" ∷ termErr tm ∷ strErr ")." ∷ strErr msg ∷ []
 
   quoteConstructor : (Γ : Cx) (`c : Name) → TC (ConDesc I Γ)
   quoteConstructor Γ `c =
@@ -119,8 +129,8 @@ module _ where
     testPair = refl
 
     data DummyN (A : Set) : Nat → Set where
-      dNil : ∀ {n} → DummyN A n
-      dCons : ∀ {n} → A → DummyN A n → DummyN A (suc n)
+      dNil : ∀ n → DummyN A n
+      dCons : ∀ n → A → DummyN A n → DummyN A (suc n)
 
     testNil : quoteConstructorᵐ DummyN 1 (ε ▷ (λ γ → Nat)) (ε ▷₁′ Set) dNil
       ≡ ("n" / (λ γ → Nat) ⊗ ι (λ γ → tt , top γ))
@@ -132,7 +142,7 @@ module _ where
     testCons = refl
 
     data DummyNB : (n : Nat) → Fin n → Set where
-      dIFin : ∀ {n k} → DummyNB n k
+      dIFin : ∀ n k → DummyNB n k
 
     testIFin : quoteConstructorᵐ DummyNB 0 (ε ▷′ Nat ▷ (Fin ∘ top)) ε dIFin
       ≡ (("n" / (λ γ → Nat) ⊗ "k" / (Fin ∘ top) ⊗ ι (λ γ → (tt , top (pop γ)) , top γ)))

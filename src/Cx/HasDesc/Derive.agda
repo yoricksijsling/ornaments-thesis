@@ -8,6 +8,7 @@ open import Reflection
 
 open import Cx.Named
 open import Cx.HasDesc.Core
+open import Cx.Quoting public
 
 private
   `suc^ : ∀{tp} → Nat → ⟦ tp ⟧tp → ⟦ tp ⟧tp
@@ -29,6 +30,11 @@ private
   -- ⟨ sucⁱ () , _ ⟩
   absurd-β : (i : Nat) → Pattern
   absurd-β i = `con₁ (quote ⟨_⟩) $ `con₂ (quote Σ._,_) (`suc^ i absurd) (var "_")
+
+  -- Takes (ε ▷ p₁ ▷ p₂ ▷ .. ▷ pn) and `T
+  -- Returns `(∀{p₁ p₂ .. pn} → T)
+  cxType : ∀{a} → Cx {a} → Type → Type
+  cxType Γ ty = Cx-iter (pi (hArg unknown) ∘ abs "_") ty Γ
 
   ΓIVars : (offset : Nat) → (Γ : Cx₁) → (I : Cx₀) → List (Arg Term)
   ΓIVars offset Γ I = cxVars (offset + CxLength I) Γ ++ cxVars offset I
@@ -111,6 +117,16 @@ private
 deriveHasDesc : (`quotedDesc `hasDesc `dt : Name) → TC ⊤
 deriveHasDesc `quotedDesc `hasDesc `dt =
   do q ← quoteDatatype `dt
+  =| `q ← quoteTC q
+  -| define (vArg `quotedDesc) (quoteTerm (QuotedDesc Name))
+            [ clause [] `q ]
+  ~| `desc := def₁ (quote QuotedDesc.desc) (def₀ `quotedDesc)
+  -| deriveHasDesc′ `hasDesc `desc q
+  where open import Cx.Quoting
+
+deriveHasDescExisting : (`quotedDesc `hasDesc `dt : Name) → ∀{I Γ #c} → DatDesc I Γ #c → TC ⊤
+deriveHasDescExisting `quotedDesc `hasDesc `dt D =
+  do q ← quoteDatatypeTo `dt D
   =| `q ← quoteTC q
   -| define (vArg `quotedDesc) (quoteTerm (QuotedDesc Name))
             [ clause [] `q ]

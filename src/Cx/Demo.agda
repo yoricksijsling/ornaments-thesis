@@ -285,7 +285,7 @@ module N where
   module NatToListByDepth where
     open QuoteList
 
-    list→vec : DefOrn (ε ▷′ Nat) (λ _ → tt) (ε ▷₁′ Set) id listDesc
+    list→vec : Orn _ _ listDesc
     list→vec = algOrn listDesc (depthAlg listDesc)
 
     vecD′ : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2

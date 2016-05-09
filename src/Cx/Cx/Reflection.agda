@@ -19,23 +19,48 @@ t `▷₁ s = con₂ (quote _▷₁_) t s
 `top = def₁ (quote top)
 
 
+-- Takes an offset and (ε ▷ p₁ ▷ p₂ ▷ .. ▷ pn)
+-- Returns [var (n+o) , .. , var (1+o) , var o]
+cxVars : (offset : Nat) → ∀{a} → Cx {a} → List (Arg Term)
+cxVars offset = let f = λ { (o , ts) → suc o , vArg (var₀ o) ∷ ts } in
+                snd ∘ Cx-iter f (offset , [])
+
+cxPats : ∀{a} → Cx {a} → List (Arg Pattern)
+cxPats = Cx-iter (_∷_ (vArg (var "_"))) []
+
+-- Takes an offset and (ε ▷ p₁ ▷ p₂ ▷ .. ▷ pn)
+-- Returns `((((tt , var (n+o)) , ..) , var (1+o)) , var o)
+cxVal : ∀ (offset : Nat) {a} → Cx {a} → Term
+cxVal offset {a} = Cx-walk {Nat} {Term} offset suc suc (const (con₀ (quote ⊤′.tt)))
+                           (λ n tm → con₂ (quote _▶₁_._,_) tm (`var₀ n ""))
+                           (λ n tm → con₂ (quote _▶₀_._,_) tm (`var₀ n ""))
+
+-- Takes a term and (ε ▷ S₁ ▷ S₂ ▷ .. ▷ Sn)
+-- Returns _$_ `tm (forceType ⟦ ε ▷ S₁ ▷ S₂ ▷ .. ▷ Sn ⟧ ((tt , vn) , .. , v2) , v1)
+applyCx : ∀{a} → Cx {a} → (`γ `f : Term) → TC Term
+applyCx {a} Γ `γ `f = _`$_ `f <$> forceTypeTC (⟦_⟧Cx {a} Γ) `γ
+
+----------------------------------------
+-- Type to Cx
+
 private
   substsVars : Nat → (Term → Term) → List SafeTerm → List SafeTerm
   substsVars zero f xs = xs
   substsVars (suc n) f xs = substsVars n (f ∘ `pop) (xs ++ [ safe (`top $ f $ var₀ 0) _ ])
 
--- Substitute variable references with tops and pops. Wrap the term in (λ γ →).
--- from: `(Ψ (var 0) (var 1) .. (var n))
--- to  : `(λ γ → Ψ (top γ) (pop $ top γ) .. (popⁿ $ top γ))
-termInCx : Nat → Term → Term
-termInCx n = lam visible ∘ abs "γ" ∘ substTerm (substsVars (suc n) id [])
-
-private
   test-substsVars-0 : substsVars 1 id [] ≡ safe (`top $ var₀ 0) _ ∷ []
   test-substsVars-0 = refl
   test-substsVars-2 : substsVars 3 id [] ≡ (safe (`top $ var₀ 0) _ ∷
     safe (`top $ `pop $ var₀ 0) _ ∷ safe (`top $ `pop $ `pop $ var₀ 0 ) _ ∷ [])
   test-substsVars-2 = refl
+
+-- Substitute variable references with tops and pops. Wrap the term in (λ γ →).
+-- from: `(Ψ (var 0) (var 1) .. (var n))
+-- to  : `(λ γ → Ψ (top γ) (top $ pop γ) .. (top $ popⁿ γ))
+termInCx : Nat → Term → Term
+termInCx n = lam visible ∘ abs "γ" ∘ substTerm (substsVars (suc n) id [])
+
+private
   test-TermInCx : termInCx 2 (def₂ (quote Vec) (var₀ 2) (var₀ 0)) ≡
     lam visible (abs "γ" (def₂ (quote Vec) (`top $ `pop $ `pop $ var₀ 0) (`top $ var₀ 0)))
   test-TermInCx = refl
@@ -86,63 +111,35 @@ private
   test-typeToCx-5 = tt
 
 
+----------------------------------------
+-- Cx to Type
 
--- Takes (ε ▷ p₁ ▷ p₂ ▷ .. ▷ pn) and `T
--- Returns `(∀{p₁ p₂ .. pn} → T)
-cxType : ∀{a} → Cx {a} → Type → Type
-cxType Γ ty = Cx-iter (pi (hArg unknown) ∘ abs "_") ty Γ
+-- From (ε ▷₁ (λ γ → Set) ▷₁ (λ γ → top γ → Set) ▷ (λ γ → Nat)), cxToType builds something like this:
+--   (A : $A (⟦_⟧Cx {lsuc lzero} (ε))                                     (λ γ → Set) (tt)) →
+--   (B : $A (⟦_⟧Cx {lsuc lzero} (ε ▷₁′ Set))                              (λ γ → top γ → Set) (tt , A)) →
+--   (n : $A (⟦_⟧Cx {lsuc lzero} (ε ▷₁′ Set ▷₁ (λ γ → top γ → Set)))       (λ γ → Nat) ((tt , A) , B)) →
+--   Set
+-- Which is the same as:
+--   (A : Set) → (B : A → Set) → (C : Nat) → Set
 
--- Takes an offset and (ε ▷ p₁ ▷ p₂ ▷ .. ▷ pn)
--- Returns [var (n+o) , .. , var (1+o) , var o]
-cxVars : (offset : Nat) → ∀{a} → Cx {a} → List (Arg Term)
-cxVars offset = let f = λ { (o , ts) → suc o , vArg (var₀ o) ∷ ts } in
-                snd ∘ Cx-iter f (offset , [])
+mutual
+  cxToTel : ∀{a} → Cx {a} → TC Telescope
+  cxToTel (Γ ▷₁ S) = quoteTC S >>= cxToTel-helper Γ
+  cxToTel (Γ ▷ S) = quoteTC S >>= cxToTel-helper Γ
+  cxToTel ε = return []
 
-cxPats : ∀{a} → Cx {a} → List (Arg Pattern)
-cxPats = Cx-iter (_∷_ (vArg (var "_"))) []
+  cxToTel-helper : ∀{a} → Cx {a} → Term → TC Telescope
+  cxToTel-helper {a} Γ `S =
+    do xs ← cxToTel {a} Γ
+    =| `tm ← applyCx Γ (cxVal 0 Γ) `S
+    -| return (xs ++ [ vArg `tm ])
 
--- Takes an offset and (ε ▷ p₁ ▷ p₂ ▷ .. ▷ pn)
--- Returns `((((tt , var (n+o)) , ..) , var (1+o)) , var o)
-cxVal : ∀ (offset : Nat) {a} → Cx {a} → Term
-cxVal offset {a} = Cx-walk {Nat} {Term} offset suc suc (const (con₀ (quote ⊤′.tt)))
-                           (λ n tm → con₂ (quote _▶₁_._,_) tm (`var₀ n ""))
-                           (λ n tm → con₂ (quote _▶₀_._,_) tm (`var₀ n ""))
+cxToType : ∀{a} → Type → Cx {a} → TC Type
+cxToType {a} ty Γ = flip telPi ty <$> cxToTel {a} Γ
 
--- Takes a term and (ε ▷ S₁ ▷ S₂ ▷ .. ▷ Sn)
--- Returns _$_ {A = ⟦ ε ▷ S₁ ▷ S₂ ▷ .. ▷ Sn ⟧} `tm (((tt , vn) , .. , v2) , v1)
-applyCx : ∀{a} → Cx {a} → (`γ `f : Term) → TC Term
-applyCx {a} Γ `γ `f = _`$_ `f <$> forceTypeTC (⟦_⟧Cx {a} Γ) `γ
-
-
-module CxToType where
-  -- From (ε ▷₁ (λ γ → Set) ▷₁ (λ γ → top γ → Set) ▷ (λ γ → Nat)), cxToType builds something like this:
-  --   (A : $A (⟦_⟧Cx {lsuc lzero} (ε))                                     (λ γ → Set) (tt)) →
-  --   (B : $A (⟦_⟧Cx {lsuc lzero} (ε ▷₁′ Set))                              (λ γ → top γ → Set) (tt , A)) →
-  --   (n : $A (⟦_⟧Cx {lsuc lzero} (ε ▷₁′ Set ▷₁ (λ γ → top γ → Set)))       (λ γ → Nat) ((tt , A) , B)) →
-  --   Set
-  -- Which is the same as:
-  --   (A : Set) → (B : A → Set) → (C : Nat) → Set
-
-
-  mutual
-    cxToTel : ∀{a} → Cx {a} → TC Telescope
-    cxToTel (Γ ▷₁ S) = quoteTC S >>= cxToTel-helper Γ
-    cxToTel (Γ ▷ S) = quoteTC S >>= cxToTel-helper Γ
-    cxToTel ε = return []
-
-    cxToTel-helper : ∀{a} → Cx {a} → Term → TC Telescope
-    cxToTel-helper {a} Γ `S =
-      do xs ← cxToTel {a} Γ
-      =| `tm ← applyCx Γ (cxVal 0 Γ) `S
-      -| return (xs ++ [ vArg `tm ])
-
-  cxToType : ∀{a} → Type → Cx {a} → TC Type
-  cxToType {a} ty Γ = flip telPi ty <$> cxToTel {a} Γ
-
+private
   Set→Cx→Set : ∀{a} → Set a → TC (Set a)
   Set→Cx→Set {a} x = ((quoteTC x >>=′ typeToCx {a} 0 nothing) >>=′ cxToType set₀) >>=′ unquoteTC
 
   test-Set₁→Cx→Set₁ : evalT (Set→Cx→Set testty) ≡ testty
   test-Set₁→Cx→Set₁ = refl
-
-open CxToType using (cxToTel; cxToType) public

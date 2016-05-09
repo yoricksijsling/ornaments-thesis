@@ -13,15 +13,24 @@ module _ {I : Cx}{J : Pow ⟦ I ⟧} where
   -- polymorphic in the datatype parameters. That is because during the
   -- definition of datatypes we do not know the values of the parameters, and
   -- by extension we do not know them in an ornament.
-  algOrn : ∀{Γ Δ dt}{c : Cxf Δ Γ}(D : Desc I Γ dt) →
+  algOrn′ : ∀{Γ Δ dt}{c : Cxf Δ Γ}(D : Desc I Γ dt) →
            (∀{δ : ⟦ Δ ⟧} → Alg D (c δ) J) → DefOrn (I ▷ J) pop Δ c D
-  algOrn {dt = isCon} {c = c} (ι o) α = ι (λ δ → inv (o (c δ) , α refl))
-  algOrn {dt = isCon} (nm / S ⊗ xs) α = nm /-⊗ (algOrn xs (λ {γ} → curry α (top γ)))
-  algOrn {dt = isCon} {c = c} (nm /rec i ⊗ xs) α = "_" / (J ∘ i ∘ c)
-                                                +⊗ nm /rec (λ δ → inv (i (c $ pop δ) , top δ))
-                                                 ⊗ algOrn xs (λ {δ} → curry α (top δ))
-  algOrn {dt = isDat _} `0 α = `0
-  algOrn {dt = isDat _} (x ⊕ xs) α = algOrn x (curry α 0) ⊕ algOrn xs (α ∘ (suc *** id))
+  algOrn′ {dt = isCon} {c = c} (ι o) α = ι (λ δ → inv (o (c δ) , α refl))
+  algOrn′ {dt = isCon} (nm / S ⊗ xs) α = nm /-⊗ (algOrn′ xs (λ {γ} → curry α (top γ)))
+  algOrn′ {dt = isCon} {c = c} (nm /rec i ⊗ xs) α = "_" / (J ∘ i ∘ c)
+                                                 +⊗ nm /rec (λ δ → inv (i (c $ pop δ) , top δ))
+                                                  ⊗ algOrn′ xs (λ {δ} → curry α (top δ))
+  algOrn′ {dt = isDat _} `0 α = `0
+  algOrn′ {dt = isDat _} (x ⊕ xs) α = algOrn′ x (curry α 0) ⊕ algOrn′ xs (α ∘ (suc *** id))
+
+  algOrn : ∀{Γ dt}(D : Desc I Γ dt) →
+           ({γ : ⟦ Γ ⟧} → Alg D γ J) → DefOrn (I ▷ J) pop Γ id D
+  algOrn = algOrn′
+
+  -- A 'remember' operation should be possible, see McBrides
+  -- Ornamental Algebras/Algebraic Ornaments
+  -- remember : ∀{Γ #c}(D : DatDesc I Γ #c) → (α : {γ : ⟦ Γ ⟧} → Alg D γ J) →
+  --            ∀{γ i} → μ D γ (pop i) → μ (ornToDesc (algOrn D α)) γ i
 
 
 ----------------------------------------
