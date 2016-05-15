@@ -7,7 +7,7 @@ open import Cx.HasDesc
 open HasDesc
 
 gfold : ∀{A}{{R : HasDesc A}} → ∀{X} → Alg (desc R) (γ R) X → A → X (i R)
-gfold {{R}} α = fold α ∘ to R
+gfold α = fold α ∘ to
 
 gforget : ∀{A}{{AR : HasDesc A}}{B}{{BR : HasDesc B}} →
           {u : Cxf (I BR) (I AR)}{c : Cxf (Γ BR) (Γ AR)} →

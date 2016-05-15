@@ -115,10 +115,6 @@ module _ {I Γ #c} (D : DatDesc I Γ #c) where
 postulate
   Self : {X : Set₁} → X
 
-DumpableName : Bool → Set
-DumpableName true = Name
-DumpableName false = String
-
 PartS : Set
 PartS = TC (List ErrorPart → List ErrorPart)
 infixr 9 _<∘>_
@@ -130,33 +126,27 @@ private
   str s = return (_∷_ (strErr s))
   trm : Term → PartS
   trm t = return (_∷_ (termErr t))
-
-  nameAsString : ∀{b} → DumpableName b → String
-  nameAsString {false} n = n
-  nameAsString {true} n = showNameInModule n
   
-  header : ∀{b} (`dt : DumpableName b) (I : Cx₀) (Γ : Cx₁) → PartS
-  header `dt I Γ = str (nameAsString `dt) <∘> str ":" <∘>
+  header : (`dt : Name) (I : Cx₀) (Γ : Cx₁) → PartS
+  header `dt I Γ = str (showNameInModule `dt) <∘> str ":" <∘>
                    (IΓType I Γ >>= trm) <∘> str "\n"
 
-  constr : ∀{b I Γ} → (`dt : DumpableName b) → ConDesc I Γ → TC Type
-  constr {false} {I} {Γ} `dt D = IΓType I Γ >>= λ `dty →
-                                 conDescType (def (quote Self) [ hArg `dty ]) D
-  constr {true} `dt D = conDescType (def₀ `dt) D
+  constr : ∀{I Γ} → (`dt : Name) → ConDesc I Γ → TC Type
+  constr `dt D = conDescType (def₀ `dt) D
 
-  constructors : ∀{b I Γ #c} → (`dt : DumpableName b) →
-                 (`cs : Vec (DumpableName b) #c) → DatDesc I Γ #c → PartS
+  constructors : ∀{I Γ #c} → (`dt : Name) →
+                 (`cs : Vec (Name) #c) → DatDesc I Γ #c → PartS
   constructors `dt [] `0 = return id
-  constructors `dt (`c ∷ `cs) (D ⊕ DS) = str (nameAsString `c) <∘> str ":" <∘>
+  constructors `dt (`c ∷ `cs) (D ⊕ DS) = str (showNameInModule `c) <∘> str ":" <∘>
                                           (constr `dt D >>= trm) <∘>
                                           str "\n" <∘> constructors `dt `cs DS
   
-  datatype : ∀{b} → QuotedDesc (DumpableName b) → PartS
+  datatype : QuotedDesc → PartS
   datatype (mk {I} {Γ} `dt `cs desc) = header `dt I Γ <∘> constructors `dt `cs desc
 
-dumpDatatype : ∀{b} → QuotedDesc (DumpableName b) → TC ⊤
+dumpDatatype : QuotedDesc → TC ⊤
 dumpDatatype D = datatype D >>= (λ f → typeError (f []))
 
 macro
-  dumpDatatypeᵐ : ∀{b} → QuotedDesc (DumpableName b) → Tactic
+  dumpDatatypeᵐ : QuotedDesc → Tactic
   dumpDatatypeᵐ D = evalTC (dumpDatatype D)

@@ -54,12 +54,11 @@ data μ {I Γ #c} (F : DatDesc I Γ #c) (γ : ⟦ Γ ⟧) (o : ⟦ I ⟧) : Set 
 -- Map
 
 descmap : ∀{I Γ dt X Y} (f : ∀{i : ⟦ I ⟧} → X i → Y i) (D : Desc I Γ dt) →
-          ∀{γ i} → (xs : ⟦ D ⟧ γ X i) → ⟦ D ⟧ γ Y i
+          ∀{γ i} → ⟦ D ⟧ γ X i → ⟦ D ⟧ γ Y i
 descmap {dt = isCon} f (ι o) refl = refl
 descmap {dt = isCon} f (_ / S ⊗ xs) (s , v) = s , descmap f xs v
 descmap {dt = isCon} f (_ /rec i ⊗ xs) (s , v) = f s , descmap f xs v
-descmap {dt = isDat _} f `0 (() , _)
-descmap {dt = isDat _} f (x ⊕ xs) (k , v) = k , descmap f (lookupCtor (x ⊕ xs) k) v
+descmap {dt = isDat _} f xs (k , v) = k , descmap f (lookupCtor xs k) v
 
 
 ----------------------------------------
@@ -80,12 +79,11 @@ module Fold {I Γ #c}{D : DatDesc I Γ #c}{γ X} (α : Alg D γ X) where
     fold ⟨ xs ⟩ = α (descmap-fold D xs)
 
     -- The normal descmap specialised to fold. Needed for termination checking
-    descmap-fold : ∀{dt Γ′} (D′ : Desc I Γ′ dt) {γ′ i} (xs : ⟦ D′ ⟧ γ′ (μ D γ) i) → ⟦ D′ ⟧ γ′ X i
+    descmap-fold : ∀{dt Γ′} (D′ : Desc I Γ′ dt) {γ′ i} → ⟦ D′ ⟧ γ′ (μ D γ) i → ⟦ D′ ⟧ γ′ X i
     descmap-fold {isCon} (ι o) refl = refl
     descmap-fold {isCon} (_ / S ⊗ xs) (s , v) = s , descmap-fold xs v
     descmap-fold {isCon} (_ /rec i′ ⊗ xs) (s , v) = fold s , descmap-fold xs v
-    descmap-fold {isDat _} `0 (() , _)
-    descmap-fold {isDat _} (x ⊕ xs) (k , v) = k , descmap-fold (lookupCtor (x ⊕ xs) k) v
+    descmap-fold {isDat _} xs (k , v) = k , descmap-fold (lookupCtor xs k) v
 open Fold using (fold) public
 
 

@@ -1,6 +1,6 @@
 %include thesis.fmt
 
-\subsection{Reflection in Agda}\label{sec:reflection}
+\section{Reflection in Agda}\label{sec:reflection}
 
 Our framework is intended to be used on Agda datatypes, so we need
 some way of operating on the definitions of these datatypes from
@@ -23,19 +23,18 @@ constructs to evaluate this monad.
 
 
 
-\subsubsection{Representation of terms}\label{sec:reflection-terms}
+\subsection{Representation of terms}\label{sec:reflection-terms}
 
 Within the reflection framework, terms are represented using the
 |Term| datatype, shown in Listing
-\ref{lst:definition-representation}. The constructors |var|, |con| and
+\ref{lst:refl-term}. The constructors |var|, |con| and
 |def| are used to refer to variables, constructors and
 definitions. They take a list of arguments to which they are applied,
 so we do not need a separate constructor for function
 application. There are constructors for lambda-abstractions,
 pattern-matching lambdas, pi-types, sorts and literals.
 
-\begin{listing}[p]\texths
-\begin{code}
+\begin{codelst}[p]{Datatypes for terms}{refl-term}\begin{code}
 postulate Name : Set
 
 postulate Meta : Set
@@ -85,9 +84,7 @@ pattern hArg x = arg (arg-info hidden relevant) x
 
 data Abs (A : Set) : Set where
   abs : (s : String) (x : A) → Abs A
-\end{code}
-\caption{Datatypes for terms}\label{lst:definition-representation}
-\end{listing}
+\end{code}\end{codelst}
 
 The |meta| constructor represents a metavariable. In general
 metavariables are unsolved variables which are introduced during the
@@ -162,18 +159,17 @@ pi (vArg (agda-sort (set (meta _99 []))))
 \end{example}
 
 
-\subsubsection{Representation of definitions}\label{sec:reflection-definitions}
+\subsection{Representation of definitions}\label{sec:reflection-definitions}
 
 Bare expressions are not all we can represent in the reflection
 framework. The |Definition| datatype in Listing
-\ref{lst:definition-datatypes} covers definitions of functions,
+\ref{lst:refl-definition} covers definitions of functions,
 datatypes, records, datatype constructors, postulates and
 primitives. The |function| constructor takes a list of clauses. Each
 clause has a |Pattern| for each argument, and a |Term| if it is not an
 absurd clause.
 
-\begin{listing}[htb]\texths
-\begin{code}
+\begin{codelst}{Datatypes for reflected definitions}{refl-definition}\begin{code}
 data Definition : Set where
   function    : (cs : List Clause) → Definition
   data-type   : (pars : Nat) (cs : List Name) → Definition
@@ -193,9 +189,7 @@ data Pattern : Set where
 data Clause : Set where
   clause        : (ps : List (Arg Pattern)) (t : Term) → Clause
   absurd-clause : (ps : List (Arg Pattern)) → Clause
-\end{code}
-\caption{Datatypes for definitions}\label{lst:definition-datatypes}
-\end{listing}
+\end{code}\end{codelst}
 
 In the previous section we saw some uses of the |Name| type. |Name|s
 are necessary to be able to refer to definitions. The ways in which a
@@ -328,7 +322,7 @@ evalT (getType (quote Vec._∷_)) ≡
 \end{example}
 
 
-\subsubsection{The TC monad}\label{sec:reflection-tc}
+\subsection{The TC monad}\label{sec:reflection-tc}
 
 Within TC monad one can write meta-programs which can interact with
 the underlying type-checking mechanics. These meta-programs - or TC
@@ -343,7 +337,7 @@ This system has been in place since Agda version 2.5.1 and is based on
 the work on elaborator reflection \todo{ref thesis Christiansen} in
 Idris. The core idea is the same, though many of the actual operations
 are different. For completeness, the full list of TC operations is in
-figure \ref{lst:TC-operations} but we will not explain nor use all of
+figure \ref{lst:tc-operations} but we will not explain nor use all of
 them. The list also contains the already familiar functions |getType|
 and |getDefinition|. These do not have an effect themselves, but their
 results are influenced by other operations in the monad. To maintain
@@ -353,8 +347,7 @@ the right order of operations they must also return a TC computation.
   metavariables which can occur anywhere, and they are solved by
   unification.}
 
-\begin{listing}[htb]\texths
-\begin{code}
+\begin{codelst}{Operations in the TC monad}{tc-operations}\begin{code}
 data ErrorPart : Set where
   strErr  : String → ErrorPart
   termErr : Term → ErrorPart
@@ -382,9 +375,7 @@ postulate
   getType        : Name → TC Type
   getDefinition  : Name → TC Definition
   blockOnMeta    : ∀ {a} {A : Set a} → Meta → TC A
-\end{code}
-\caption{Operations in the TC monad}\label{lst:TC-operations}
-\end{listing}
+\end{code}\end{codelst}
 
 In the previous section we used |evalT| to evaluate a TC computation,
 but this is not built-in to Agda. Before seeing how |evalT| is
@@ -506,7 +497,7 @@ evalTC {A = A} c hole =
 
 \todo{unquotedecl example?}
 
-\subsubsection{Macros}\label{sec:reflection-macros}
+\subsection{Macros}\label{sec:reflection-macros}
 
 Macros provide some syntactical sugar for |Tactic|s. |Tactic|s often
 take arguments which have to be quoted first and to use them they are

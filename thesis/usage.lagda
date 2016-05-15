@@ -1,6 +1,6 @@
 %include thesis.fmt
 
-\section{Introduction}\label{sec:introduction}
+\chapter{Usage}\label{sec:usage}
 
 In this section we provide a short overview of how the whole system
 works. It is meant to show how the different components fit together,
@@ -124,7 +124,7 @@ from naturals:
 \end{itemize}
 
 These two ornaments have to be applied in sequence, so they are
-composed using |_>>⁺_|. The resulting ornament can be applied using
+composed using |>>⁺|. The resulting ornament can be applied using
 |ornToDesc|, and we see that |ornToDesc nat→list| results in a
 description which is exactly the same as |listDesc|:
 

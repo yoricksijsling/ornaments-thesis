@@ -1,6 +1,6 @@
 %include thesis.fmt
 
-\section{Introduction}\label{sec:introduction}
+\chapter{Introduction}\label{sec:introduction}
 
 Modern dependently typed functional programming languages like Agda
 and Idris support datatypes with dependent types and indexes. These

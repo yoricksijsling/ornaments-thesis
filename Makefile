@@ -56,8 +56,8 @@ cleanproposal:
 
 # Thesis --------------------
 
-THESIS_TEX=main abstract introduction usage simple extended named \
-           implementation reflection discussion conclusion
+THESIS_TEX=main abstract introduction usage sop simple extended \
+           named implementation reflection discussion conclusion
 
 thesis: AGDA_PARAMS = $(INCLUDE_PARAMS) --latex-dir=src-tex --latex --allow-unsolved-metas
 thesis: thesis/main.pdf
@@ -70,7 +70,7 @@ src-tex/%.tex: $(SRC)/%.lagda src-tex thesis.fmt
 thesis/%.tex: thesis/%.lagda thesis.fmt
 	lhs2TeX --agda -o $@ $<
 
-thesis/main.pdf: $(THESIS_TEX:%=thesis/%.tex) $(MODULES:%=src-tex/%.tex) thesis/agda.sty thesis/main.bib
+thesis/main.pdf: $(THESIS_TEX:%=thesis/%.tex) $(MODULES:%=src-tex/%.tex) thesis/agda.sty thesis/main.bib thesis/main.sty
 	cd thesis; latexmk -xelatex -outdir=out main.tex
 	cp thesis/out/main.pdf thesis/main.pdf
 	rm thesis/out/main.pdf

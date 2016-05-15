@@ -15,7 +15,7 @@ quoteConstructors `dt #p I Γ (cname ∷ cnames) =
   -| cs ← quoteConstructors `dt #p I Γ cnames
   -| return (c ⊕ cs)
 
-quoteDatatype : (`dt : Name) → TC (QuotedDesc Name)
+quoteDatatype : (`dt : Name) → TC QuotedDesc
 quoteDatatype `dt =
   do dttype ← getType `dt
   =| #p ← getParameters `dt
@@ -35,8 +35,8 @@ private
 -- Connect a Desc to an existing datatype
 -- quoteDatatype, decide if quoted desc is equal to given desc,
 -- replace quoted desc by given desc
-quoteDatatypeTo : (`dt : Name) → ∀{I Γ #c} → DatDesc I Γ #c → TC (QuotedDesc Name)
-quoteDatatypeTo `dt {I} {Γ} {#c} D =
+quoteDatatypeExisting : (`dt : Name) → ∀{I Γ #c} → DatDesc I Γ #c → TC QuotedDesc
+quoteDatatypeExisting `dt {I} {Γ} {#c} D =
   do dw ← quoteDatatype `dt
   =| Ieq ← tcEq I (QuotedDesc.I dw)
   =| Γeq ← tcEq Γ (QuotedDesc.Γ dw)

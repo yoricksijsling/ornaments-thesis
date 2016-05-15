@@ -1,18 +1,18 @@
 %include thesis.fmt
 
-\section{Conclusion}\label{sec:conclusion}
+\chapter{Conclusion}\label{sec:conclusion}
 
 Show that we indeed contribute what we claimed.
 
-\subsection{Future work}
+\section{Future work}
 
-\subsubsection{Making indices dependent on parameters}
+\subsection{Making indices dependent on parameters}
 
-\subsubsection{Names in contexts}
+\subsection{Names in contexts}
 
-\subsubsection{Real unquoting of datatypes}
+\subsection{Real unquoting of datatypes}
 
-\subsubsection{Interactive macros}
+\subsection{Interactive macros}
 
 Calling macros from emacs. Automating prompting of inputs for those macros.
 
@@ -21,4 +21,4 @@ data Prompt (A : Set) (s : String) : Set
   ret : (a : A) → Prompt A s
 \end{code}
 
-\subsubsection{Transporting funtions over ornaments}
+\subsection{Transporting funtions over ornaments}

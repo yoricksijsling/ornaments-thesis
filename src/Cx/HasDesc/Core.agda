@@ -15,5 +15,12 @@ record HasDesc (A : Set) : Set₂ where
     desc : DatDesc I Γ #c
     {γ} : ⟦ Γ ⟧
     {i} : ⟦ I ⟧
-    to : A → μ desc γ i
-    from : μ desc γ i → A
+    to′ : A → μ desc γ i
+    from′ : μ desc γ i → A
+
+open HasDesc
+
+to : {A : Set} {{r : HasDesc A}} → A → μ (desc r) (γ r) (i r)
+to {{r}} = to′ r
+from : {A : Set} {{r : HasDesc A}} → μ (desc r) (γ r) (i r) → A
+from {{r}} = from′ r

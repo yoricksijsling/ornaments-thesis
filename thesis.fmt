@@ -25,6 +25,11 @@
 %format Expr^evalAlg = "\D{Expr}^{\D{evalAlg}}"
 %format ++ = "\V{++}"
 
+% Simplified contexts
+%format Cx₁ = "\D{Cx}"
+%format Cx₀ = "\D{Cx}"
+%
+
 % 
 % %subst keyword a = "\textxits{" a "}"
 % %subst conid a = "\V{" a "}"

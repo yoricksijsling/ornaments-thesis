@@ -2,7 +2,7 @@
 module Cx.Simple.Ornament where
 
 open import Common
-open import Cx.Simple.Desc public
+open import Cx.Simple.Desc
 
 infixr 3 _⊕_
 infixr 4 -⊗_ rec-⊗_ _+⊗_ rec-+⊗_
@@ -17,6 +17,7 @@ data ConOrn : ∀{Γ Δ} (f : Cxf Δ Γ) (D : ConDesc Γ) → Set₂ where
 
   give-K : ∀{Γ Δ S xs}{c : Cxf Δ Γ} →
            (s : (γ : ⟦ Δ ⟧) → S (c γ)) → (xs⁺ : ConOrn (cxf-instantiate c s) xs) → ConOrn c (S ⊗ xs)
+
 data DatOrn : ∀{#c}(D : DatDesc #c) → Set₂ where
   `0 : DatOrn `0
   _⊕_ : ∀{#c x xs} → (x⁺ : ConOrn id x) (xs⁺ : DatOrn xs) → DatOrn {suc #c} (x ⊕ xs)
@@ -51,7 +52,7 @@ conForgetNT (-⊗ xs⁺) (s , v) = s , conForgetNT xs⁺ v
 conForgetNT (rec-⊗ xs⁺) (s , v) = s , conForgetNT xs⁺ v
 conForgetNT (_+⊗_ S xs⁺) (s , v) = conForgetNT xs⁺ v
 conForgetNT (rec-+⊗_ xs⁺) (s , v) = conForgetNT xs⁺ v
-conForgetNT {c = c} (give-K s xs⁺) v = s _ , conForgetNT xs⁺ v
+conForgetNT (give-K s xs⁺) v = s _ , conForgetNT xs⁺ v
 forgetNT : ∀{#c}{D : DatDesc #c} (o : DatOrn D) → ∀{X} → ⟦ o ⟧ X → ⟦ D ⟧ X
 forgetNT `0 (() , _)
 forgetNT (x⁺ ⊕ xs⁺) (zero , v) = 0 , conForgetNT x⁺ v

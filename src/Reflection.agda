@@ -113,7 +113,10 @@ absTelescope xs = [] , xs
 absTelPi : AbsTelescope → Type → Type
 absTelPi tel xs = foldr (λ { (abs s (arg i x)) xs → pi (arg i x) (abs s xs)}) xs tel
 
-absTelView : (t : Type) → Σ AbsTelescope λ tel → Σ Type λ xs → absTelPi tel xs ≡ t
+AbsTelView : Type → Set
+AbsTelView t = Σ AbsTelescope λ tel → Σ Type λ xs → absTelPi tel xs ≡ t
+
+absTelView : (t : Type) → AbsTelView t
 absTelView (pi (arg i x) (abs s xs)) with absTelView xs
 absTelView (pi (arg i x) (abs s _)) | rtel , rxs , refl = (abs s (arg i x)) ∷ rtel , rxs , refl
 absTelView xs = [] , xs , refl

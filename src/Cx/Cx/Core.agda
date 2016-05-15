@@ -94,18 +94,6 @@ Cx-walk {A} {B} a d₁ d₀ fε u₁ u₀ = helper a
 Cx-iter : {B : Set} → (f : B → B) → (x : B) → ∀{a} → Cx {a} → B
 Cx-iter {B} f x = Cx-walk {⊤} {B} tt id id (const x) (const f) (const f)
 
--- Cx-walkM : ∀{M} {{M-monad : Monad M}} →
---           {A B : Set} → A → (d₁ : A → M A) → (d₀ : A → M A) →
---           (fε : A → M B) → (u₁ : A → B → M B) → (u₀ : A → B → M B) →
---           ∀{ℓ} → Cx {ℓ} → M B
--- Cx-walkM {M} {A} {B} a d₁ d₀ fε u₁ u₀ = Cx-walk {M A} {M B} (return a) (_=<<_ d₁) (_=<<_ d₀)
---                                                             (_=<<_ fε) (=<<₂ u₁) (=<<₂ u₀)
---   where =<<₂ : ∀{A B C} → (A → B → M C) → M A → M B → M C
---         =<<₂ f a b = a >>= (λ a′ → b >>= (λ b′ → f a′ b′))
-
--- Cx-iterM : {B : Set} → ∀{M} {{M-monad : Monad M}} → (f : B → M B) → (x : B) → ∀{a} → Cx {a} → M B
--- Cx-iterM f x = Cx-iter (_=<<_ f) (return x)
-
 CxLength : ∀{ℓ} → Cx {ℓ} → Nat
 CxLength = Cx-iter {Nat} suc 0
 

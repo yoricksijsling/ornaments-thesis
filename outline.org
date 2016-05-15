@@ -14,13 +14,18 @@
 ** generieke functies
 ** mutaties zoals addParameter en renameArguments
 
+* 3. Sum of products
 
+** Descriptions en semantics
+** Maps en folds
+** Ornaments
+** Ornamental algebras
+** Discussie
 
-* 3. Basic descriptions and ornaments
+* 4. Simple descriptions and ornaments
 
-** Achtergrond: Sum-of-products, fixpoints
-** Contexts
 ** Gebruik van simple descriptions en ornaments
+** Contexts (Internalising terms)
 ** Description-definities
 *** Algebras/folds
 ** Ornament-definities
@@ -31,7 +36,7 @@
 *** Keuze van ornaments
 
 
-* 4. Extended descriptions and ornaments
+* 5. Extended descriptions and ornaments
 
 ** Gebruik van extended descriptions en ornaments
 ** Description-definities
@@ -46,26 +51,26 @@
 *** 
 
 
-* 5. Quoted descriptions
+* 6. Quoted descriptions
 
 ** Gebruik van quoting
    Nu zie je ook hoe de namen in descriptions zijn verwerkt.
    Laat ook dumpDatatype zien?
    
 ** Description/ornament-definities
-** QuotedDesc
+** QuotedDesc/HasDesc
    Komt overeen met de declaratie van een datatype
-** HasDesc
 ** Generieke functies en algebras
-** Mutations
+** Ornament combinators (`Mutations`)
 ** Discussie
 *** .
 
-* 6. Implementatie van quoting en unquoting
+* 7. Implementatie van quoting en unquoting
   Ook implementatie van andere dingen?
 ** Reflection in Agda
-** Quoten van datatypes
+** Reflectie van Contexts
 ** Unquoten van datatypes
+** Quoten van datatypes
 ** Deriven van HasDesc
 ** Discussie
 *** .
@@ -87,3 +92,4 @@
 *** Namen in contexts
 *** Echt unquoten van datatypes
 *** Interactieve dingen
+*** Transporteren van functies over ornaments

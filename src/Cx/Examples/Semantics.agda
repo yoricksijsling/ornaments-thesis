@@ -8,7 +8,6 @@ open import Reflection
 open import Cx.HasDesc
 open import Cx.GenericOperations
 open import Cx.Unquoting
-open HasDesc {{...}} using (to; from)
 
 data Ty : Set where
   `Nat : Ty

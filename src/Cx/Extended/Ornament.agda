@@ -2,7 +2,7 @@
 module Cx.Extended.Ornament where
 
 open import Common
-open import Cx.Extended.Desc public
+open import Cx.Extended.Desc
 
 infixr 3 _⊕_
 infixr 4 -⊗_ rec_⊗_ _+⊗_ rec_+⊗_
@@ -45,17 +45,6 @@ module _ {I J}{u : Cxf J I} where
 
   instance orn-semantics : ∀{Γ Δ dt}{c : Cxf Δ Γ}{D : Desc I Γ dt} → Semantics (Orn u c D)
            orn-semantics = record { ⟦_⟧ = ⟦_⟧ ∘ ornToDesc }
-
-
-----------------------------------------
--- Identity ornament
-
-idOrn : ∀{I Γ dt}{D : Desc I Γ dt} → Orn id id D
-idOrn {dt = isCon} {ι o} = ι (λ δ → inv (o δ))
-idOrn {dt = isCon} {S ⊗ xs} = -⊗ idOrn
-idOrn {dt = isCon} {rec i ⊗ xs} = rec (λ δ → inv (i δ)) ⊗ idOrn
-idOrn {dt = isDat _} {`0} = `0
-idOrn {dt = isDat _} {x ⊕ xs} = idOrn ⊕ idOrn
 
 
 ----------------------------------------

@@ -72,7 +72,7 @@ module DeriveTo (`to : Name)(`desc : Term) where
     makeClauses i [] `0 = []
     makeClauses i (`c ∷ `cs) (D ⊕ DS) = makeClause i `c D  ∷ makeClauses (suc i) `cs DS
   
-  deriveTo : QuotedDesc Name → TC ⊤
+  deriveTo : QuotedDesc → TC ⊤
   deriveTo (mk {I} {Γ} `datatypeName `constructorNames desc) =
     define (vArg `to) (type Γ I `datatypeName) (makeClauses Γ I 0 `constructorNames desc)
 
@@ -93,43 +93,34 @@ module DeriveFrom (`from : Name)(`desc : Term) where
     makeClauses i [] `0 = [ absurd-clause [ vArg (absurd-β i) ] ]
     makeClauses i (`c ∷ `cs) (D ⊕ DS) = makeClause i `c D ∷ makeClauses (suc i) `cs DS
 
-  deriveFrom : QuotedDesc Name → TC ⊤
+  deriveFrom : QuotedDesc → TC ⊤
   deriveFrom (mk {I} {Γ} `datatypeName `constructorNames desc) =
     define (vArg `from) (type Γ I `datatypeName)
            (makeClauses Γ I 0 `constructorNames desc)
 
 private
   -- ∀{ps is} → HasDesc (`dt ps is)
-  hasDescType : QuotedDesc Name → Type
+  hasDescType : QuotedDesc → Type
   hasDescType (mk {I} {Γ} `dt _ desc) = cxType Γ $ cxType I $
                                         def₁ (quote HasDesc) (def `dt (ΓIVars 0 Γ I))
 
-  deriveHasDesc′ : (`hasDesc : Name) → (`desc : Term) → QuotedDesc Name → TC ⊤
-  deriveHasDesc′ `hasDesc `desc q =
-    do `to ← freshName "to"
+
+module _ (`quotedDesc `hasDesc `dt : Name) where
+  deriveHasDesc′ : QuotedDesc → TC ⊤
+  deriveHasDesc′ q =
+    do `q ← quoteTC q
+    -| define (vArg `quotedDesc) (quoteTerm QuotedDesc)
+              [ clause [] `q ]
+    ~| `desc := def₁ (quote QuotedDesc.desc) (def₀ `quotedDesc)
+    -| `to ← freshName "to"
     -| `from ← freshName "from"
     -| DeriveTo.deriveTo `to `desc q
     ~| DeriveFrom.deriveFrom `from `desc q
     ~| define (iArg `hasDesc) (hasDescType q)
               [ clause [] (con₃ (quote HasDesc.mk) `desc (def₀ `to) (def₀ `from)) ]
 
+  deriveHasDesc : TC ⊤
+  deriveHasDesc = quoteDatatype `dt >>=′ deriveHasDesc′
 
-deriveHasDesc : (`quotedDesc `hasDesc `dt : Name) → TC ⊤
-deriveHasDesc `quotedDesc `hasDesc `dt =
-  do q ← quoteDatatype `dt
-  =| `q ← quoteTC q
-  -| define (vArg `quotedDesc) (quoteTerm (QuotedDesc Name))
-            [ clause [] `q ]
-  ~| `desc := def₁ (quote QuotedDesc.desc) (def₀ `quotedDesc)
-  -| deriveHasDesc′ `hasDesc `desc q
-  where open import Cx.Quoting
-
-deriveHasDescExisting : (`quotedDesc `hasDesc `dt : Name) → ∀{I Γ #c} → DatDesc I Γ #c → TC ⊤
-deriveHasDescExisting `quotedDesc `hasDesc `dt D =
-  do q ← quoteDatatypeTo `dt D
-  =| `q ← quoteTC q
-  -| define (vArg `quotedDesc) (quoteTerm (QuotedDesc Name))
-            [ clause [] `q ]
-  ~| `desc := def₁ (quote QuotedDesc.desc) (def₀ `quotedDesc)
-  -| deriveHasDesc′ `hasDesc `desc q
-  where open import Cx.Quoting
+  deriveHasDescExisting : ∀{I Γ #c} → DatDesc I Γ #c → TC ⊤
+  deriveHasDescExisting D = quoteDatatypeExisting `dt D >>=′ deriveHasDesc′

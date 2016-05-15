@@ -17,41 +17,39 @@ pattern cons-β n x xs = ⟨ suc zero , n , x , xs , refl ⟩
 pattern absurd-β = ⟨ suc (suc ()) , _ ⟩
 
 module Manually where
-  desc : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
-  desc = ι (λ _ → tt , 0)
+  vdesc : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
+  vdesc = ι (λ _ → tt , 0)
        ⊕ "n" / (λ γ → Nat)
                 ⊗ "x" / top ∘ pop
                 ⊗ "xs" /rec (λ γ → tt , top (pop γ))
                 ⊗ ι (λ γ → tt , suc (top (pop γ)))
        ⊕ `0
 
-  to : ∀ {A n} → MyVec A n → μ desc (tt , A) (tt , n)
-  to nil-α = nil-β
-  to (cons-α n x xs) = cons-β n x (to xs)
+  vto : ∀ {A n} → MyVec A n → μ vdesc (tt , A) (tt , n)
+  vto nil-α = nil-β
+  vto (cons-α n x xs) = cons-β n x (vto xs)
 
-  from : ∀ {A n} → μ desc (tt , A) (tt , n) → MyVec A n
-  from nil-β = nil-α
-  from (cons-β n x xs) = cons-α n x (from xs)
-  from absurd-β
+  vfrom : ∀ {A n} → μ vdesc (tt , A) (tt , n) → MyVec A n
+  vfrom nil-β = nil-α
+  vfrom (cons-β n x xs) = cons-α n x (vfrom xs)
+  vfrom absurd-β
 
   vecHasDesc : ∀ {A n} → HasDesc (MyVec A n)
-  vecHasDesc = mk desc to from
+  vecHasDesc = mk vdesc vto vfrom
 
 
 module Auto where
-  open HasDesc {{...}} using (to; from)
-
   unquoteDecl quotedVec vecHasDesc = deriveHasDesc quotedVec vecHasDesc (quote MyVec)
 
-  test-desc : QuotedDesc.desc quotedVec ≡ Manually.desc
+  test-desc : QuotedDesc.desc quotedVec ≡ Manually.vdesc
   test-desc = refl
 
 
-  test-to : ∀ {A n} → (xs : MyVec A n) → Manually.to xs ≡ to xs
+  test-to : ∀ {A n} → (xs : MyVec A n) → Manually.vto xs ≡ to xs
   test-to nil-α = refl
   test-to (cons-α n x xs) = cong (cons-β n x) (test-to xs)
 
-  test-from : ∀ {A n} → (xs : μ Manually.desc (tt , A) (tt , n)) → Manually.from xs ≡ from xs
+  test-from : ∀ {A n} → (xs : μ Manually.vdesc (tt , A) (tt , n)) → Manually.vfrom xs ≡ from xs
   test-from nil-β = refl
   test-from (cons-β n x xs) = cong (cons-α n x) (test-from xs)
   test-from absurd-β

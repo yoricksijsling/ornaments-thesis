@@ -166,7 +166,6 @@ module N where
   open import Cx.Quoting
   open import Cx.GenericOperations
   open import Reflection
-  open HasDesc {{...}} using (to; from)
 
   module QuoteNat where
 
@@ -323,7 +322,6 @@ module N where
     open import Cx.Unquoting
 
     -- dn = dumpDatatypeᵐ quotedVec
-    -- ds = dumpDatatypeᵐ (fmap showNameInModule quotedVec)
 
     data UVec (A : Set) : unquoteDat vecDesc where
       nil : unquoteCon vecDesc 0 UVec
@@ -337,7 +335,7 @@ module N where
     data MultiP (A : Set) : (n : Nat) → Vec A n → Set where
       fo : (n : Nat) → (xs : Vec A n) → MultiP A n xs
 
-    q : QuotedDesc Name
+    q : QuotedDesc
     q = evalT (quoteDatatype (quote Multi))
 
     open import Reflection using (ShouldFailᵐ)
