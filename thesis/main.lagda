@@ -1,4 +1,8 @@
-\documentclass[a4paper]{report}
+% \documentclass[a4paper]{report}
+\documentclass[draft,a4paper]{report}
+
+\newif\ifusecolors
+\usecolorstrue
 
 %include lhs2TeX.fmt
 %include lhs2TeX.sty
@@ -14,7 +18,7 @@
 
 \begin{document}
 
-\maketitle
+% \maketitle
 
 % \begin{flushright}
 % \emph{Supervised by} Wouter Swierstra\\
@@ -26,7 +30,7 @@
 \tableofcontents
 \input{introduction.tex}
 \input{usage.tex}
-\input{background.tex}
+\input{sop.tex}
 \input{simple.tex}
 \input{extended.tex}
 \input{named.tex}

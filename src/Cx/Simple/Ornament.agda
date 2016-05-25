@@ -37,23 +37,20 @@ ornToDesc : ∀{#c}{D : DatDesc #c} → DatOrn D → DatDesc #c
 ornToDesc `0 = `0
 ornToDesc (x⁺ ⊕ xs⁺) = conOrnToDesc x⁺ ⊕ ornToDesc xs⁺
 
-instance conOrn-semantics : ∀{Γ Δ}{c : Cxf Δ Γ}{D : ConDesc Γ} → Semantics (ConOrn c D)
-         conOrn-semantics = record { ⟦_⟧ = ⟦_⟧ ∘ conOrnToDesc }
-         orn-semantics : ∀{#c}{D : DatDesc #c} → Semantics (DatOrn D)
-         orn-semantics = record { ⟦_⟧ = ⟦_⟧ ∘ ornToDesc }
 
 ----------------------------------------
 -- Ornamental Algebra
 
 conForgetNT : ∀{Γ Δ}{c : Cxf Δ Γ}{D : ConDesc Γ} (o : ConOrn c D) →
-              ∀{δ X} → ⟦ o ⟧ δ X → ⟦ D ⟧ (c δ) X
+              ∀{δ X} → ⟦ conOrnToDesc o ⟧ δ X → ⟦ D ⟧ (c δ) X
 conForgetNT ι tt = tt
 conForgetNT (-⊗ xs⁺) (s , v) = s , conForgetNT xs⁺ v
 conForgetNT (rec-⊗ xs⁺) (s , v) = s , conForgetNT xs⁺ v
 conForgetNT (_+⊗_ S xs⁺) (s , v) = conForgetNT xs⁺ v
 conForgetNT (rec-+⊗_ xs⁺) (s , v) = conForgetNT xs⁺ v
 conForgetNT (give-K s xs⁺) v = s _ , conForgetNT xs⁺ v
-forgetNT : ∀{#c}{D : DatDesc #c} (o : DatOrn D) → ∀{X} → ⟦ o ⟧ X → ⟦ D ⟧ X
+forgetNT : ∀{#c}{D : DatDesc #c} (o : DatOrn D) →
+           ∀{X} → ⟦ ornToDesc o ⟧ X → ⟦ D ⟧ X
 forgetNT `0 (() , _)
 forgetNT (x⁺ ⊕ xs⁺) (zero , v) = 0 , conForgetNT x⁺ v
 forgetNT (x⁺ ⊕ xs⁺) (suc k , v) = (suc *** id) (forgetNT xs⁺ (k , v))

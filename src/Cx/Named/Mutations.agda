@@ -31,12 +31,6 @@ addParameterArg : ∀{I Γ #c}{D : DatDesc I Γ #c} → Fin #c → String →
                 DefOrn I id (Γ ▷₁′ Set) pop D
 addParameterArg k str = updateConstructor k (str / top +⊗ idOrn)
 
-private
-  countArguments : ∀{I Γ}(D : ConDesc I Γ) → Nat
-  countArguments (ι o) = 0
-  countArguments (nm / S ⊗ xs) = suc (countArguments xs)
-  countArguments (nm /rec i ⊗ xs) = suc (countArguments xs)
-
 conRenameArguments : ∀{I Γ}{D : ConDesc I Γ} → Vec (Maybe String) (countArguments D) → Orn id id D
 conRenameArguments {D = ι o} [] = ι (inv ∘ o)
 conRenameArguments {D = nm / S ⊗ xs} (nm′ ∷ nms) = maybe nm id nm′ /-⊗ (conRenameArguments nms)

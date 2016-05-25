@@ -4,27 +4,20 @@
    Wat zijn generics, hoe zorgt dat ervoor dat je functies niet overal voor hoeft te definieren, wat zijn ornaments, hoe lossen ze welk probleem op.
 ** Typeset _▷₁_ als _▷_. Cx₀ en Cx₁ ook als Cx. Typeset Pow ⟦ I ⟧
 ** Dingen overnemen van proposal..
+*** Met name to/from verhaal, in named.deriving hasdesc
 ** Reornaments naar Named?
 ** Waarom komen recursieve argumenten niet in de context?
    Iets met strict-positivity..
 ** Reconstructor ergens benoemen
    Mergen en splitten van constructors. Example: Toevoegen van types aan een lambda calculus. (`lit : Exp) wordt dan bijvoorbeeld (`bool : Exp Bool) en (`nat : Exp Nat).
 ** Het gebruik van Contexts voor indices discussieren.
-** Over het encoden van argumenten:
-   We doen dit nu met een functie (⟦ Γ ⟧ → Set). Dit is bedoelt om
-   arbitraire terms te kunnen representeren, die wel gebruik kunnen
-   maken van een context. Voor de implementatie van bepaalde generieke
-   functies zoals toList of toJson zou je willen herkennen wanneer de
-   term enkel een verwijzing naar een parameter is (`top`). Met deze
-   representatie is dat niet mogelijk. We zouden deze terms kunnen
-   reifyen, bijvoorbeeld met een beperkt datatype (CxTerm = topTerm |
-   otherTerm (⟦ Γ ⟧ → Set)), of idealiter door de volledige taal te
-   reifyen (Work on internalising type theory: Chapman Type theory
-   should eat itself, McBride Outrageous but meaningful coincidences).
+** Brady optimizations
 ** Vraag: Hoe zit het ook alweer met Π-types in onze universe?
 ** Vraag: Kunnen we ornaments gebruiken om een interface naar haskell mooier te maken?
 ** Vraag: Kunnen we zoiets als McBride's 'How to keep your neighbors in order' doen?
    Iets met addLimitingIndex ofzo, die overal een index toevoegt.
+   Misschien algebraic ornaments waarbij de Algebra een Maybe oplevert?
+** Example: Binary trees, complete binary trees, red-black trees, avl trees
 ** Vraag: Je kan descriptions droppen naar een eenvoudiger soort. Kan je ornaments ook liften naar moeilijkere?
 
 
@@ -42,7 +35,8 @@
 ** Topics: Description, algebra/fold, ornament, ornamental algebras, algebraic ornaments, quoting/unquoting
 
 
-* Literatuur [0/15]
+* Literatuur [0/18]
+** Generics
 *** TODO Morris 2007: Constructing universes for generic programming
 *** TODO Altenkirch, McBride, Morris 2007: Generic programming with dependent types
 *** TODO Yakushev, Holdermans, Löh, Jeuring 2009: Generic programming with fixed points for mutually recursive datatypes
@@ -51,7 +45,9 @@
 *** TODO Magalhães, Löh 2012: A formal comparison of approaches to datatype-generic programming
 *** TODO Magalhães 2012: Less is more - Generic programming theory and practice
 *** TODO Weirich, Casinghino: Generic programming with dependent types
+*** TODO Magalhães, Dijkstra, Jeuring, Lŏh 2010: A generic deriving mechanism in haskell
 
+** Ornaments
 *** TODO McBride 2011: Ornamental algebras, algebraic ornaments
 **** Use this one: http://plv.mpi-sws.org/plerg/papers/mcbride-ornaments-2up.pdf
 **** How about the Hutton's Razor example? Compiling code to a stack machine
@@ -61,6 +57,12 @@
 *** TODO Ko, Gibbons 2014: Categorical organisation of the ornament-refinement framework
 *** TODO Williams, Dagand, Remy 2014: Ornaments in practice
 *** TODO David Christiansen thesis
+
+** Internalising type theory
+*** TODO Danielsson 2007: A partial formalisation of a dependently typed language as an inductive-recursive family
+*** TODO Chapman 2009: Type theory should eat itself
+*** TODO McBride 2010: Outrageous but meaningful coincidences: Dependent type-safe syntax and evaluation
+*** TODO Brown, Palsberg 2016: Breaking through the normalization barrier: a self-interpreter for f-omega
 
 
 

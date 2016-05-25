@@ -1,11 +1,15 @@
-%include lhs2TeX.fmt
 %include polycode.fmt
+
+% Use \D for types, \V for variables, \K for keywords. Also see
+% main.sty for definitions of those. The default values for these
+% %subst commands are found in lhs2TeX.fmt and polycode.fmt.
 
 %subst keyword a = "\K{" a "}"
 %subst conid a = "\D{" a "}"
 %subst varid a = "\V{" a "}"
 %subst consym a = "\mathsf{" a "}"
 %subst varsym a = "\mathsf{" a "}"
+%subst comment a = "\agdacomment{" a "}"
 
 %format constructor = "\K{constructor}"
 %format indexfirst = "\K{indexfirst}"
@@ -20,33 +24,54 @@
 %format A_n = "\D{Aₙ}"
 %format x_n = "\V{xₙ}"
 %format y_n = "\V{yₙ}"
+%format x_0 = x "_{" 0 "}"
+%format x_1 = x "_{" 1 "}"
+%format x_n-1 = x "_{" n-1 "}"
+%format x_k = x "_{" k "}"
+%format x_0⁺ = x_0 ⁺
+%format x_1⁺ = x_1 ⁺
+%format x_n-1⁺ = x_n-1 ⁺
+%format x_k⁺ = x_k ⁺
 %format cong_n = "\V{congₙ}"
 %format `fmap` = "\V{<\$>}"
 %format Expr^evalAlg = "\D{Expr}^{\D{evalAlg}}"
 %format ++ = "\V{++}"
 
+% Descriptions and ornaments
+%format _⊕_ = "\V{\_\large⊕\normalsize\_}"
+%format ⊕ = "\V{\large⊕\normalsize}"
+%format rec-⊗_ = "\V{rec}\Vlight{-}\V{⊗\_}"
+%format rec-⊗ = "\V{rec}\Vlight{-}\V{⊗}"
+%format -⊗_ = "\V{\textendash ⊗\_}"
+%format -⊗ = "\V{\textendash ⊗}"
+%format rec-+⊗_ = "\V{rec}\Vlight{-}\V{+⊗\_}"
+%format rec-+⊗ = "\V{rec}\Vlight{-}\V{+⊗}"
+
+% Semantics
+%format ⟧conDesc = ⟧ "_{\Vlight{conDesc}}"
+%format ⟦_⟧conDesc = ⟦_ ⟧conDesc
+%format ⟧datDesc = ⟧ "_{\Vlight{datDesc}}"
+%format ⟦_⟧datDesc = ⟦_ ⟧datDesc
+%format ⟧Cx = ⟧ "_{\Vlight{Cx}}"
+%format ⟦_⟧Cx = ⟦_ ⟧Cx
+%format ⟧DescΣ = ⟧ "_{\Vlight{DescΣ}}"
+%format ⟦_⟧DescΣ = ⟦_ ⟧DescΣ
+
+% Σ suffixes
+%format _Σ = "_{\Vlight{Σ}}"
+%format μΣ = μ _Σ
+%format eitherDescΣ = eitherDesc _Σ
+%format eitherDescΣ-left = eitherDesc _Σ -left
+%format eitherDescΣ-right = eitherDesc _Σ -right
+%format ornToDescΣ = ornToDesc _Σ
+%format natDescΣ = natDesc _Σ
+%format nat→listΣ = nat→list _Σ
+%format boolsDescΣ = boolsDesc _Σ
+%format boolsDescΣ-example = boolsDesc _Σ -example
+
+
 % Simplified contexts
 %format Cx₁ = "\D{Cx}"
 %format Cx₀ = "\D{Cx}"
-%
-
-% 
-% %subst keyword a = "\textxits{" a "}"
-% %subst conid a = "\V{" a "}"
-% %subst varid a = "\V{" a "}"
-% %subst numeral a = "\CC{" a "}"
-% 
-% %format `+ = "\AI{`+}"
-% %format `* = "\AI{`*}"
-% %format _`+_ = "\AI{\_`+\_}"
-% %format _`*_ = "\AI{\_`*\_}"
-% %format `var = "\AI{`var}"
-% %format `0 = "\AI{`0}"
-% %format `1 = "\AI{`1}"
-% 
-% %format Set = "\AD{Set}"
-% %format Set₀ = "\AD{Set₀}"
-% %format Set₁ = "\AD{Set₁}"
-% %format Desc = "\AD{Desc}"
-% 
-% 
+%format ▷₁ = "\V{▷}"
+%format ▷₁′ = "\V{▷′}"

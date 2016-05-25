@@ -43,16 +43,13 @@ module _ {I J}{u : Cxf J I} where
   ornToDesc `0 = `0
   ornToDesc (x⁺ ⊕ xs⁺) = ornToDesc x⁺ ⊕ ornToDesc xs⁺
 
-  instance orn-semantics : ∀{Γ Δ dt}{c : Cxf Δ Γ}{D : Desc I Γ dt} → Semantics (Orn u c D)
-           orn-semantics = record { ⟦_⟧ = ⟦_⟧ ∘ ornToDesc }
-
 
 ----------------------------------------
 -- Ornamental algebra
 
 module _ {I J}{u : Cxf J I} where
   forgetNT : ∀{Γ Δ dt}{c : Cxf Δ Γ}{D : Desc I Γ dt} (o : Orn u c D) →
-             ∀ {δ X j} → ⟦ o ⟧ δ (X ∘ u) j → ⟦ D ⟧ (c δ) X (u j)
+             ∀ {δ X j} → ⟦ ornToDesc o ⟧ δ (X ∘ u) j → ⟦ D ⟧ (c δ) X (u j)
   forgetNT {c = c} (ι j) {δ} refl = sym (inv-eq (j δ))
   forgetNT (-⊗ xs⁺) (s , v) = s , forgetNT xs⁺ v
   forgetNT (rec j ⊗ xs⁺) {δ} {X} (s , v) = transport X (inv-eq (j δ)) s , forgetNT xs⁺ v

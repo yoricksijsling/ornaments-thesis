@@ -90,7 +90,10 @@ open Fold using (fold) public
 ----------------------------------------
 -- Walking over actual descriptions
 
-ConDesc-fold : ∀{A : Set}{I Γ} → A → (A → A) → (A → A) → ConDesc I Γ → A
-ConDesc-fold fι f frec (ι o) = fι
-ConDesc-fold fι f frec (nm / S ⊗ xs) = f (ConDesc-fold fι f frec xs)
-ConDesc-fold fι f frec (nm /rec i ⊗ xs) = frec (ConDesc-fold fι f frec xs)
+fold-ConDesc : ∀{A : Set}{I Γ} → A → (A → A) → (A → A) → ConDesc I Γ → A
+fold-ConDesc fι f frec (ι o) = fι
+fold-ConDesc fι f frec (nm / S ⊗ xs) = f (fold-ConDesc fι f frec xs)
+fold-ConDesc fι f frec (nm /rec i ⊗ xs) = frec (fold-ConDesc fι f frec xs)
+
+countArguments : ∀{I Γ}(D : ConDesc I Γ) → Nat
+countArguments = fold-ConDesc 0 suc suc

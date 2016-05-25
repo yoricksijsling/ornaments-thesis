@@ -30,10 +30,8 @@
 
     \tracinglostchars=2 % If the font is missing some symbol, then say
                         % so in the compilation output.
-
     \setmainfont[Ligatures=TeX]{texgyrepagella-regular.otf}
     \setmathfont{Asana-Math.otf}
-
 
     \providecommand{\DeclareUnicodeCharacter}[2]{\relax}
 
@@ -114,17 +112,14 @@
 % Font styles.
 
 \ifxetexorluatex
-  % Don't use math mode, it messes up kerning.
-  % \newcommand{\AgdaFontStyle}[1]{\ensuremath{\mathsf{#1}}}
-  \newcommand{\AgdaFontStyle}[1]{\textsf{#1}}
+  \newcommand{\AgdaFontStyle}[1]{\ensuremath{\mathsf{#1}}}
   \ifthenelse{\equal{\AgdaColourScheme}{bw}}{
       \newcommand{\AgdaKeywordFontStyle}[1]{\underline{#1}}
   }{
       \newcommand{\AgdaKeywordFontStyle}[1]{\ensuremath{\mathsf{#1}}}
   }
   \newcommand{\AgdaStringFontStyle}[1]{\ensuremath{\mathtt{#1}}}
-  % \newcommand{\AgdaCommentFontStyle}[1]{\ensuremath{\mathtt{#1}}}
-  \newcommand{\AgdaCommentFontStyle}[1]{\textsf{#1}}
+  \newcommand{\AgdaCommentFontStyle}[1]{\ensuremath{\mathtt{#1}}}
   \newcommand{\AgdaBoundFontStyle}[1]{\ensuremath{\mathit{#1}}}
 
 \else
@@ -317,32 +312,10 @@
   \newdimen\mathindent\mathindent\leftmargini
 \fi
 
-% ------- REASONABLY WORKING
-% \newenvironment{code}
-% {\noindent\ignorespaces}
-% {\noindent\ignorespacesafterend}
-% -------
-
-\newif\ifcodeinline
-\codeinlinefalse
-
-\newcommand{\StartCodeInline}{
-  \renewcommand{\>}[1][0]{\unskip\ignorespaces} % Disable polytable columns
-  \newcommand{\<}[1][0]{\unskip\ignorespaces}
-  \renewcommand{\AgdaIndent}[2]{\unskip\ignorespaces}
-  \noindent\ignorespaces\AgdaCodeStyle}
-\newcommand{\EndCodeInline}{
-  \ignorespacesafterend}
-
-\newcommand{\StartCodeBlock}{
-  \noexpand\noindent\ignorespaces\advance\leftskip\mathindent\AgdaCodeStyle\pboxed}
-\newcommand{\EndCodeBlock}{
-  \endpboxed\noindent\ignorespacesafterend}
-
-\newenvironment{code}
-{\ifcodeinline\expandafter\StartCodeInline\else\expandafter\StartCodeBlock\fi}
-{\ifcodeinline\expandafter\EndCodeInline\else\expandafter\EndCodeBlock\fi}
-
+\newenvironment{code}%
+{\noindent\ignorespaces\advance\leftskip\mathindent\AgdaCodeStyle\pboxed}%
+{\endpboxed\par\noindent%
+\ignorespacesafterend}
 
 % Default column for polytable.
 \defaultcolumn{@{~}l@{~}}

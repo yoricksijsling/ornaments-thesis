@@ -50,7 +50,7 @@ private
   -- Returns a list of terms [a, `f ps is x, `f ps is y, b, `f ps is z]
   termArgs : ∀{I Γ} → (`f : Name) → (offset : Nat) → ConDesc I Γ → List Term
   termArgs {I} {Γ} `f offset = snd ∘
-    ConDesc-fold (0 , [])
+    fold-ConDesc (0 , [])
                  (λ { (n , ts) → suc n , var₀ n ∷ ts })
                  (λ { (n , ts) → suc n , def₁ `f (var₀ n) ∷ ts})
 

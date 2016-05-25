@@ -1,6 +1,6 @@
 %include thesis.fmt
 
-\chapter{Ornaments on families of datatypes}\label{sec:extended}
+\chapter{Ornaments on families of datatypes}\label{chap:extended}
 
 With indices. Show how mutual recursion is the same as indices.
 
@@ -124,6 +124,22 @@ module _ {I J}{u : Cxf J I} where
   forget o = fold (forgetAlg o)
 \end{code}\end{codelst}
 
+\begin{example}
+For
+example: we could consider a datatype which holds login information,
+where a value of this type contains a domain name, username and
+password:
+
+\begin{code}
+loginDesc : DatDesc 1
+loginDesc = Uri ⊗ Name ⊗ Password ⊗ ι ⊕ `0
+\end{code}
+
+Say this is part of some personal password management system. One of
+the use cases is to find your login information for a given uri. Now
+what if some function always returns login information for the same
+uri?
+\end{example}
 
 \section{Algebraic ornaments}
 

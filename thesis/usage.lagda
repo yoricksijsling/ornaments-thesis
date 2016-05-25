@@ -85,7 +85,7 @@ listFrom = from
 \end{code}
 
 With the |ListHasDesc| instance we can perform generic operations on
-|List|s. |gdepth : ∀{A} → ⦃R : HasDesc A⦄ → A → Nat)| calculates the
+|List|s. |gdepth| |: ∀{A} → ⦃ R : HasDesc A ⦄ → A → Nat)| calculates the
 depth of any value which has a generic representation. (To be precise,
 |gdepth| counts the number of recursive occurences of the datatype
 within a value of that type.) For |List|s this is exactly the length

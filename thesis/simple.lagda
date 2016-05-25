@@ -1,6 +1,6 @@
 %include thesis.fmt
 
-\chapter{Ornaments on dependently typed descriptions}\label{sec:simple}
+\chapter{Ornaments on dependently typed descriptions}\label{chap:simple}
 
 The sum-of-products descriptions of Section \ref{sec:sop} can
 be extended to support dependent types. In the |_⊗_| constructor we

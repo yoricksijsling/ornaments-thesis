@@ -22,10 +22,20 @@ gforget {{AR = mk desc Ato Afrom}} {{BR = mk .(ornToDesc o) Bto Bfrom}} o
 ----------------------------------------
 -- Depth
 
+maxNat : Nat → Nat → Nat
+maxNat zero n = n
+maxNat (suc m) zero = suc m
+maxNat (suc m) (suc n) = suc (maxNat m n)
+
+maxNat-id : ∀ n → maxNat n n ≡ n
+maxNat-id zero = refl
+maxNat-id (suc n) = cong suc (maxNat-id n)
+
 depthAlg : ∀{I Γ dt} → (D : Desc I Γ dt) → ∀{γ} → Alg D γ (λ _ → Nat)
 depthAlg {dt = isCon} (ι o) v = 0
 depthAlg {dt = isCon} (nm / S ⊗ xs) (s , v) = depthAlg xs v
-depthAlg {dt = isCon} (nm /rec i ⊗ xs) (s , v) = max (suc s) (depthAlg xs v)
+-- depthAlg {dt = isCon} (nm /rec i ⊗ xs) (s , v) = max (suc s) (depthAlg xs v)
+depthAlg {dt = isCon} (nm /rec i ⊗ xs) (s , v) = maxNat (suc s) (depthAlg xs v)
 depthAlg {dt = isDat _} D (k , v) = depthAlg (lookupCtor D k) v
 
 gdepth : ∀{A} → {{R : HasDesc A}} → A → Nat

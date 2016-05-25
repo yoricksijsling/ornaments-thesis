@@ -1,6 +1,6 @@
 %include thesis.fmt
 
-\chapter{Conclusion}\label{sec:conclusion}
+\chapter{Conclusion}\label{chap:conclusion}
 
 Show that we indeed contribute what we claimed.
 

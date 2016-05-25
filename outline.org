@@ -2,8 +2,7 @@
   Praktisch voorbeeld van iets wat gewoonlijk slecht werkt.
   We zeggen dat wij een oplossing hebben en noemen onze bijdrages.
 
-
-* 2. Gebruik van framework
+* DONE 2. Gebruik van framework
 
   Overzicht van hoe je het framework kan gebruiken. Hoe je iets kan
   quoten, wat je dan krijgt, hoe je hier een ornament op toepast. Hier
@@ -14,13 +13,16 @@
 ** generieke functies
 ** mutaties zoals addParameter en renameArguments
 
-* 3. Sum of products
+* DONE 3. Sum of products
 
-** Descriptions en semantics
-** Maps en folds
-** Ornaments
-** Ornamental algebras
-** Discussie
+** DONE Descriptions en semantics
+** DONE Maps en folds
+** DONE Ornaments
+** DONE Ornamental algebras
+** DONE Discussie
+*** DONE Waarom Dat/Con splitsing?
+*** DONE Vergelijking met Σ-descriptions
+*** DONE Waarom deze ornaments?
 
 * 4. Simple descriptions and ornaments
 
@@ -31,10 +33,7 @@
 ** Ornament-definities
 *** Ornamental algebras (forget)
 ** Discussie
-*** Waarom de Dat/Con splitsing?
 *** Vergelijk met Σ descriptions
-*** Keuze van ornaments
-
 
 * 5. Extended descriptions and ornaments
 
@@ -49,7 +48,6 @@
 ** Discussie
 *** Indices kunnen niet afhankelijk zijn van parameters
 *** 
-
 
 * 6. Quoted descriptions
 
@@ -81,6 +79,7 @@
 ** Invloed van ornaments op keuze description
 ** Vergelijk met IODesc?
 ** Williams, Dagand, Remy 2014: Ornaments in practice
+** Encoding argument types
 
 
 * Conclusie

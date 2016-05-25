@@ -1,6 +1,6 @@
 %include thesis.fmt
 
-\chapter{Ornaments on reflected datatypes}\label{sec:named}
+\chapter{Ornaments on reflected datatypes}\label{chap:named}
 
 Usage of quoting. Show how the names fit into descriptions. Also show
 |dumpDatatype|?
