@@ -5,16 +5,19 @@ open import Prelude
 open import Common
 
 infixl 0 _▶₁_ _▶₀_
-record _▶₁_ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
+record _▶₁_ (A : Set₁) (B : A → Set₁) : Set₁ where
   constructor _,_
   field
-    pop : A
-    top : B pop
-record _▶₀_ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
+    pop₁ : A
+    top₁ : B pop₁
+open _▶₁_ public
+
+record _▶₀_ {a} (A : Set a) (B : A → Set) : Set a where
   constructor _,_
   field
-    pop : A
-    top : B pop
+    pop₀ : A
+    top₀ : B pop₀
+open _▶₀_ public
 
 record Popable {a b} (_▶_ : (A : Set a) (B : A → Set b) → Set (a ⊔ b)) : Set (lsuc (a ⊔ b)) where
   field
@@ -24,29 +27,28 @@ record Popable {a b} (_▶_ : (A : Set a) (B : A → Set b) → Set (a ⊔ b)) :
 open Popable {{...}} public
 
 instance
-  Popable₁ : ∀{a b} → Popable {a} {b} _▶₁_
-  Popable₁ = record { pop = _▶₁_.pop ; top = _▶₁_.top ; _,ᵖ_ = _,_ }
-  Popable₀ : ∀{a b} → Popable {a} {b} _▶₀_
-  Popable₀ = record { pop = _▶₀_.pop ; top = _▶₀_.top ; _,ᵖ_ = _,_ }
-{-# DISPLAY _▶₁_.pop = pop #-}
-{-# DISPLAY _▶₁_.top = top #-}
--- {-# DISPLAY _▶₁_._,_ = _,_ #-}
-{-# DISPLAY _▶₀_.pop = pop #-}
-{-# DISPLAY _▶₀_.top = top #-}
--- {-# DISPLAY _▶₀_._,_ = _,_ #-}
+  Popable-▶₁ : Popable _▶₁_
+  Popable-▶₁ = record { pop = pop₁ ; top = top₁ ; _,ᵖ_ = _,_ }
+  Popable-▶₀ : ∀{a} → Popable {a} _▶₀_
+  Popable-▶₀ = record { pop = pop₀ ; top = top₀ ; _,ᵖ_ = _,_ }
+{-# DISPLAY pop₁ = pop #-}
+{-# DISPLAY top₁ = top #-}
+{-# DISPLAY pop₀ = pop #-}
+{-# DISPLAY top₀ = top #-}
 
 infixl 0 _▷_ _▷₁_
 mutual
-  -- Terrible hack only works with two levels. The only levels which are sure to
-  -- be contained in (lsuc a) for any a, are 0 and a.
+  -- Terrible hack, still only works with two levels. The only levels
+  -- which are sure to be contained in (lsuc a) for any a, are 0 and
+  -- a.
   data Cx {a : Level} : Set (lsuc a) where
     _▷₁_ : {{p : a ≡ lsuc lzero}}(Γ : Cx)(S : (γ : ⟦ Γ ⟧Cx) → Set a) → Cx {a}
     _▷_ : (Γ : Cx)(S : (γ : ⟦ Γ ⟧Cx) → Set) → Cx {a}
     ε : Cx
 
   ⟦_⟧Cx : ∀{a} → Cx {a} → Set a
-  ⟦ Γ ▷₁ S ⟧Cx = ⟦ Γ ⟧Cx ▶₁ S
-  ⟦ Γ ▷ S ⟧Cx = ⟦ Γ ⟧Cx ▶₀ S
+  ⟦ _▷₁_ {{refl}} Γ S ⟧Cx = ⟦ Γ ⟧Cx ▶₁ S
+  ⟦ _▷_ Γ S ⟧Cx = ⟦ Γ ⟧Cx ▶₀ S
   ⟦ ε ⟧Cx = ⊤′
 
 infixl 0 _▷′_ _▷₁′_

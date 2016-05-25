@@ -22,10 +22,10 @@ module ConDescType {I : Cx₀}{Γ : Cx₁} (`dt : Type) where
   cxLookupAll = helper
     where
     helper : ∀ Γ → Term → List (Arg (Term))
-    helper (Γ ▷₁ S) `tm = helper Γ (def₁ (quote _▶₁_.pop) `tm) ++
-                          [ vArg (def₁ (quote _▶₁_.top) `tm) ]
-    helper (Γ ▷ S) `tm = helper Γ (def₁ (quote _▶₀_.pop) `tm) ++
-                         [ vArg (def₁ (quote _▶₀_.top) `tm) ]
+    helper (Γ ▷₁ S) `tm = helper Γ (def₁ (quote pop₁) `tm) ++
+                          [ vArg (def₁ (quote top₁) `tm) ]
+    helper (Γ ▷ S) `tm = helper Γ (def₁ (quote pop₀) `tm) ++
+                         [ vArg (def₁ (quote top₀) `tm) ]
     helper ε `tm = []
 
   -- Given params and an instantiated context ((((tt , i₀) , i₁ ) , .. ) , ik)
