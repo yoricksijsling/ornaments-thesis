@@ -594,7 +594,7 @@ cons. This has two benefits: It ensures that every description has one
 canonical representation and it is easier to work with, both in
 construction and consumption.
 
-\subsection{Sum-of-products with Σ}
+\subsection{Σ-descriptions}
 
 The descriptions we have seen all have sums and products using |_⊕_|
 and |_⊗_|. In dependently typed languages we have Σ-types, which can

@@ -200,31 +200,4 @@ fairly limited amount of knowledge. We did not once have to look at
 the descriptions on which all these functions work internally. In the
 rest of this thesis we will be taking a better look on how these
 descriptions and ornaments have to be defined and how metaprogramming
-can be used to connect the descriptions to actual datatypes. We make
-the following key contributions:
-
-\begin{enumerate}
-\item We build a universe of descriptions which can be used to encode
-  datatypes. The descriptions support parameters, indices and
-  dependent types. Contrary to many approaches, our universe must be
-  conservative in the sense that only datatypes which can exist in the
-  host language may be encoded in the universe. Every description
-  which can be built can also be converted to a real datatype. These
-  descriptions are uniquely suitable for the purpose of building new
-  datatypes. The descriptions do not require exceptions regarding
-  strict-positivity, type-in-type or termination checking.
-\item We define ornaments for these descriptions. Due to the
-  construction of our descriptions we can freely apply any ornaments
-  and still be certain that the resulting description corresponds to a
-  datatype. We have been able to translate many of the related
-  concepts to our universe, including ornamental algebras, algebraic
-  ornaments and reornaments. Additionally we define some high-level
-  operations which can be used to modify descriptions without knowing
-  anything about the implementation of ornaments.
-\item We implement a framework which uses metaprogramming to derive
-  descriptions and matching embedding-projection pairs for real
-  datatypes. Some operations regarding descriptions and ornaments have
-  been lifted to work on real datatypes, provided that the
-  embedding-projection pairs have been derived for those types. All of
-  this allows for easy experimentation with ornaments.
-\end{enumerate}
+can be used to connect the descriptions to actual datatypes.

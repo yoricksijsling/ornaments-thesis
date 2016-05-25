@@ -1,43 +1,102 @@
 %include thesis.fmt
 
-\chapter{Introduction}\label{sec:introduction}
+\chapter{Introduction}\label{chap:introduction}
 
-Modern dependently typed functional programming languages like Agda
-and Idris support datatypes with dependent types and indexes. These
-allow programmers to encode invariants of their programs within their
-datatypes. Building your datatypes such that they precisely match
-the logic of the program is an essential aspect of writing
-correct-by-construction software in these languages.
+Modern dependently typed languages like Agda support indices and
+dependent types in their datatypes, allowing us to construct inductive
+families \cite{dybjer}. Types can contain extra information in their
+indices, allowing us to place more precise restrictions on which
+values our allowed in certain places. For instance, lists with a
+length index are useful to build functions which require lists of
+certain lengths. By adding the proper indices, we can also encode
+logic of the program within a datatype. An example of this is the
+addition of a type index to a datatype which encodes an expression
+language; this index can be used to enforce typing rules of that
+language. Building datatypes such that they precisely match the logic
+of the program is an essential aspect of writing
+correct-by-construction programs in functional programming languages.
 
 This specialization of datatypes can however be a significant obstacle
-to code reuse. Programmers frequently define practically the same
-functions for slightly different datatypes. For example; vectors are
-the same as lists with an extra length index, but the append (++)
-function for lists does not work for vectors. Having to write this
-function for both types violates the 'don't repeat yourself' software
-development principle.
+to code reuse. For example; one may have defined the |List| datatype
+and a function to find the lowest value in a list of naturals:
 
-To start solving this problem, we have to capture the relationships
-between different-but-similar datatypes. Ornaments have been invented
-to do this; they formalise the notions of extension en refinements of
-datatypes \todo{cite mcbride}. They can be generated in various ways
-and can be used to build new datatypes. An ornament can guide the
-implementation of functions which work on the work on the ornamented
-datatype based on the implementation of that function on the
-non-ornamented datatype \cite{dagand14-transporting, williams14}.
+\begin{code}
+data List (A : Set) : Set where
+  [] : List A
+  _∷_ : A → List A → List A
 
-This topic has been explored and formalized using category theory
-\cite{dagand12, kogibbons13} and in Agda \cite{dagand14-transporting,
-  dagand14-essence}.  The Agda implementations require you to describe
-your datatypes within a universe of descriptions, so to use it the
-user is always working with generic representations of datatypes, not
-with the datatypes themselves. This hinders usability and easy
-experimentation.
+lowest : List Nat → Maybe Nat
+lowest [] = nothing
+lowest (x ∷ xs) with lowest xs
+lowest (x ∷ _) | nothing = just x
+lowest (x ∷ _) | just m = just (if (lessNat x m) then x else m)
+\end{code}
 
-A technology like ornaments has to be experimented with to reach its
-potential. To facilitate this, we have implemented a more practical
-way to use ornaments in Agda based on metaprogramming. With this
-implementation, we can use actual Agda datatypes and define ornaments
-for them. Along the way we have implemented a mechanism to derive
-generic descriptions of datatypes supporting indices, parameters and
-dependent types.
+The |Vec| datatype is very similar; it only adds a length index:
+
+\begin{code}
+data Vec (A : Set) : Nat → Set where
+  [] : Vec A zero
+  _∷_ : ∀{n} → A → Vec A n → Vec A (suc n)
+\end{code}
+
+Although we explain |Vec|s as being a |List| with an index, we
+\emph{define} it as an entirely separate thing. Agda has no idea that
+these two are related. If we want to get the lowest value in a |Vec|
+of naturals, we have to write the whole function again:
+
+\begin{code}
+lowestᵥ : ∀{n} → Vec Nat n → Maybe Nat
+lowestᵥ [] = nothing
+lowestᵥ (x ∷ xs) with lowestᵥ xs
+lowestᵥ (x ∷ _) | nothing = just x
+lowestᵥ (x ∷ _) | just m = just (if (lessNat x m) then x else m)
+\end{code}
+
+Clearly, it might be useful if Agda actually knew about the connection
+between |List|s and |Vec|s. Conor McBride \cite{mcbride11} has
+presented \emph{ornaments} as a way to express relations between
+datatypes. Loosely speaking, one type can be said to be an ornament of
+another if it contains more information in some way, for example by
+the refinement of indices or the addition of data. They can be used to
+express that |Vec|s are an ornament on |List|s. |List|s themselves are
+ornaments on |Nat|s, they are |Nat|s with an extra element attached to
+the |suc| constructor.
+
+....
+
+- generics
+- universes
+- embedding-projection pairs
+
+...
+
+We make the following contributions:
+
+\begin{enumerate}
+\item We build a universe of descriptions which is used to encode
+  datatypes. The descriptions support parameters, indices and
+  dependent types. Contrary to many approaches, our universe must be
+  conservative in the sense that only datatypes which can exist in the
+  host language may be encoded in the universe. Every description
+  which can be built in this system can also be converted to a real
+  datatype. These descriptions are uniquely suitable for modification
+  and the construction of new datatypes. The descriptions do not
+  require the disabling of safety features like strict-positivity,
+  type-in-type or termination checking.
+\item We define ornaments for these descriptions. Due to the
+  construction of our descriptions we can freely apply any ornaments
+  and still be certain that the resulting description corresponds to a
+  definable datatype. We have been able to translate many of the
+  ornament-related concepts to our universe, including ornamental
+  algebras, algebraic ornaments and reornaments. Additionally we
+  define some high-level operations which can be used to modify
+  descriptions without knowing anything about the implementation of
+  ornaments.
+\item We implement a framework which uses meta-programming to derive
+  descriptions and matching embedding-projection pairs for real
+  datatypes. Some operations regarding descriptions and ornaments have
+  been lifted to work on real datatypes, provided that the
+  embedding-projection pairs have been derived for those types. All of
+  this allows for easier experimentation with ornaments.
+\end{enumerate}
