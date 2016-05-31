@@ -70,17 +70,17 @@ Cx₁ = Cx {lsuc lzero}
 Cxf : ∀{a}(Γ Δ : Cx {a}) → Set a
 Cxf Γ Δ = ⟦ Γ ⟧ → ⟦ Δ ⟧
 
-cxf-both : ∀{a}{Γ Δ : Cx {a}}{S} → (f : Cxf Δ Γ) → Cxf (Δ ▷ (S ∘ f)) (Γ ▷ S)
+cxf-both : ∀{a}{Γ Δ : Cx {a}}{S} → (c : Cxf Δ Γ) → Cxf (Δ ▷ (S ∘ c)) (Γ ▷ S)
 cxf-both f δ = (f $ pop δ) , top δ
 
-cxf-forget : ∀{a}{Γ Δ : Cx {a}} → (f : Cxf Δ Γ) → (S : ⟦ Δ ⟧ → Set) → Cxf (Δ ▷ S) Γ
+cxf-forget : ∀{a}{Γ Δ : Cx {a}} → (c : Cxf Δ Γ) → (S : ⟦ Δ ⟧ → Set) → Cxf (Δ ▷ S) Γ
 cxf-forget f S δ = f (pop δ)
 
-cxf-instantiate : ∀{a}{Γ Δ : Cx {a}}{S} → (f : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → S (f γ)) → Cxf Δ (Γ ▷ S)
-cxf-instantiate f s δ = f δ , s δ
+cxf-inst : ∀{a}{Γ Δ : Cx {a}}{S} → (c : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → S (c γ)) → Cxf Δ (Γ ▷ S)
+cxf-inst f s δ = f δ , s δ
 
-cxf-instantiateSet : ∀{Γ Δ : Cx₁}{S} → (f : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → S (f γ)) → Cxf Δ (Γ ▷₁ S)
-cxf-instantiateSet f s δ = f δ , s δ
+-- cxf-instSet : ∀{Γ Δ : Cx₁}{S} → (c : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → S (c γ)) → Cxf Δ (Γ ▷₁ S)
+-- cxf-instSet f s δ = f δ , s δ
 
 
 Cx-walk : {A B : Set} → A → (d₁ : A → A) → (d₀ : A → A) →

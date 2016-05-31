@@ -20,6 +20,12 @@
 %format quoteGoal = "\K{quoteGoal}"
 %format tactic = "\K{tactic}"
 
+% Holes
+%format ?0 = "\Hole{?0}"
+%format ?1 = "\Hole{?1}"
+%format ?2 = "\Hole{?2}"
+%format ?3 = "\Hole{?3}"
+
 %format pargs = "\overline{\V{p}}"
 %format A_n = "\D{Aₙ}"
 %format x_n = "\V{xₙ}"
@@ -36,6 +42,7 @@
 %format `fmap` = "\V{<\$>}"
 %format Expr^evalAlg = "\D{Expr}^{\D{evalAlg}}"
 %format ++ = "\V{++}"
+%format +N = +
 
 % Descriptions and ornaments
 %format _⊕_ = "\V{\_\large⊕\normalsize\_}"
@@ -68,10 +75,12 @@
 %format nat→listΣ = nat→list _Σ
 %format boolsDescΣ = boolsDesc _Σ
 %format boolsDescΣ-example = boolsDesc _Σ -example
-
+%format shorterDescΣ = shorterDesc _Σ
 
 % Simplified contexts
-%format Cx₁ = "\D{Cx}"
-%format Cx₀ = "\D{Cx}"
-%format ▷₁ = "\V{▷}"
-%format ▷₁′ = "\V{▷′}"
+%format Cx₁ = Cx
+%format Cx₀ = Cx
+%format ▷₁ = ▷
+%format ▷₁′ = ▷′
+%format ▶₀ = ▶
+%format ▶₁ = ▶

@@ -199,33 +199,37 @@ to a description by simply prepending the description with |μ|. For
 instance, |μ natDesc| is a |Set| which corresponds to the natural
 numbers.
 
-\Fref{lst:sop-nat-example} gives an example of how a |μ natDesc| can
-be constructed. In |nat-example₁|, the hole has to be of type |⟦
-natDesc ⟧ (μ natDesc)|. When we expand that type we get a Σ-type where
-the first argument must be a |Fin 2|, allowing us to pick one of the
-two constructors. In |nat-example₂| we pick the second constructor
-(they start at number 0), the description of this constructor is
-|rec-⊗ ι|, so we are left to fill in a |⟦ rec-⊗ ι ⟧ (μ natDesc)| which
-is equivalent to |μ natDesc × ⊤|. The definition |nat-example₃| shows
-how this process could be completed by filling in |⟨ 0 , tt ⟩| in the
-recursive spot, resulting in an expression which should be read as
-|suc zero|, i.e. the number 1.
+The following code gives an example of how a |μ natDesc| can be
+constructed. In |nat-example₁|, the hole has to be of type |⟦ natDesc
+⟧ (μ natDesc)|. When we expand that type we get a Σ-type where the
+first argument must be a |Fin 2|, allowing us to pick one of the two
+constructors.
 
-\begin{codelst}{Constructing naturals}{sop-nat-example}\begin{code}
+\begin{code}
 nat-example₁ : μ natDesc
-nat-example₁ = ⟨ ? ⟩
--- Goal: |⟦ natDesc ⟧ (μ natDesc)|
--- Expands to: |Σ (Fin 2) (λ k → ⟦ lookupCtor natDesc k ⟧ (μ natDesc))|
+nat-example₁ = ⟨ ?0 ⟩
+-- ?0: |⟦ natDesc ⟧ (μ natDesc)|
+-- ?0: |Σ (Fin 2) (λ k → ⟦ lookupCtor natDesc k ⟧ (μ natDesc))|
+\end{code}
 
+In |nat-example₂| we pick the second constructor (they start at number
+0), the description of this constructor is |rec-⊗ ι|, so we are left
+to fill in a |⟦ rec-⊗ ι ⟧ (μ natDesc)| which is equal to |μ natDesc ×
+⊤|. The definition |nat-example₃| shows how this process could be
+completed by filling in |⟨ 0 , tt ⟩| in the recursive spot, resulting
+in an expression which should be read as |suc zero|, i.e. the number
+1.
+
+\begin{code}
 nat-example₂ : μ natDesc
-nat-example₂ = ⟨ 1 , ? ⟩
--- Goal: |⟦ lookupCtor natDesc 1 ⟧ (μ natDesc)|
--- Expands to: |⟦ rec-⊗ ι ⟧ (μ natDesc)|
--- Expands to: |μ natDesc × ⊤|
+nat-example₂ = ⟨ 1 , ?1 ⟩
+-- ?1: |⟦ lookupCtor natDesc 1 ⟧ (μ natDesc)|
+-- ?1: |⟦ rec-⊗ ι ⟧ (μ natDesc)|
+-- ?1: |μ natDesc × ⊤|
 
 nat-example₃ : μ natDesc
 nat-example₃ = ⟨ 1 , ⟨ 0 , tt ⟩ , tt ⟩
-\end{code}\end{codelst}
+\end{code}
 
 Whenever we want to give a value belonging to |μ someDescription|, we
 start by writing |⟨_⟩| and picking the number of the constructor we want to
@@ -276,6 +280,10 @@ are inverses of each other.
     from-to : ∀ x → to (from x) ≡ x
 \end{code}
 
+More often than not, we will skip the proofs and just give the
+embedding-projection pair or the constructor-functions. This rules out
+many mistakes and suffices to convince ourselves that a description is
+\emph{probably} right.
 
 \section{Maps and folds}\label{sec:sop-map}
 
@@ -287,7 +295,7 @@ decoding of any description in \fref{lst:sop-map}. For a function |f :
 X → Y| and a description |D|, we can always return a function |⟦ D ⟧ X
 → ⟦ D ⟧ Y|.
 
-\begin{codelst}{Generic map}{sop-map}\begin{code}
+\begin{codelst}{Map over the pattern functors}{sop-map}\begin{code}
 conDescmap : ∀{X Y} (f : X → Y) (D : ConDesc) →
              (v : ⟦ D ⟧ X) → ⟦ D ⟧ Y
 conDescmap f ι tt = tt
@@ -300,22 +308,23 @@ datDescmap f xs (k , v) = k , conDescmap f (lookupCtor xs k) v
 \end{code}\end{codelst}
 
 A typical operation which can be performed generically is
-\emph{folding}. Given a description |D| and an algebra of type |DatAlg
-D X|, the |fold| function can calculate a result of type |X| for any
-value of type |μ D|. We define |DatAlg D X| to be |⟦ D ⟧ X → X|. The
-intuition here is that the user has to provide the fold function with
-a method to calculate a result for every possible value, given that a
-result has already been calculated for the recursive positions. The
-|fold| function first maps the fold over the recursive positions and
-then the algebra can be applied.
+\emph{folding}, defined in \fref{lst:sop-fold}. Given a description
+|D| and an algebra of type |Alg D X|, the |fold| function can
+calculate a result of type |X| for any value of type |μ D|. As seen in
+\fref{lst:sop-fold}, we define |Alg D X| to be |⟦ D ⟧ X → X|. The
+intuition here is that the user has to provide the |fold| function
+with a method to calculate a result for every possible value, given
+that a result has already been calculated for the recursive
+positions. The |fold| function first maps the fold over the recursive
+positions and then the algebra can be applied.
 
-\begin{code}
-DatAlg : ∀{#c} → DatDesc #c → Set → Set
-DatAlg D X = ⟦ D ⟧ X → X
+\begin{codelst}{Generic fold}{sop-fold}\begin{code}
+Alg : ∀{#c} → DatDesc #c → Set → Set
+Alg D X = ⟦ D ⟧ X → X
 
-fold : ∀{#c}{D : DatDesc #c}{X} (α : DatAlg D X) → μ D → X
+fold : ∀{#c}{D : DatDesc #c}{X} (α : Alg D X) → μ D → X
 fold {D = D} α ⟨ xs ⟩ = α (datDescmap (fold α) D xs)
-\end{code}
+\end{code}\end{codelst}
 
 \begin{example}
 An example of a simple algebra is one which counts the |true| values
@@ -329,7 +338,7 @@ obtain a function which counts the number of |true|s in a list of
 booleans.
 
 \begin{code}
-countTruesAlg : DatAlg (listDesc Bool) Nat
+countTruesAlg : Alg (listDesc Bool) Nat
 countTruesAlg (zero , tt) = 0
 countTruesAlg (suc zero , x , xs , tt) = if x then suc xs else xs
 countTruesAlg (suc (suc ()) , _)
@@ -464,7 +473,7 @@ forgetNT (x⁺ ⊕ xs⁺) (zero , v) = 0 , conForgetNT x⁺ v
 forgetNT (x⁺ ⊕ xs⁺) (suc k , v) = (suc *** id) (forgetNT xs⁺ (k , v))
 
 forgetAlg : ∀{#c}{D : DatDesc #c} (o : DatOrn D) →
-            DatAlg (ornToDesc o) (μ D)
+            Alg (ornToDesc o) (μ D)
 forgetAlg o = ⟨_⟩ ∘ forgetNT o
 
 forget : ∀{#c}{D : DatDesc #c} (o : DatOrn D) →
@@ -594,7 +603,7 @@ cons. This has two benefits: It ensures that every description has one
 canonical representation and it is easier to work with, both in
 construction and consumption.
 
-\subsection{Σ-descriptions}
+\subsection{Σ-descriptions}\label{sec:sop-Σdesc}
 
 The descriptions we have seen all have sums and products using |_⊕_|
 and |_⊗_|. In dependently typed languages we have Σ-types, which can
@@ -769,9 +778,7 @@ that when it is applied to ornaments it can mean |⟦ ornToDesc o ⟧| or
 \begin{table}
 \centering
 \begin{tabular*}{\textwidth}{@@{\extracolsep{\fill} } l l l l }
-\multicolumn{2}{ c }{Ornament from original PF to ornamented PF} &
-Original PF & Ornamented PF \\
-\cline{1-2}
+ & & Original PF & Ornamented PF \\
 |o : Con/DatOrn D| & |oΣ : OrnΣ DΣ| &
 |⟦ D ⟧| and |⟦ DΣ ⟧| & |⟦ o ⟧| and |⟦ oΣ ⟧| \\
 \hline

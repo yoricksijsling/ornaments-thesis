@@ -57,12 +57,10 @@ datDescmap f xs (k , v) = k , conDescmap f (lookupCtor xs k) v
 ----------------------------------------
 -- Folding
 
-DatAlg : ∀{#c} → DatDesc #c → Set → Set
-DatAlg D X = ⟦ D ⟧ X → X
-ConAlg : ∀{Γ} → ConDesc Γ → ⟦ Γ ⟧ → Set → Set
-ConAlg D γ X = ⟦ D ⟧ γ X → X
+Alg : ∀{#c} → DatDesc #c → Set → Set
+Alg D X = ⟦ D ⟧ X → X
 
-module Fold {#c}{D : DatDesc #c}{X} (α : DatAlg D X) where
+module Fold {#c}{D : DatDesc #c}{X} (α : Alg D X) where
   mutual
     fold : μ D → X
     fold ⟨ xs ⟩ = α (datDescmap-fold D xs) -- D and xs are the starting arguments

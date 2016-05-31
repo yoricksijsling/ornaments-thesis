@@ -64,8 +64,8 @@ module _ {I J K}{u : Cxf J I}{v : Cxf K J} where
                     (o : Orn u c D) → (p : Orn v d (ornToDesc o)) →
                     (ornToDesc (o >>⁺ p)) ≡ ornToDesc p
     >>⁺-coherence {d = d} (ι j) (ι k) = cong ι (ext (λ x → uninv-inv-∘ (j (d x)) (k x)))
-    >>⁺-coherence (ι {i = i} {c} j) (T +⊗ ys⁺) = cong (_⊗_ T) (>>⁺-coherence (ι {i = i} {c} j) ys⁺)
-    >>⁺-coherence (ι {i = i} {c} j) (rec k +⊗ ys⁺) = cong (rec_⊗_ k) (>>⁺-coherence (ι {i = i} {c} j) ys⁺)
+    >>⁺-coherence (ι {i = i} j) (T +⊗ ys⁺) = cong (_⊗_ T) (>>⁺-coherence (ι {i = i} j) ys⁺)
+    >>⁺-coherence (ι {i = i} j) (rec k +⊗ ys⁺) = cong (rec_⊗_ k) (>>⁺-coherence (ι {i = i} j) ys⁺)
     >>⁺-coherence (-⊗ xs⁺) (-⊗ ys⁺) = cong (_⊗_ _) (>>⁺-coherence xs⁺ ys⁺)
     >>⁺-coherence (-⊗ xs⁺) (T +⊗ ys⁺) = cong (_⊗_ T) (>>⁺-coherence (-⊗ xs⁺) ys⁺)
     >>⁺-coherence (-⊗ xs⁺) (rec k +⊗ ys⁺) = cong (rec_⊗_ k) (>>⁺-coherence (-⊗ xs⁺) ys⁺)

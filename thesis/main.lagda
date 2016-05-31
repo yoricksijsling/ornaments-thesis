@@ -1,8 +1,8 @@
 % \documentclass[a4paper]{report}
 \documentclass[draft,a4paper]{report}
 
-\newif\ifusecolors
-\usecolorstrue
+\newif\ifsetmono
+\setmonofalse
 
 %include lhs2TeX.fmt
 %include lhs2TeX.sty
@@ -25,7 +25,7 @@
 % \emph{Second examiner} Johan Jeuring
 % \end{flushright}
 
-% \listoftodos
+\ifdraft{\listoftodos}{}
 % \input{abstract.tex}
 \tableofcontents
 \input{introduction.tex}

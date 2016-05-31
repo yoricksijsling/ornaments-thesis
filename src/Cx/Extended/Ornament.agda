@@ -6,24 +6,25 @@ open import Cx.Extended.Desc
 
 infixr 3 _⊕_
 infixr 4 -⊗_ rec_⊗_ _+⊗_ rec_+⊗_
+
 -- The `u` function tells us how the ornament changes the indices of the current Desc.
 -- The `c` function specifies how the context outside the current Desc has changed.
-data Orn {I J}(u : Cxf J I) : ∀{Γ Δ dt} (c : Cxf Δ Γ) (D : Desc I Γ dt) → Set₁ where
-  ι : ∀{Γ Δ i}{c : Cxf Δ Γ} → (j : (δ : ⟦ Δ ⟧) → u ⁻¹ (i (c δ))) → Orn u c (ι i)
-  -⊗_ : ∀{Γ Δ S xs}{c : Cxf Δ Γ} → (xs⁺ : Orn u (cxf-both c) xs) → Orn u c (S ⊗ xs)
-  rec_⊗_ : ∀{Γ Δ i xs}{c : Cxf Δ Γ} →
-            (j : (δ : ⟦ Δ ⟧) → u ⁻¹ (i (c δ))) → (xs⁺ : Orn u c xs) → Orn u c (rec i ⊗ xs)
+data Orn {I J}(u : Cxf J I){Γ Δ}(c : Cxf Δ Γ) : ∀{dt}(D : Desc I Γ dt) → Set₁ where
+  ι : ∀{i} → (j : (δ : ⟦ Δ ⟧) → u ⁻¹ (i (c δ))) → Orn u c (ι i)
+  -⊗_ : ∀{S xs} → (xs⁺ : Orn u (cxf-both c) xs) → Orn u c (S ⊗ xs)
+  rec_⊗_ : ∀{i xs} → (j : (δ : ⟦ Δ ⟧) → u ⁻¹ (i (c δ))) →
+    (xs⁺ : Orn u c xs) → Orn u c (rec i ⊗ xs)
 
-  _+⊗_ : ∀{Γ Δ}{c : Cxf Δ Γ}{xs : ConDesc I Γ} →
-                (S : (δ : ⟦ Δ ⟧) → Set) → (xs⁺ : Orn u (cxf-forget c S) xs) → Orn u c xs
-  rec_+⊗_ : ∀{Γ Δ}{c : Cxf Δ Γ}{xs : ConDesc I Γ} →
-                  (j : (δ : ⟦ Δ ⟧) → ⟦ J ⟧) → (xs⁺ : Orn u c xs) → Orn u c xs
-  give-K : ∀{Γ Δ S xs}{c : Cxf Δ Γ} →
-           (s : (δ : ⟦ Δ ⟧) → S (c δ)) → (xs⁺ : Orn u (cxf-instantiate c s) xs) → Orn u c (S ⊗ xs)
+  _+⊗_ : ∀{xs : ConDesc I Γ} → (S : (δ : ⟦ Δ ⟧) → Set) →
+    (xs⁺ : Orn u (cxf-forget c S) xs) → Orn u c xs
+  rec_+⊗_ : ∀{xs : ConDesc I Γ} → (j : (δ : ⟦ Δ ⟧) → ⟦ J ⟧) →
+    (xs⁺ : Orn u c xs) → Orn u c xs
+  give-K : ∀{S xs} → (s : (δ : ⟦ Δ ⟧) → S (c δ)) →
+    (xs⁺ : Orn u (cxf-inst c s) xs) → Orn u c (S ⊗ xs)
 
-  `0 : ∀{Γ Δ}{c : Cxf Δ Γ} → Orn u c `0
-  _⊕_ : ∀{Γ Δ #c x}{c : Cxf Δ Γ}{xs : DatDesc I Γ #c} →
-         (x⁺ : Orn u c x) (xs⁺ : Orn u c xs) → Orn u c (x ⊕ xs)
+  `0 : Orn u c `0
+  _⊕_ : ∀{#c x}{xs : DatDesc I Γ #c} →
+    (x⁺ : Orn u c x) (xs⁺ : Orn u c xs) → Orn u c (x ⊕ xs)
 
 DefOrn : ∀{I}(J : Cx)(u : Cxf J I) {Γ}(Δ : Cx)(c : Cxf Δ Γ) {dt}(D : Desc I Γ dt) → Set₁
 DefOrn J u Δ c D = Orn u c D
@@ -35,7 +36,7 @@ DefOrn J u Δ c D = Orn u c D
 module _ {I J}{u : Cxf J I} where
   ornToDesc : ∀{Γ Δ dt}{c : Cxf Δ Γ}{D : Desc I Γ dt} → (o : Orn u c D) → Desc J Δ dt
   ornToDesc {c = c} (ι j) = ι (uninv ∘ j)
-  ornToDesc (-⊗_ {S = S} {c = c} xs⁺) = S ∘ c ⊗ ornToDesc xs⁺
+  ornToDesc {c = c} (-⊗_ {S = S} xs⁺) = S ∘ c ⊗ ornToDesc xs⁺
   ornToDesc (rec j ⊗ xs⁺) = rec (uninv ∘ j) ⊗ ornToDesc xs⁺
   ornToDesc (_+⊗_ S xs⁺) = S ⊗ ornToDesc xs⁺
   ornToDesc (rec_+⊗_ j xs⁺) = rec j ⊗ ornToDesc xs⁺

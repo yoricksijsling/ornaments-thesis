@@ -1,35 +1,34 @@
 \ProvidesPackage{main}
 
 \usepackage[english]{babel}
-\usepackage{graphicx}
-\usepackage{hyperref}
 
 \usepackage{ifdraft}
-\usepackage[\ifdraft{draft}{disable}]{todonotes}
+\usepackage{color}
 \usepackage{alltt}
 \usepackage{amsthm}
 \usepackage{float}
 
-\ifdraft{
-  \usepackage{everypage}
-  \AddEverypageHook{\makebox(0,0){Draft \today}}
-
-  \usepackage{showlabels}
-}{}
-
 % Enable or disable colors
-% Assumes that \newif\ifusecolors has been executed
-\newcommand*{\ifcolors}{%
-  \ifusecolors
+% Assumes that \newif\ifsetmono has been executed
+\newcommand*{\ifmono}{%
+  \ifsetmono
     \expandafter\@firstoftwo
   \else
     \expandafter\@secondoftwo
   \fi
 }
 
-% Frame color
-% \usepackage{framed,color}
-% \definecolor{shadecolor}{rgb}{1.0,0.9,0.7}
+\ifdraft{
+  \usepackage{easy-todo}
+  \renewcommand{\todocolor}{\color{\ifmono{black}{red}}}
+
+  \usepackage{everypage}
+  \AddEverypageHook{\makebox(0,0){Draft \today}}
+
+  \usepackage{showlabels}
+}{
+  \newcommand{\todo}[1]{}
+}
 
 % Theorem styles
 \newtheorem{theorem}{Theorem}[section]
@@ -42,18 +41,6 @@
   {\popQED\endexamplex}
 \newtheorem{definition}{Definition}[section]
 
-% References
-\usepackage[plain]{fancyref}
-\newcommand*{\fancyreflstlabelprefix}{lst}
-\fancyrefaddcaptions{english}{%
-  \providecommand*{\freflstname}{listing}%
-  \providecommand*{\Freflstname}{Listing}%
-}
-\frefformat{plain}{\fancyreflstlabelprefix}{\freflstname\fancyrefdefaultspacing#1}
-\Frefformat{plain}{\fancyreflstlabelprefix}{\Freflstname\fancyrefdefaultspacing#1}
-\frefformat{vario}{\fancyreflstlabelprefix}{\freflstname\fancyrefdefaultspacing#1#3}
-\Frefformat{vario}{\fancyreflstlabelprefix}{\Freflstname\fancyrefdefaultspacing#1#3}
-
 % Shortcuts
 \newcommand{\definedin}[1]{\footnote{Module: #1}}
 
@@ -61,8 +48,8 @@
 \newcommand{\args}[1]{\overline{#1}}
 \newcommand{\ttargs}[1]{\(\args{\texttt{#1}}\)}
 \newcommand{\ttunderline}[1]{\(\underline{\texttt{#1}}\)}
-\definecolor{ttemph1}{HTML}{BB0000}
-\definecolor{ttemph2}{HTML}{0000BB}
+\definecolor{ttemph1}{rgb}{0.7,0,0}
+\definecolor{ttemph2}{rgb}{0,0,0.7}
 \newcommand{\codeemph}[2]{%
 \ifnum#1=1\textcolor{ttemph1}{\textsf{\textbf{#2}}}%
 \else\ifnum#1=2\textcolor{ttemph2}{\textsf{\textbf{#2}}}%
@@ -79,26 +66,35 @@
 \newcommand{\Vlight}{}
 \newcommand{\K}{}
 \newcommand{\agdacomment}{}
+\newcommand{\Hole}
 
-\newcommand{\DefaultStuff}{%
+\newcommand{\DisableColors}{%
   \renewcommand{\D}[1]{\textsf{##1}}% Types
   \renewcommand{\V}[1]{\textsf{##1}}% Variables
   \renewcommand{\Vlight}[1]{\textsf{##1}}%
   \renewcommand{\K}[1]{\textsf{##1}}% Keywords
   \renewcommand{\agdacomment}[1]{\mbox{-{}-##1}}%
+  \renewcommand{\Hole}[1]{\textsf{##1}}%
 }
-\newcommand{\ColourStuff}{%
-  \renewcommand{\D}[1]{\textcolor[rgb]{0,0,0.8}{\textsf{##1}}}% Types
+\newcommand{\EnableColors}{%
+  \renewcommand{\D}[1]{\textcolor[rgb]{\ifmono{0,0,0}{0,0,0.6}}{\textsf{##1}}}% Types
   \renewcommand{\V}[1]{\textcolor[gray]{0.15}{\textsf{##1}}}% Variables
   \renewcommand{\Vlight}[1]{\textcolor[gray]{0.5}{\textsf{##1}}}%
-  \renewcommand{\K}[1]{\textcolor[rgb]{0.8,0.4,0}{\textsf{##1}}}% Keywords
+  \renewcommand{\K}[1]{\ifmono{\textcolor[gray]{0}{\textbf{\textsf{##1}}}}%
+    {\textcolor[rgb]{0.8,0.4,0}{\textsf{##1}}}}% Keywords
   \renewcommand{\agdacomment}[1]{%
-    \mbox{\DefaultStuff\textcolor[rgb]{0.6,0.15,0.15}{-{}-##1}\ColourStuff}}%
+    \mbox{\DisableColors\textcolor[rgb]{\ifmono{0,0,0}{0.6,0.15,0.15}}{-{}-##1}%
+      \EnableColors}}%
+  \renewcommand{\Hole}[1]{\colorbox[rgb]{\ifmono{0.8,0.8,0.8}{0.6,1,0.6}}{\textsf{##1}}}%
 }
-\newcommand{\MonochromeStuff}{} % Not in use
-\ColourStuff
+\EnableColors
 
 %--------------------------------------------------
+% Listings
+
+% Use array environment for hscode. Page breaks within code blocks are
+% not allowed.
+\arrayhs
 
 % Floated boxed listings can be made like this:
 %
@@ -106,35 +102,38 @@
 %   (code)
 %   \end{code}\end{codelst}
 %
-% We can not get rid of the \begin{code} and \end{code}, because lhs2tex needs it.
-% The lstboxed floatstyle is a copy of boxed, but with a colored border.
+% We can not get rid of the \begin{code} and \end{code}, because
+% lhs2tex needs it. The colorboxed floatstyle is a copy of boxed, but
+% with a colored border and slightly more padding (from 3pt to 5pt).
 
-% Use array environment for hscode. Page breaks within code blocks are
-% not allowed
-\arrayhs
-
-\newcommand{\lstboxcolor}{\color[rgb]{0.5,0.5,0.5}}
-\newcommand\fs@lstboxed{%
+\newcommand{\lstboxcolor}{\color[gray]{0.7}}
+\newcommand\fs@colorboxed{%
   \def\@fs@cfont{\bfseries}%
   \let\@fs@capt\floatc@plain
   \def\@fs@pre{\lstboxcolor\setbox\@currbox\vbox{\hbadness10000
-    \moveleft3.4pt\vbox{\advance\hsize by6.8pt
-      \hrule \hbox to\hsize{\vrule\kern3pt
-        \vbox{\kern3pt\box\@currbox\kern3pt}\kern3pt\vrule}\hrule}}}%
+    \moveleft5.4pt\vbox{\advance\hsize by10.8pt
+      \hrule \hbox to\hsize{\vrule\kern5pt
+        \vbox{\kern5pt\box\@currbox\kern5pt}\kern5pt\vrule}\hrule}}}%
   \def\@fs@mid{\kern2pt\color{black}}%
   \def\@fs@post{}%
   \let\@fs@iftopcapt\iffalse}
+\floatstyle{colorboxed}
 
-\floatstyle{lstboxed}
+% Use colorboxed style for tables
+\restylefloat{table}
+
+% New floats for listings, numbered per chapter
 \newfloat{listing}{htbp}{ltg}
 \floatname{listing}{Listing}
+\@addtoreset{listing}{chapter}
+\renewcommand\thelisting{\thechapter.\arabic{listing}}
 
-\newenvironment{codelst}[3][ht]
+\newenvironment{codelst}[3][t]
 {\begin{listing}[#1]\texths\caption{#2}\label{lst:#3}\centering}
 {\end{listing}}
 
-
 %--------------------------------------------------
+% Fonts and text
 
 \setmainfont[ItalicFont = xits-italic.otf
 , BoldFont = xits-bold.otf
@@ -162,5 +161,21 @@
 
 \hyphenation{data-type}
 \hyphenation{data-types}
+
+%--------------------------------------------------
+% References
+
+% Probably good to do this at the end, because hyperref says so
+
+\usepackage[plain]{fancyref}
+\newcommand*{\fancyreflstlabelprefix}{lst}
+\fancyrefaddcaptions{english}{%
+  \providecommand*{\freflstname}{listing}%
+  \providecommand*{\Freflstname}{Listing}%
+}
+\frefformat{plain}{\fancyreflstlabelprefix}{\freflstname\fancyrefdefaultspacing#1}
+\Frefformat{plain}{\fancyreflstlabelprefix}{\Freflstname\fancyrefdefaultspacing#1}
+\frefformat{vario}{\fancyreflstlabelprefix}{\freflstname\fancyrefdefaultspacing#1#3}
+\Frefformat{vario}{\fancyreflstlabelprefix}{\Freflstname\fancyrefdefaultspacing#1#3}
 
 \endinput

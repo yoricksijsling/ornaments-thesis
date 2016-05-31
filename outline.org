@@ -27,7 +27,7 @@
 * 4. Simple descriptions and ornaments
 
 ** Gebruik van simple descriptions en ornaments
-** Contexts (Internalising terms)
+** Contexts en environments (Internalising terms)
 ** Description-definities
 *** Algebras/folds
 ** Ornament-definities

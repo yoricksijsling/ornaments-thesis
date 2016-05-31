@@ -4,7 +4,7 @@
 
 Modern dependently typed languages like Agda support indices and
 dependent types in their datatypes, allowing us to construct inductive
-families \cite{dybjer}. Types can contain extra information in their
+families \cite{dybjer91}. Types can contain extra information in their
 indices, allowing us to place more precise restrictions on which
 values our allowed in certain places. For instance, lists with a
 length index are useful to build functions which require lists of

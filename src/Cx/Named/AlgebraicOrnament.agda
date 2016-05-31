@@ -77,8 +77,8 @@ module _ {I J K}{u : Cxf J I}{v : Cxf K J} where
                     (o : Orn u c D) → (p : Orn v d (ornToDesc o)) →
                     (ornToDesc (o >>⁺ p)) ≡ ornToDesc p
     >>⁺-coherence {d = d} (ι j) (ι k) = cong ι (ext (λ x → uninv-inv-∘ (j (d x)) (k x)))
-    >>⁺-coherence (ι {i = i} {c} j) (nm / T +⊗ ys⁺) = cong (_/_⊗_ nm T) (>>⁺-coherence (ι {i = i} {c} j) ys⁺)
-    >>⁺-coherence (ι {i = i} {c} j) (nm /rec k +⊗ ys⁺) = cong (_/rec_⊗_ nm k) (>>⁺-coherence (ι {i = i} {c} j) ys⁺)
+    >>⁺-coherence (ι {i = i} j) (nm / T +⊗ ys⁺) = cong (_/_⊗_ nm T) (>>⁺-coherence (ι {i = i} j) ys⁺)
+    >>⁺-coherence (ι {i = i} j) (nm /rec k +⊗ ys⁺) = cong (_/rec_⊗_ nm k) (>>⁺-coherence (ι {i = i} j) ys⁺)
     >>⁺-coherence (nm′ /-⊗ xs⁺) (nm /-⊗ ys⁺) = cong (_/_⊗_ _ _) (>>⁺-coherence xs⁺ ys⁺)
     >>⁺-coherence (nm′ /-⊗ xs⁺) (nm / T +⊗ ys⁺) = cong (_/_⊗_ nm T) (>>⁺-coherence (nm′ /-⊗ xs⁺) ys⁺)
     >>⁺-coherence (nm′ /-⊗ xs⁺) (nm /rec k +⊗ ys⁺) = cong (_/rec_⊗_ nm k) (>>⁺-coherence (nm′ /-⊗ xs⁺) ys⁺)

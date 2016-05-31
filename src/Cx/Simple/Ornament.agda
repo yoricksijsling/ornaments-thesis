@@ -6,32 +6,35 @@ open import Cx.Simple.Desc
 
 infixr 3 _⊕_
 infixr 4 -⊗_ rec-⊗_ _+⊗_ rec-+⊗_
-data ConOrn : ∀{Γ Δ} (f : Cxf Δ Γ) (D : ConDesc Γ) → Set₂ where
-  ι : ∀{Γ Δ}{c : Cxf Δ Γ} → ConOrn c ι
-  -⊗_ : ∀{Γ Δ S xs}{c : Cxf Δ Γ} → (xs⁺ : ConOrn (cxf-both c) xs) → ConOrn c (S ⊗ xs)
-  rec-⊗_ : ∀{Γ Δ xs}{c : Cxf Δ Γ} → (xs⁺ : ConOrn c xs) → ConOrn c (rec-⊗ xs)
 
-  _+⊗_ : ∀{Γ Δ xs}{c : Cxf Δ Γ} →
-             (S : (δ : ⟦ Δ ⟧) → Set) → (xs⁺ : ConOrn (cxf-forget c S) xs) → ConOrn c xs
-  rec-+⊗_ : ∀{Γ Δ xs}{c : Cxf Δ Γ} → (xs⁺ : ConOrn c xs) → ConOrn c xs
+data ConOrn {Γ Δ} (c : Cxf Δ Γ) : (D : ConDesc Γ) → Set₂ where
+  ι : ConOrn c ι
+  -⊗_ : ∀{S xs} → (xs⁺ : ConOrn (cxf-both c) xs) → ConOrn c (S ⊗ xs)
+  rec-⊗_ : ∀{xs} → (xs⁺ : ConOrn c xs) → ConOrn c (rec-⊗ xs)
 
-  give-K : ∀{Γ Δ S xs}{c : Cxf Δ Γ} →
-           (s : (γ : ⟦ Δ ⟧) → S (c γ)) → (xs⁺ : ConOrn (cxf-instantiate c s) xs) → ConOrn c (S ⊗ xs)
+  _+⊗_ : ∀{xs} → (S : (δ : ⟦ Δ ⟧) → Set) →
+    (xs⁺ : ConOrn (cxf-forget c S) xs) → ConOrn c xs
+  rec-+⊗_ : ∀{xs} → (xs⁺ : ConOrn c xs) → ConOrn c xs
+
+  give-K : ∀{S xs} → (s : (γ : ⟦ Δ ⟧) → S (c γ)) →
+    (xs⁺ : ConOrn (cxf-inst c s) xs) → ConOrn c (S ⊗ xs)
 
 data DatOrn : ∀{#c}(D : DatDesc #c) → Set₂ where
   `0 : DatOrn `0
-  _⊕_ : ∀{#c x xs} → (x⁺ : ConOrn id x) (xs⁺ : DatOrn xs) → DatOrn {suc #c} (x ⊕ xs)
+  _⊕_ : ∀{#c x xs} →
+    (x⁺ : ConOrn id x) (xs⁺ : DatOrn xs) → DatOrn {suc #c} (x ⊕ xs)
 
 
 ----------------------------------------
 -- Semantics
 
-conOrnToDesc : ∀{Γ Δ}{c : Cxf Δ Γ}{D : ConDesc Γ} → ConOrn c D → ConDesc Δ
+conOrnToDesc : ∀{Γ Δ}{c : Cxf Δ Γ}{D : ConDesc Γ} →
+               ConOrn c D → ConDesc Δ
 conOrnToDesc ι = ι
-conOrnToDesc (-⊗_ {S = S} {c = c} xs⁺) = S ∘ c ⊗ conOrnToDesc xs⁺
-conOrnToDesc (rec-⊗ xs⁺) = rec-⊗ (conOrnToDesc xs⁺)
-conOrnToDesc (_+⊗_ S xs⁺) = S ⊗ (conOrnToDesc xs⁺)
-conOrnToDesc (rec-+⊗_ xs⁺) = rec-⊗ (conOrnToDesc xs⁺)
+conOrnToDesc {c = c} (-⊗_ {S = S} xs⁺) = S ∘ c ⊗ conOrnToDesc xs⁺
+conOrnToDesc (rec-⊗ xs⁺) = rec-⊗ conOrnToDesc xs⁺
+conOrnToDesc (S +⊗ xs⁺) = S ⊗ conOrnToDesc xs⁺
+conOrnToDesc (rec-+⊗ xs⁺) = rec-⊗ conOrnToDesc xs⁺
 conOrnToDesc (give-K s xs⁺) = conOrnToDesc xs⁺
 ornToDesc : ∀{#c}{D : DatDesc #c} → DatOrn D → DatDesc #c
 ornToDesc `0 = `0
@@ -41,7 +44,8 @@ ornToDesc (x⁺ ⊕ xs⁺) = conOrnToDesc x⁺ ⊕ ornToDesc xs⁺
 ----------------------------------------
 -- Ornamental Algebra
 
-conForgetNT : ∀{Γ Δ}{c : Cxf Δ Γ}{D : ConDesc Γ} (o : ConOrn c D) →
+conForgetNT : ∀{Γ Δ}{c : Cxf Δ Γ}{D : ConDesc Γ} →
+              (o : ConOrn c D) →
               ∀{δ X} → ⟦ conOrnToDesc o ⟧ δ X → ⟦ D ⟧ (c δ) X
 conForgetNT ι tt = tt
 conForgetNT (-⊗ xs⁺) (s , v) = s , conForgetNT xs⁺ v
@@ -55,7 +59,7 @@ forgetNT `0 (() , _)
 forgetNT (x⁺ ⊕ xs⁺) (zero , v) = 0 , conForgetNT x⁺ v
 forgetNT (x⁺ ⊕ xs⁺) (suc k , v) = (suc *** id) (forgetNT xs⁺ (k , v))
 
-forgetAlg : ∀{#c}{D : DatDesc #c} (o : DatOrn D) → DatAlg (ornToDesc o) (μ D)
+forgetAlg : ∀{#c}{D : DatDesc #c} (o : DatOrn D) → Alg (ornToDesc o) (μ D)
 forgetAlg o = ⟨_⟩ ∘ forgetNT o
 
 forget : ∀{#c}{D : DatDesc #c} (o : DatOrn D) → μ (ornToDesc o) → μ D

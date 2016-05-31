@@ -8,11 +8,13 @@
 ** Reornaments naar Named?
 ** Waarom komen recursieve argumenten niet in de context?
    Iets met strict-positivity..
-** Reconstructor ergens benoemen
+   De context wil een Set hebben, maar voor een recursief argument
+   is die er niet tijdens het definieren van ConDesc. Zou het helpen
+   om Cx uit te breiden tot functor?
+** Reconstructor example
    Mergen en splitten van constructors. Example: Toevoegen van types aan een lambda calculus. (`lit : Exp) wordt dan bijvoorbeeld (`bool : Exp Bool) en (`nat : Exp Nat).
 ** Het gebruik van Contexts voor indices discussieren.
 ** Brady optimizations
-** Vraag: Hoe zit het ook alweer met Π-types in onze universe?
 ** Vraag: Kunnen we ornaments gebruiken om een interface naar haskell mooier te maken?
 ** Vraag: Kunnen we zoiets als McBride's 'How to keep your neighbors in order' doen?
    Iets met addLimitingIndex ofzo, die overal een index toevoegt.

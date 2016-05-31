@@ -30,21 +30,14 @@ infixl 0 _▷′_
 _▷′_ : (Γ : Cx) → Set → Cx
 Γ ▷′ S = Γ ▷ const S
 
-example-Γ : Cx
-example-Γ = ε ▷′ Set ▷′ Nat ▷ (λ γ → Vec (top (pop γ)) (top γ))
-
-example-γ : ⟦ example-Γ ⟧Cx
-example-γ = ((tt , String) , 3) , "test" ∷ "1" ∷ "2" ∷ []
-
-
 Cxf : (Γ Δ : Cx) → Set
 Cxf Γ Δ = ⟦ Γ ⟧ → ⟦ Δ ⟧
 
-cxf-both : ∀{Γ Δ S} → (f : Cxf Δ Γ) → Cxf (Δ ▷ (S ∘ f)) (Γ ▷ S)
-cxf-both f δ = f (pop δ) , top δ
+cxf-both : ∀{Γ Δ S} → (c : Cxf Δ Γ) → Cxf (Δ ▷ (S ∘ c)) (Γ ▷ S)
+cxf-both c δ = c (pop δ) , top δ
 
-cxf-forget : ∀{Γ Δ} → (f : Cxf Δ Γ) → (S : ⟦ Δ ⟧ → Set) → Cxf (Δ ▷ S) Γ
-cxf-forget f S δ = f (pop δ)
+cxf-forget : ∀{Γ Δ} → (c : Cxf Δ Γ) → (S : ⟦ Δ ⟧ → Set) → Cxf (Δ ▷ S) Γ
+cxf-forget c S δ = c (pop δ)
 
-cxf-instantiate : ∀{Γ Δ S} → (f : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → S (f γ)) → Cxf Δ (Γ ▷ S)
-cxf-instantiate f s δ = f δ , s δ
+cxf-inst : ∀{Γ Δ S} → (c : Cxf Δ Γ) → (s : (γ : ⟦ Δ ⟧) → S (c γ)) → Cxf Δ (Γ ▷ S)
+cxf-inst c s δ = c δ , s δ
