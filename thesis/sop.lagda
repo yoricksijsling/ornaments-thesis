@@ -4,12 +4,12 @@
 
 Datatype-generic programming in functional languages is all about
 figuring out how to build complicated types from a small set of
-components. For finite types - those types which have a finite number
-of inhabitants, i.e. they do not allow recursion - this is quite
+components. For finite types---those types which have a finite number
+of inhabitants, i.e. they do not allow recursion---this is quite
 easy. By using just the basic components |⊤|, |_×_| and |Either| for
 unit, products and coproducts, we can already build some simple types
-like those for booleans and maybe. The type for maybe contains a
-parameter which has to be instantiated to get the actual |Set|.
+like |Bool| and |Maybe|. The |Maybe| type contains a parameter which
+has to be instantiated to get the actual |Set|.
 
 \begin{code}
   boolLike : Set
@@ -21,13 +21,13 @@ parameter which has to be instantiated to get the actual |Set|.
 
 Of course, finite types are very limited. Not just in the number of
 elements contained in these types, but in their usefulness too. To
-implement a wider range of types we need recursion. We could say that,
-for instance, |listLike A = Either ⊤ (listLike A)| but the evaluation
-of a term like that does not terminate. The common approach to work
-around this problem is by associating each datatype with a
+implement a wider range of types we need recursion. Naively, we might
+try to define lists as |listLike A = Either ⊤ (listLike A)|, but the
+evaluation of a term like that does not terminate. The common approach
+to work around this problem is by associating each datatype with a
 \emph{pattern functor} \cite{jansson97, norell03}. Instead of building
-a |Set|, we build a |Set → Set|. For example these types for naturals
-and lists:
+a |Set|, we build a |Set → Set|. For example we can build these
+pattern functors for naturals and lists:
 
 \begin{code}
   natPF : Set → Set
@@ -40,14 +40,15 @@ and lists:
 The meaning of the content of the argument |X| varies depending on the
 circumstances, but at least we can say that each occurence of |X|
 signifies that it is a recursive position. The definitions |natPF| and
-|listPF| provide the structure - or \emph{pattern} - for the types we
-want without talking about the recursive spots. By taking the fixpoint
-of the pattern functor we let the argument |X| refer to the type
-itself, effectively representing recursion. The fixpoint is
-represented as a datatype to allow us to manually unroll the type
-\footnote{The observant reader may notice that the |μ| datatype does
-  not pass the strict-positivity check. This problem is solved with a
-  new definition of |μ| in the next section.}.
+|listPF| provide the structure---or \emph{pattern}---for the types we
+want without talking about the content of the recursive spots. By
+taking the fixpoint of the pattern functor we let the argument |X|
+refer to the type itself, effectively representing recursion. The
+fixpoint is represented as the |μ′| datatype\footnote{The observant
+  reader may notice that the |μ′| datatype does not pass the
+  strict-positivity check. This problem is solved with a new
+  definition of |μ′| in the next section.} to allow us to manually
+unroll the type.
 
 \begin{code}
   data μ′ (F : Set → Set) : Set where
@@ -74,11 +75,11 @@ the concept of a universe in Martin Löf's type theory
 \cite{martinloef84} involves two things: firstly there are codes which
 describe types; secondly there is a decoding function to translate
 codes into whatever they are meant to encode. In this work, the
-descriptions are the codes of the universe. The decoding function
-gives us the pattern functor for a description, one might also say
-that the decoding function provides a \emph{semantics} for
+descriptions form the codes of the universe and the decoding function
+|⟦_⟧| gives a pattern functor for a description. In a sense, the
+decoding function provides a pattern functor semantics for
 descriptions. By taking the fixpoint of the resulting pattern functor
-we obtain a |Set| which is a usable type.
+we obtain a |Set| which can be used as a type.
 
 With descriptions and their interpretations in place, ornaments for
 these descriptions are defined in \fref{sec:sop-ornaments}. Every
@@ -99,16 +100,15 @@ descriptions in this chapter, we will be using the following
 codes:
 
 \begin{itemize}
-\item The empty type is described with |`0|
-\item The unit type is described with |ι|
 \item The |_⊕_| operator represents a choice. For our purposes this
-  always means a choice between different constructors.
-\item The |_⊗_| operator is used for products. To the right of the
-  operator goes another description, so chains of |_⊗_|'s can be
-  formed to represent a single constructor. The left side is of type
-  |Set|, so a type can be given to represent a constructor argument of
-  the given type.
-\item For recursive arguments we use a special operator |rec-⊗_|.
+  always means a choice between different constructors. A list of
+  constructors is separated by |_⊕_|'es and terminated with the empty
+  type |`0|.
+\item The |_⊗_| operator is used for products. A chain of |_⊗_|'s
+  terminated with the unit type |ι| can be formed to represent a
+  single constructor.
+\item For recursive arguments a special operator |rec-⊗_| can be used
+  in the same places where |_⊗_| is allowed.
 \end{itemize}
 
 These codes are formalised using the |ConDesc| and |DatDesc|
@@ -154,7 +154,7 @@ It's noteworthy that even though we can parameterise these
 descriptions, the descriptions themselves are not really aware of
 it. The parameterisation takes place outside of the descriptions. The
 extended descriptions in \fref{chap:extended} internalise the
-parameterisation, so the parameters are included within the
+parameterisation, such that the parameters are included within the
 descriptions.
 
 \Fref{lst:sop-semantics} shows how descriptions are decoded to pattern
@@ -189,15 +189,15 @@ data μ {#c : Nat}(F : DatDesc #c) : Set where
   ⟨_⟩ : ⟦ F ⟧ (μ F) → μ F
 \end{code}\end{codelst}
 
-The fixpoint |μ| is similar to the fixpoint in the introduction of this chapter,
-but specialised to the decoding of |DatDesc|. This specialisation is
-necessary to convince Agda that the datatype |μ| is strictly
-positive. This works as long as there are no non-strictly-positive
-occurences of |X| in |⟦_⟧datDesc| and |⟦_⟧conDesc|. Since |μ| already
-includes the call to |⟦_⟧datDesc|, we can get the |Set| corresponding
-to a description by simply prepending the description with |μ|. For
-instance, |μ natDesc| is a |Set| which corresponds to the natural
-numbers.
+The fixpoint |μ| (\fref{lst:sop-semantics}) is similar to the fixpoint
+in the introduction of this chapter, but specialised to the decoding
+of |DatDesc|. This specialisation is necessary to convince Agda that
+the datatype |μ| is strictly positive. This works as long as there are
+no non-strictly-positive occurences of |X| in |⟦_⟧datDesc| and
+|⟦_⟧conDesc|. Since |μ| already includes the call to |⟦_⟧datDesc|, we
+can get the |Set| corresponding to a description by simply prepending
+the description with |μ|. For instance, |μ natDesc| is a |Set| which
+corresponds to the natural numbers.
 
 The following code gives an example of how a |μ natDesc| can be
 constructed. In |nat-example₁|, the hole has to be of type |⟦ natDesc
@@ -214,11 +214,11 @@ nat-example₁ = ⟨ ?0 ⟩
 
 In |nat-example₂| we pick the second constructor (they start at number
 0), the description of this constructor is |rec-⊗ ι|, so we are left
-to fill in a |⟦ rec-⊗ ι ⟧ (μ natDesc)| which is equal to |μ natDesc ×
-⊤|. The definition |nat-example₃| shows how this process could be
-completed by filling in |⟨ 0 , tt ⟩| in the recursive spot, resulting
-in an expression which should be read as |suc zero|, i.e. the number
-1.
+to fill in a |⟦ rec-⊗ ι ⟧ (μ natDesc)|, a type which is equal to |μ
+natDesc × ⊤|. The definition |nat-example₃| shows how this process
+could be completed by filling in |⟨ 0 , tt ⟩| in the recursive spot,
+resulting in an expression which should be read as |suc zero|,
+i.e. the number 1.
 
 \begin{code}
 nat-example₂ : μ natDesc
@@ -327,15 +327,17 @@ fold {D = D} α ⟨ xs ⟩ = α (datDescmap (fold α) D xs)
 \end{code}\end{codelst}
 
 \begin{example}
-An example of a simple algebra is one which counts the |true| values
-in a list of booleans. To define the algebra we can pattern match on
-the argument of type |⟦ listDesc| |Nat ⟧ Nat|. Each case corresponds to
-a constructor of the list datatype. In the second case |(suc zero , x
-, xs , tt)|, the variable |x| is of type |Bool| because it is an
-element in the list. The variable |xs| is of type |Nat| because that
-is the result of the algebra. By applying |fold| to the algebra we
-obtain a function which counts the number of |true|s in a list of
-booleans.
+  An example of a simple algebra is one which counts the |true| values
+  in a list of booleans. To define the algebra we can pattern match on
+  the argument of type |⟦ listDesc| |Nat ⟧ Nat|. A case split is done
+  on the first field in the Σ-type, such that each case corresponds to
+  a constructor of the list datatype. The first case, for the empty
+  list, always returns a |0|. In the second case---|suc zero , x , xs ,
+  tt|---the variable |x| is of type |Bool| because it is an element in
+  the list. The variable |xs| is of type |Nat| because that is the
+  supposed result of the algebra. By applying |fold| to the algebra we
+  obtain a function which counts the number of |true|s in a list of
+  booleans.
 
 \begin{code}
 countTruesAlg : Alg (listDesc Bool) Nat
@@ -413,6 +415,14 @@ ornToDesc `0 = `0
 ornToDesc (x⁺ ⊕ xs⁺) = conOrnToDesc x⁺ ⊕ ornToDesc xs⁺
 \end{code}\end{codelst}
 
+The functions |conOrnToDesc| and |ornToDesc| define the semantics of
+|ConOrn| and |DatOrn| respectively. They convert an ornament into a
+description. If we talk about 'applying' an ornament, we actually mean
+the application of |conOrnToDesc| or |ornToDesc|. Furthermore, we will
+once again overload the |⟦_⟧| notation such that when it is used with
+an ornament it means |⟦ ornToDesc o ⟧datDesc| or |⟦ conOrnToDesc o
+⟧conDesc|.
+
 We can now build some simple ornaments. We have previously defined
 |natDesc| as |ι ⊕ rec-⊗ ι ⊕ `0| and |listDesc A| as |ι ⊕ A ⊗ rec-⊗ ι ⊕
 `0|. These are clearly quite similar. We can build an ornament on
@@ -434,11 +444,11 @@ test-nat→list = refl
 Each ornament induces an \emph{ornamental algebra}
 \cite{mcbride11}. The ornamental algebra turns elements of the
 ornamented type back into elements of the original type. Such that
-folding the ornamental algebra for an ornament |o : DatOrn D| results
+folding the ornamental algebra for an ornament |(o : DatOrn D)| results
 in a function from |μ (ornToDesc o)| to |μ D|. The ornamental algebra
-is built using a natural transformation from |⟦ o ⟧| to |⟦ D ⟧|, that
-is a function which goes from |⟦ o ⟧ X| to |⟦ D ⟧ X| for all values of
-|X|.
+is built using a natural transformation between the pattern functors
+|⟦ o ⟧| and |⟦ D ⟧|, that is a function which goes from |⟦ o ⟧ X| to
+|⟦ D ⟧ X| for all values of |X|.
 
 \begin{code}
 forgetNT : ∀{#c}{D : DatDesc #c} (o : DatOrn D) →
@@ -472,6 +482,7 @@ forgetNT `0 (() , _)
 forgetNT (x⁺ ⊕ xs⁺) (zero , v) = 0 , conForgetNT x⁺ v
 forgetNT (x⁺ ⊕ xs⁺) (suc k , v) = (suc *** id) (forgetNT xs⁺ (k , v))
 
+-- |Alg (ornToDesc o) (μ D)| is |⟦ ornToDesc o ⟧ (μ D) → μ D|
 forgetAlg : ∀{#c}{D : DatDesc #c} (o : DatOrn D) →
             Alg (ornToDesc o) (μ D)
 forgetAlg o = ⟨_⟩ ∘ forgetNT o
@@ -487,9 +498,10 @@ ornament. The |forget| function for this ornament should take a list
 to a natural. More precisely, applying |forget| to |nat→list| for a
 given parameter |A| results in a function which takes a |μ (listDesc
 A)| to a |μ natDesc|. Each nil is taken to a zero and cons is taken to
-a suc, the extra elements of type |A| which were introduced by the
+a suc---the extra elements of type |A| which were introduced by the
 ornament are forgotten. This happens to result in exactly the length
-of the list, so we might define a length function as |forget nat→list|:
+of the list, so we might define a length function as |forget
+nat→list|.
 
 \begin{code}
 `length : ∀{A} → μ (listDesc A) → μ natDesc
@@ -516,7 +528,7 @@ test-list→listof7s = refl
 \end{code}
 
 It seems odd that we can have ornaments which go from naturals to
-lists, and ornaments form lists to naturals as well. The point here is
+lists, and ornaments from lists to naturals as well. The point here is
 that within the context of the |list→listof7s| ornament that natural
 has a very particular meaning, namely the length of the list. This becomes
 obvious when we |forget| the ornament. By passing the number two, we get
@@ -541,7 +553,7 @@ Interestingly, the |`length| function which was obtained by the
 ornamental algebra of |nat→list| is the inverse of this |`replicate|
 function which we got with the ornamental algebra of
 |list→listof7s|. This is not a coincidence. The |nat→list| ornament
-(|ι ⊕ A +⊗ rec-⊗ ι ⊕ `0|) inserts exactly the argument which was
+(|ι ⊕ A +⊗| |rec-⊗ ι ⊕ `0|) inserts exactly the argument which was
 removed by the |list→listof7s| ornament (|ι ⊕ give-K 7 (rec-⊗ ι) ⊕
 `0|), while keeping the rest of the description the same.  If we say
 that an ornament |o₂| is an inverse of the ornament |o₁| iff |forget
@@ -557,15 +569,16 @@ simple datatypes. At the root they are ordinary sum-of-products
 descriptions which support recursion using fixpoints. Although we did
 represent types with datatype parameters, the parameter abstractions
 were always done externally and the descriptions are not aware of any
-differences between datatype parameters and other arguments. The
-Regular \cite{noort08} datatype-generic programming library for
-Haskell has a similar scope where parameters and indices are not
-supported. An Agda formalisation of the Regular library is presented
-by Magalhães and Löh \cite{magalhaes12}. The codes for the universe
-they use are shown in \fref{lst:sop-regular-codes}. There are codes
-for units, recursive positions, sums and products. The decoding
-function |⟦_⟧| and the fixpoint datatype |μ| are similar to those in
-this chapter.
+differences between datatype parameters and other arguments.
+
+The Regular \cite{noort08} library is a datatype-generic programming
+library for Haskell which has a similar scope, where parameters and
+indices are not supported. An Agda formalisation of the Regular
+library is presented by Magalhães and Löh \cite{magalhaes12}. The
+codes for the universe they use are shown in
+\fref{lst:sop-regular-codes}. There are codes for units, recursive
+positions, sums and products. The decoding function |⟦_⟧| and the
+fixpoint datatype |μ| are similar to those in this chapter.
 
 \begin{codelst}{Codes for a universe of regular types}{sop-regular-codes}\begin{code}
 data Code : Set where
@@ -577,14 +590,14 @@ data Code : Set where
 
 The types which can be represented with the descriptions in this
 chapter are limited to the \emph{regular} types, those which can be
-defined using the units, sums, products and the fixpoints |μ| of this
-chapter \cite{noort08}. Regular types (also known as context-free
-types \cite{altenkirch06}) do not allow nested datatypes \cite{bird98}
-or mutual recursion. A regular type does not necessarily correspond to
-one single datatype though. For instance, list of booleans is a
-regular type which could be encoded as a regular type as |A ⊗ (ι ⊕
-ι)|. To define that type using Agda datatypes would however require
-multiple datatypes, namely the |List| and |Bool| types.
+defined using the units, sums, products and the fixpoints |μ|
+\cite{noort08}. Regular types (also known as context-free types
+\cite{altenkirch06}) do not allow nested datatypes \cite{bird98} or
+mutual recursion. A regular type does not necessarily correspond to
+one single datatype though. For instance, |List Bool| could be encoded
+as a regular type as |A ⊗ (ι ⊕ ι)|. To define that type using Agda
+datatypes would however require multiple datatypes, namely the |List|
+and |Bool| types.
 
 With regards to the ultimate goal of using our descriptions to
 accurately represent and even define Agda datatypes, we need to impose
@@ -593,7 +606,7 @@ not need. We have to make sure that every description corresponds to
 exactly one Agda datatype. An Agda datatype is always a sum of
 products, where each term of the top-level sum corresponds to a
 constructor and the factors of those terms correspond to constructor
-arguments. The split between |ConDesc|s and |DatDesc|s enforces this
+arguments. The split between |ConDesc| and |DatDesc| enforces this
 structure.
 
 Our descriptions also differ from those in
@@ -637,7 +650,7 @@ constructor based on the |Fin 2| value. The top-level |σ| thus works
 as a sum of two constructors. The inner |σ|'s
 function like |_⊗_|; in the first constructor an |A| is asked for, in
 addition to the rest of the description for that constructor where the
-value |a : A| may be used.
+value |(a : A)| may be used.
 
 \begin{code}
 eitherDescΣ : (A B : Set) → DescΣ
@@ -663,7 +676,7 @@ why we need the |lookupCtor| function to define the decoding and
 \begin{table}[t]
 \centering
 \begin{tabular}{ l l l }
-|ConDesc|/|DatDesc| & |DescΣ| & |⟦_⟧| \\ \hline
+|D : ConDesc/DatDesc| & |DΣ : DescΣ| & |⟦ D ⟧ and ⟦ DΣ ⟧| \\ \hline
 |ι| & |ι| & |⊤| \\
 |S ⊗ xs| & |σ S λ _ → xs| & |S × ⟦ xs ⟧ X| \\
 |rec-⊗ xs| & |rec-× xs| & |X × ⟦ xs ⟧ X| \\
@@ -675,10 +688,10 @@ why we need the |lookupCtor| function to define the decoding and
 \end{table}
 
 In \fref{lst:sop-Σorn} we define ornaments for copying of |ι|, |σ| and
-|rec-×_| and for insertion and deletion of |σ|'s. This is similar to
-those defined by Dagand and McBride \cite{dagand14-transporting}. Note
-that |insert-σ| is similar to our |_+⊗_| ornament and |delete-σ| is
-similar to |give-K|.
+|rec-×_| and for insertion and deletion of |σ|'s. They are similar to
+those defined by Dagand and McBride \cite{dagand14-transporting}. The
+|insert-σ| and |delete-σ| ornaments match our |_+⊗_| and |give-K|
+ornaments.
 
 \begin{codelst}{Ornaments on Σ-descriptions}{sop-Σorn}\begin{code}
 data OrnΣ : (D : DescΣ) → Set₁ where
@@ -747,7 +760,7 @@ and consider what things would look like with Σ-descriptions.
 \subsection{Finding the right ornaments}
 
 The ornaments in this chapter where presented without much
-explanation, but there are in fact some choices to make here. To
+justification, but there are in fact some choices to make here. To
 figure out what the ornaments are for a particular set of
 descriptions, one first has to answer an essential question: When can
 a transformation from one description to another be called an
@@ -771,9 +784,8 @@ already knew that our descriptions and their corresponding
 (\fref{tab:sop-Σ-comparison}), and now it turns out that the ornaments
 on our descriptions and the corresponding ornaments on Σ-descriptions
 perform the same operation on the underlying pattern functors as
-well. Note that we overloaded the notation |⟦ o ⟧| once more, such
-that when it is applied to ornaments it can mean |⟦ ornToDesc o ⟧| or
-|⟦ ornToDescΣ o ⟧|.
+well. The overloaded notation |⟦_⟧| is used to mean |⟦ ornToDesc o ⟧|
+and |⟦ ornToDescΣ o ⟧| as well.
 
 \begin{table}
 \centering
@@ -800,13 +812,13 @@ that when it is applied to ornaments it can mean |⟦ ornToDesc o ⟧| or
 \end{table}
 
 With the exception of |rec-+⊗_|, every ornament of ours has a |OrnΣ|
-counterpart. We included |rec-+⊗_| because we can define the
-ornamental algebra for it, and there is no particular reason not to
-use it. One would then also expect an ornament which deletes recursive
-arguments. Similar to |give-K|, the ornament would require a default
-value to be able reconstruct the right value in the ornamental
+counterpart. The |rec-+⊗_| ornament is included because an ornamental
+algebra can be defined for it, and it does not cause any problems
+anywhere. One would then also expect an ornament which deletes
+recursive arguments---similar to |give-K|, the ornament would require a
+default value to be able reconstruct the right value in the ornamental
 algebra. The type of this value is however not known within the
-ornament declaration so we can not define it as far as we know.
+ornament declaration so we can not define it as far as we are aware.
 
 \begin{code}
 -- Constructor for |ConOrn|
@@ -816,13 +828,13 @@ ornament declaration so we can not define it as far as we know.
 There are still some ornaments missing which we did have for
 Σ-descriptions. Because a chain of constructors |x_0 ⊕ x_1 ⊕ ⋯ ⊕ `0|
 is similar to |σ (Fin n) λ k → x_k|, we would expect the ornaments
-|insert-σ| and |delete-σ| to have a counterpart in our ornaments. The
-main reason why we do not have those is because an equivalent ornament
-would have to insert or delete the whole constructor chain. The
-deletion of the chain would mean one ends up with a single constructor
-and the insertion would require a single constructor to start
-with. Our ornaments have to go from |DatDesc| to |DatDesc|, so these
-operations are both not valid.
+|insert-σ| and |delete-σ| for constructors to have a counterpart in
+our ornaments. The main reason why we do not have those is because an
+equivalent ornament would have to insert or delete the whole
+constructor chain. The deletion of the chain would mean one ends up
+with a single constructor and the insertion would require a single
+constructor to start with. Our ornaments have to go from |DatDesc| to
+|DatDesc|, so these operations are both not valid.
 
 Dagand and McBride \cite{dagand14-transporting} do use |insert-σ| to
 insert a constructor choice quite often though, while still keeping
@@ -846,13 +858,16 @@ swapnatΣ = insert-σ (Fin 2) λ
 An |insert-σ (Fin n)| on the top-level is fine if the first thing we
 do for each constructor is to pick one of the constructors of the
 original type using |delete-σ|. We \emph{can} implement a |recons|
-ornament on |DatDesc| which has this behavior. The first argument
-|#c⁺| is the number of constructors we want the ornamented type to
-have (while |#c| is the number of constructors of the original
-type). For each of the new constructors, i.e. for each value of |Fin
-#c⁺|, two things have to be provided: A value |k| of type |Fin #c| to
-pick a constructor of the original type and an ornament on that
-constructor. The |recons| constructor for |DatOrn| looks like this:
+ornament for |DatDesc| which emulates this behavior. It requires the
+same information as what the |insert-σ| with |delete-σ|'s
+requires. The first thing we need is |#c⁺|; the number of constructors
+we want the ornamented type to have (while |#c| is the number of
+constructors of the original type). For each of the new constructors,
+i.e. for each possible value of a |Fin #c⁺|, two things have to be
+provided: A value |k| of type |Fin #c| to pick a constructor of the
+original type and an ornament on that constructor, together these
+emulate a |delete-σ k xs⁺|. The |recons| constructor for |DatOrn|
+looks as follows:
 
 \begin{code}
   recons :
@@ -861,11 +876,10 @@ constructor. The |recons| constructor for |DatOrn| looks like this:
     DatOrn {#c} D
 \end{code}
 
-With it, we can write the |swapnat| ornament for our universe of
+With it, the |swapnat| ornament can be defined for our universe of
 descriptions. By comparing |swapnat| with |swapnatΣ| we see that, as
-expected, the
-user still has to provide all of the same information with the
-exception of the |insert-σ| and |delete-σ|'s.
+expected, the user still has to provide all of the same information
+with the exception of the |insert-σ| and |delete-σ|'s. That is,
 
 \begin{code}
 swapnat : DatOrn natDesc
@@ -882,16 +896,15 @@ descriptions in the following chapters for entirely pragmatic
 reasons. The implementation is hard to get right, even for this simple
 universe. It also complicates other parts of the code because we can
 not assume that an ornament keeps the same number of
-constructors. Just to prove our point and for completeness, the
-changes needed to support |recons| in |ornToDesc| and the ornamental
-algebra are listed in \fref{lst:sop-recons-changes}. The functions
-|tabulateCtors| and |lookup-tabulate| provide some standard |Vec|
-functionality for |DatDesc|. The type of |ornToDesc| has to support
-changes to the number of constructors, which is calculated using
-|ornToDesc-#c|. Finally the case for |recons| has to be added to |forgetNT| to
-complete the implementation of |forget|.
+constructors.
 
-\begin{codelst}{Changes required to support |recons|}{sop-recons-changes}\begin{code}
+
+For completeness, we will walk through the changes needed to support
+|recons| in the definitions of |ornToDesc| and |forget|. The functions
+|tabulateCtors| and |lookup-tabulate| are required to provide some
+standard |Vec| functionality for |DatDesc|:
+
+\begin{code}
 tabulateCtors : ∀{n} → (Fin n → ConDesc) → DatDesc n
 tabulateCtors {zero} f = `0
 tabulateCtors {suc n} f = f 0 ⊕ tabulateCtors (f ∘ suc)
@@ -900,7 +913,14 @@ lookup-tabulate : ∀{#c}(f : Fin #c → ConDesc) i →
                   lookupCtor (tabulateCtors f) i ≡ f i
 lookup-tabulate f zero = refl
 lookup-tabulate f (suc i) = lookup-tabulate (f ∘ suc) i
+\end{code}
 
+The type of |ornToDesc| is updated to allow changes to the number of
+constructors and the new number of constructors is calculated using
+|ornToDesc-#c|. The case for |recons| in |ornToDesc| turns the |xs⁺|
+function into a bunch of |ConDesc|s.
+
+\begin{code}
 ornToDesc-#c : ∀{#c}{D : DatDesc #c} → DatOrn D → Nat
 ornToDesc-#c `0 = 0
 ornToDesc-#c (_ ⊕ xs⁺) = suc (ornToDesc-#c xs⁺)
@@ -912,10 +932,17 @@ ornToDesc : ∀{#c}{D : DatDesc #c} →
 
 -- Case for |recons| in |ornToDesc|
 ornToDesc (recons _ xs⁺) = tabulateCtors (conOrnToDesc ∘ snd ∘ xs⁺)
+\end{code}
 
+Finally, the case for |recons| is added to |forgetNT| to complete the
+implementation of |forget|. The type of |v| contains |tabulateCtors|
+within a |lookupCtor|. The prelude function |transport| (called
+|subst| in the standard library) is used to coerce the type of |v|
+into a type which fits.
+
+\begin{code}
 -- Case for |recons| in |forgetNT|
 forgetNT (recons _ f) {X} (c , v) =
   let v′ = transport (λ a → ⟦_⟧ a X) (lookup-tabulate _ c) v in
   fst (f c) , conForgetNT (snd (f c)) v′
-
-\end{code}\end{codelst}
+\end{code}

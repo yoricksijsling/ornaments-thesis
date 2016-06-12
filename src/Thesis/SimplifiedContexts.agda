@@ -13,6 +13,12 @@ record _▶_ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
     top : B pop
 open _▶_
 
+infixr 1 _<,>_
+_<,>_ : ∀ {a b c} → {Γ : Set c}{A : Set a}{B : A → Set b} →
+        (f : (γ : Γ) → A) → (g : (γ : Γ) → B (f γ)) → (γ : Γ) → A ▶ B
+-- f <,> g = λ γ → f γ , g γ
+f <,> g = _▶_._,_ <KS> f <S> g
+
 infixl 0 _▷_
 mutual
   data Cx : Set₁ where

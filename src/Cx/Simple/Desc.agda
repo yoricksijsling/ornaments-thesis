@@ -3,12 +3,12 @@ module Cx.Simple.Desc where
 open import Common
 open import Cx.Cx public
 
-infixr 3 _⊕_
-infixr 4 _⊗_ rec-⊗_
-data ConDesc : Cx₁ → Set₁ where
-  ι : ∀{Γ} → ConDesc Γ
-  _⊗_ : ∀{Γ}(S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc (Γ ▷ S)) → ConDesc Γ
-  rec-⊗_ : ∀{Γ}(xs : ConDesc Γ) → ConDesc Γ
+infixr 2 _⊕_
+infixr 3 _⊗_ rec-⊗_
+data ConDesc (Γ : Cx₁) : Set₁ where
+  ι : ConDesc Γ
+  _⊗_ : (S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc (Γ ▷ S)) → ConDesc Γ
+  rec-⊗_ : (xs : ConDesc Γ) → ConDesc Γ
 data DatDesc : Nat → Set₁ where
   `0 : DatDesc 0
   _⊕_ : ∀{#c}(x : ConDesc ε)(xs : DatDesc #c) → DatDesc (suc #c)

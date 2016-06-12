@@ -4,8 +4,8 @@ module Cx.Simple.Ornament where
 open import Common
 open import Cx.Simple.Desc
 
-infixr 3 _⊕_
-infixr 4 -⊗_ rec-⊗_ _+⊗_ rec-+⊗_
+infixr 2 _⊕_
+infixr 3 -⊗_ rec-⊗_ _+⊗_ rec-+⊗_
 
 data ConOrn {Γ Δ} (c : Cxf Δ Γ) : (D : ConDesc Γ) → Set₂ where
   ι : ConOrn c ι

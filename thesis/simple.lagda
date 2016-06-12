@@ -7,8 +7,8 @@ support dependent types. In the |_⊗_| constructor we used a |Set| to
 indicate which type that argument has. To encode dependent types, we
 want to allow this type to be determined by using a local
 environment. Arguments are thus encoded as a function from the
-environment |γ| to a |Set|. The descriptions of lists, which does not
-really make use of the environment, now looks like this:
+environment |γ| to a |Set|. Using the definitions in the upcoming
+sections, the description of lists will look like this:
 
 \begin{code}
 listDesc : (A : Set) → DatDesc 2
@@ -30,31 +30,64 @@ lt7Desc : DatDesc 1
 lt7Desc = (λ γ → Nat) ⊗ (λ γ → IsLessThan7 (top γ)) ⊗ ι ⊕ `0
 \end{code}
 
-All the lambda-abstractions and parentheses make the syntax harder to
-read, so we will often write functions in point-free style if we
-can. We would usually write |lt7Desc| as follows:
+All the lambda-abstractions and parentheses make the syntax quite hard
+to read. McBride \cite{mcbride10} presents a solution; SKI combinators
+can do the hard work of plumbing the environment through the
+terms. Applicative functors are a generalisation of SKI
+combinators \cite{mcbride08} and they may be more familiar to
+functional programmers who are not into combinator calculus, so we
+will be writing our terms in an applicative functor style using
+|_<S>_| for the S combinator, |const| for the K combinator and
+|_<KS>_| as a combination of |const| and |_<S>_|. With these
+combinators, as defined in \fref{lst:simple-combinators}, the
+following expressions are all equal:
+
+\begin{codelst}{Combinators for terms with environments}{simple-combinators}\begin{code}
+-- The S combinator
+_<S>_ : ∀ {a b c} {Γ : Set a} {S : Γ → Set b} {T : (γ : Γ) → S γ → Set c} →
+  (f : (γ : Γ) (s : S γ) → T γ s) → (s : (γ : Γ) → S γ) → (γ : Γ) → T γ (s γ)
+f <S> s = λ γ → f γ (s γ)
+
+_<KS>_ : ∀ {a b c} {Γ : Set a} {S : Set b} {T : S → Set c} →
+  (f : (s : S) → T s) → (s : (γ : Γ) → S) → (γ : Γ) → T (s γ)
+f <KS> s = const f <S> s
+\end{code}\end{codelst}
+
+\begin{code}
+  fxy₁ fxy₂ fxy₃ : (γ : ⟦ Γ ⟧) → String
+  fxy₁ = λ γ → f (x γ) (y γ)
+  fxy₂ = const f <S> x <S> y
+  fxy₃ = f <KS> x <S> y
+\end{code}
+
+The definition of |lt7Desc| can be modified to use these combinators.
+The first argument did not use the environment, so we can use
+|const| to always return |Nat|. In the second argument, the
+pure function |IsLessThan7| is applied to a |top| which does use the
+environment.
 
 \begin{code}
 lt7Desc′ : DatDesc 1
-lt7Desc′ = const Nat ⊗ IsLessThan7 ∘ top ⊗ ι ⊕ `0
+lt7Desc′ = const Nat ⊗ IsLessThan7 <KS> top ⊗ ι ⊕ `0
 \end{code}
 
 Of course, an environment can contain more than one value. The
 environment is basically a stack of values, where |pop| and |top| can
 be used to pick one. The behavior is like DeBruijn indices
-\cite{debruijn72}: |top γ| means variable 0, |top (pop γ)| means
-variable 1, |top (pop (pop γ))| means variable 2 and so forth. In the
-following example we assume that a predicate |IsShorter| of type |List A →
-Nat → Set| exists which says that some list is shorter than some length. The
+\cite{debruijn72}: |top| means variable 0, |top ∘ pop| means variable
+1, |top ∘ pop ∘ pop| means variable 2 and so forth. In the following
+example we assume that a predicate |IsShorter| of type |List A → Nat →
+Set| exists which says that some list is shorter than some length. The
 description |shorterDesc| describes a type with one constructor which
-contains a |Nat| and a |List A| such that they satisfy the predicate.
+contains a |Nat| and a |List A| such that they satisfy the
+predicate.
 
 \begin{code}
 IsShorter : {A : Set} → List A → Nat → Set
 
 shorterDesc : ∀{A} → DatDesc 1
 shorterDesc {A} = const (List A) ⊗ const Nat ⊗
-  (λ γ → IsShorter (top (pop γ)) (top γ)) ⊗ ι ⊕ `0
+  IsShorter <KS> top ∘ pop <S> top ⊗ ι ⊕ `0
 \end{code}
 
 When descriptions support dependent types, ornaments must do so as
@@ -69,10 +102,10 @@ DeBruijn index.
 
 \begin{code}
 lt7-insertFin : DatOrn lt7Desc
-lt7-insertFin = -⊗ Fin ∘ top +⊗ -⊗ ι ⊕ `0
+lt7-insertFin = -⊗ Fin <KS> top +⊗ -⊗ ι ⊕ `0
 
 test-lt7-insertFin : ornToDesc lt7-insertFin ≡
-  (const Nat ⊗ Fin ∘ top ⊗ IsLessThan7 ∘ top ∘ pop ⊗ ι ⊕ `0)
+  (const Nat ⊗ Fin <KS> top ⊗ IsLessThan7 <KS> top ∘ pop ⊗ ι ⊕ `0)
 test-lt7-insertFin = refl
 \end{code}
 
@@ -107,8 +140,8 @@ record _▶_ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
 
 \begin{code}
 ShorterEnv : {A : Set} → Set
-ShorterEnv {A} = ⊤ ▶₀ (λ γ → List A) ▶₀ (λ γ → Nat) ▶₀
-  (λ γ → IsShorter (top (pop γ)) (top γ))
+ShorterEnv {A} = ⊤′ ▶₀ const (List A) ▶₀ const Nat ▶₀
+  IsShorter <KS> top ∘ pop <S> top
 \end{code}
 
 The basic types |_▶_| and |⊤| can contain an environment, but it is
@@ -137,7 +170,7 @@ _▷′_ : (Γ : Cx) → Set → Cx
 
 \begin{code}
 ShorterCx : {A : Set} → Cx₀
-ShorterCx {A} = ε ▷′ List A ▷′ Nat ▷ (λ γ → IsShorter (top (pop γ)) (top γ))
+ShorterCx {A} = ε ▷′ List A ▷′ Nat ▷ IsShorter <KS> top ∘ pop <S> top
 
 test-ShorterCx : ∀{A} → ⟦ ShorterCx {A} ⟧ ≡ ShorterEnv {A}
 test-ShorterCx = refl
@@ -173,10 +206,10 @@ on the current context |Γ|. The context |Γ| is extended with |S|, and
 this forms the context for the |ConDesc| in the tail |xs|.
 
 \begin{codelst}{Descriptions with contexts}{simple-desc}\begin{code}
-data ConDesc : Cx₁ → Set₁ where
-  ι : ∀{Γ} → ConDesc Γ
-  _⊗_ : ∀{Γ}(S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc (Γ ▷ S)) → ConDesc Γ
-  rec-⊗_ : ∀{Γ}(xs : ConDesc Γ) → ConDesc Γ
+data ConDesc (Γ : Cx₁) : Set₁ where
+  ι : ConDesc Γ
+  _⊗_ : (S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc (Γ ▷ S)) → ConDesc Γ
+  rec-⊗_ : (xs : ConDesc Γ) → ConDesc Γ
 
 data DatDesc : Nat → Set₁ where
   `0 : DatDesc 0
@@ -248,10 +281,10 @@ Finally, we give |B ∘ top| as the implementation of the hole,
 resulting in a description of dependent pairs.
 
 \begin{code}
-pairDesc A B = const A ⊗ B ∘ top ⊗ ι ⊕ `0
+pairDesc A B = const A ⊗ B <KS> top ⊗ ι ⊕ `0
 \end{code}
 
-According to \fref{sec:sop-description}, an isomorphism between |Σ A
+According to \fref{sec:sop-descriptions}, an isomorphism between |Σ A
 B| and |μ (pairDesc A B)| should be given to be certain that this is
 the right description. Doing that is honestly quite boring, so we will
 just show that the definition is not \emph{entirely} wrong by giving
@@ -307,7 +340,7 @@ datatypes with contexts like these. The treatment of them is however
 very similar to how indices are treated usually in ornament
 \cite{dagand14-transporting}\todo{cite some more}. Specifically in how
 a function from the ornamented thing to the original thing is used as
-an index on the ornament. In fact, the next chapter will show how
+a parameter for the ornament. In fact, the next chapter will show how
 indices and contexts can be implemented in exactly the same way.
 
 The new definition of ornaments is given in full in

@@ -21,17 +21,22 @@
 %format tactic = "\K{tactic}"
 
 % Holes
+%format ? = "\Hole{?}"
 %format ?0 = "\Hole{?0}"
 %format ?1 = "\Hole{?1}"
 %format ?2 = "\Hole{?2}"
 %format ?3 = "\Hole{?3}"
 
+%format _0 = "_{" 0 "}"
+%format _1 = "_{" 1 "}"
+%format _2 = "_{" 2 "}"
+%format _3 = "_{" 3 "}"
 %format pargs = "\overline{\V{p}}"
 %format A_n = "\D{Aₙ}"
 %format x_n = "\V{xₙ}"
-%format y_n = "\V{yₙ}"
-%format x_0 = x "_{" 0 "}"
-%format x_1 = x "_{" 1 "}"
+%format y_n = "\V{yₙ}"\V{+ }
+%format x_0 = x _0
+%format x_1 = x _1
 %format x_n-1 = x "_{" n-1 "}"
 %format x_k = x "_{" k "}"
 %format x_0⁺ = x_0 ⁺
@@ -43,16 +48,29 @@
 %format Expr^evalAlg = "\D{Expr}^{\D{evalAlg}}"
 %format ++ = "\V{++}"
 %format +N = +
+%format >>⁺ = ≫⁺
+%format _>>⁺_ = _ >>⁺ _
+%format nat-example₁ = nat-example _1
+%format nat-example₂ = nat-example _2
+%format nat-example₃ = nat-example _3
+%format pairDesc₁ = pairDesc _1
+%format pairDesc₂ = pairDesc _2
+%format pairDesc₃ = pairDesc _3
 
 % Descriptions and ornaments
-%format _⊕_ = "\V{\_\large⊕\normalsize\_}"
-%format ⊕ = "\V{\large⊕\normalsize}"
-%format rec-⊗_ = "\V{rec}\Vlight{-}\V{⊗\_}"
-%format rec-⊗ = "\V{rec}\Vlight{-}\V{⊗}"
-%format -⊗_ = "\V{\textendash ⊗\_}"
-%format -⊗ = "\V{\textendash ⊗}"
-%format rec-+⊗_ = "\V{rec}\Vlight{-}\V{+⊗\_}"
-%format rec-+⊗ = "\V{rec}\Vlight{-}\V{+⊗}"
+%format ⊕ = "\V{\Large\raisebox{-.15ex}{⊕}}"
+%format _⊕_ = _ "\V{\large\raisebox{-.1ex}{⊕}}" _
+%format ⊗ = "\V{\large\raisebox{-.1ex}{⊗}}"
+%format _⊗_ = _ ⊗ _
+%format +⊗ = + "\kern-.1em" ⊗
+%format _+⊗_ = _ +⊗ _
+%format rec-⊗ = "\V{rec}\Vlight{-}" ⊗
+%format rec-⊗_ = rec-⊗ _
+% %format -⊗ = "\V{\textendash }" ⊗
+%format -⊗ = "\Vlight{\textendash}\kern.2em" ⊗
+%format -⊗_ = -⊗ _
+%format rec-+⊗ = "\V{rec}\Vlight{-}" +⊗
+%format rec-+⊗_ = rec-+⊗ _
 
 % Semantics
 %format ⟧conDesc = ⟧ "_{\Vlight{conDesc}}"
@@ -77,10 +95,17 @@
 %format boolsDescΣ-example = boolsDesc _Σ -example
 %format shorterDescΣ = shorterDesc _Σ
 
-% Simplified contexts
+% Contexts
 %format Cx₁ = Cx
 %format Cx₀ = Cx
 %format ▷₁ = ▷
 %format ▷₁′ = ▷′
 %format ▶₀ = ▶
 %format ▶₁ = ▶
+%format _,ᵖ_ = _,_
+%format <KS> = "\V{\footnotesize$<$\kern-.1em$\$$\kern-.1em$>$}"
+%format _<KS>_ = _ <KS> _
+%format <S> = "\V{\footnotesize$<$\kern-.13em$*$\kern-.13em$>$}"
+%format _<S>_ = _ <S> _
+%format <,> = "\V{\footnotesize$<$\kern-.1em$\normalsize\raisebox{.1ex}{,}\footnotesize$\kern-.1em$>$}"
+%format _<,>_ = _ <,> _

@@ -4,8 +4,8 @@ module Cx.Named.Ornament where
 open import Common
 open import Cx.Named.Desc public
 
-infixr 3 _⊕_
-infixr 4 _/-⊗_ _/rec_⊗_ _/_+⊗_ _/rec_+⊗_
+infixr 2 _⊕_
+infixr 3 _/-⊗_ _/rec_⊗_ _/_+⊗_ _/rec_+⊗_
 -- The `u` function tells us how the ornament changes the indices of the current Desc.
 -- The `c` function specifies how the context outside the current Desc has changed.
 data Orn {I J}(u : Cxf J I){Γ Δ}(c : Cxf Δ Γ) : ∀{dt}(D : Desc I Γ dt) → Set₁ where

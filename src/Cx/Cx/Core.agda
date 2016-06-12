@@ -36,6 +36,15 @@ instance
 {-# DISPLAY pop₀ = pop #-}
 {-# DISPLAY top₀ = top #-}
 
+infixr 1 _<,>_
+_<,>_ : ∀ {a b c} → {Γ : Set c}{A : Set a}{B : A → Set b} →
+        (f : (γ : Γ) → A) → (g : (γ : Γ) → B (f γ)) →
+        ∀ {_▶_} {{r : Popable _▶_}} →
+        (γ : Γ) → A ▶ B
+f <,> g = _,ᵖ_ <KS> f <S> g
+
+----------------------------------------
+
 infixl 0 _▷_ _▷₁_
 mutual
   -- Terrible hack, still only works with two levels. The only levels

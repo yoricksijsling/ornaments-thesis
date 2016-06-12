@@ -77,10 +77,10 @@
   \renewcommand{\Hole}[1]{\textsf{##1}}%
 }
 \newcommand{\EnableColors}{%
-  \renewcommand{\D}[1]{\textcolor[rgb]{\ifmono{0,0,0}{0,0,0.6}}{\textsf{##1}}}% Types
-  \renewcommand{\V}[1]{\textcolor[gray]{0.15}{\textsf{##1}}}% Variables
+  \renewcommand{\D}[1]{\textcolor[rgb]{\ifmono{0.15,0.15,0.15}{0,0,0.6}}{\textsf{##1}}}% Types
+  \renewcommand{\V}[1]{\textcolor[rgb]{\ifmono{0.15,0.15,0.15}{0,0,0.6}}{\textsf{##1}}}% Variables
   \renewcommand{\Vlight}[1]{\textcolor[gray]{0.5}{\textsf{##1}}}%
-  \renewcommand{\K}[1]{\ifmono{\textcolor[gray]{0}{\textbf{\textsf{##1}}}}%
+  \renewcommand{\K}[1]{\ifmono{\textcolor[gray]{0.2}{\textbf{\textsf{##1}}}}%
     {\textcolor[rgb]{0.8,0.4,0}{\textsf{##1}}}}% Keywords
   \renewcommand{\agdacomment}[1]{%
     \mbox{\DisableColors\textcolor[rgb]{\ifmono{0,0,0}{0.6,0.15,0.15}}{-{}-##1}%
@@ -134,6 +134,8 @@
 
 %--------------------------------------------------
 % Fonts and text
+
+\defaultfontfeatures{Mapping=tex-text}
 
 \setmainfont[ItalicFont = xits-italic.otf
 , BoldFont = xits-bold.otf

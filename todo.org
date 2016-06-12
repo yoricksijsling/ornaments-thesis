@@ -6,11 +6,6 @@
 ** Dingen overnemen van proposal..
 *** Met name to/from verhaal, in named.deriving hasdesc
 ** Reornaments naar Named?
-** Waarom komen recursieve argumenten niet in de context?
-   Iets met strict-positivity..
-   De context wil een Set hebben, maar voor een recursief argument
-   is die er niet tijdens het definieren van ConDesc. Zou het helpen
-   om Cx uit te breiden tot functor?
 ** Reconstructor example
    Mergen en splitten van constructors. Example: Toevoegen van types aan een lambda calculus. (`lit : Exp) wordt dan bijvoorbeeld (`bool : Exp Bool) en (`nat : Exp Nat).
 ** Het gebruik van Contexts voor indices discussieren.

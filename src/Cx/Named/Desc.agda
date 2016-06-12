@@ -5,12 +5,12 @@ open import Common
 open import Cx.Cx public
 open import Reflection
 
-infixr 3 _⊕_
-infixr 4 _/_⊗_ _/rec_⊗_
-data ConDesc (I : Cx₀) : (Γ : Cx₁) → Set₁ where
-  ι : ∀{Γ} → (o : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → ConDesc I Γ
-  _/_⊗_ : ∀{Γ} → (nm : String) → (S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc I (Γ ▷ S)) → ConDesc I Γ
-  _/rec_⊗_ : ∀{Γ} → (nm : String) → (i : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → (xs : ConDesc I Γ) → ConDesc I Γ
+infixr 2 _⊕_
+infixr 3 _/_⊗_ _/rec_⊗_
+data ConDesc (I : Cx₀)(Γ : Cx₁) : Set₁ where
+  ι : (o : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → ConDesc I Γ
+  _/_⊗_ : (nm : String) → (S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc I (Γ ▷ S)) → ConDesc I Γ
+  _/rec_⊗_ : (nm : String) → (i : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → (xs : ConDesc I Γ) → ConDesc I Γ
 data DatDesc (I : Cx)(Γ : Cx) : (#c : Nat) → Set₁ where
   `0 : DatDesc I Γ 0
   _⊕_ : ∀{#c} → (x : ConDesc I Γ) → (xs : DatDesc I Γ #c) → DatDesc I Γ (suc #c)

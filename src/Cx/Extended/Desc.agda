@@ -4,12 +4,12 @@ module Cx.Extended.Desc where
 open import Common
 open import Cx.Cx public
 
-infixr 3 _⊕_
-infixr 4 _⊗_ rec_⊗_
-data ConDesc (I : Cx₀) : (Γ : Cx₁) → Set₁ where
-  ι : ∀{Γ} → (o : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → ConDesc I Γ
-  _⊗_ : ∀{Γ} → (S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc I (Γ ▷ S)) → ConDesc I Γ
-  rec_⊗_ : ∀{Γ} → (i : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → (xs : ConDesc I Γ) → ConDesc I Γ
+infixr 2 _⊕_
+infixr 3 _⊗_ rec_⊗_
+data ConDesc (I : Cx₀)(Γ : Cx₁) : Set₁ where
+  ι : (o : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → ConDesc I Γ
+  _⊗_ : (S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc I (Γ ▷ S)) → ConDesc I Γ
+  rec_⊗_ : (i : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → (xs : ConDesc I Γ) → ConDesc I Γ
 data DatDesc (I : Cx)(Γ : Cx) : (#c : Nat) → Set₁ where
   `0 : DatDesc I Γ 0
   _⊕_ : ∀{#c}(x : ConDesc I Γ)(xs : DatDesc I Γ #c) → DatDesc I Γ (suc #c)
@@ -52,8 +52,9 @@ data μ {I Γ #c} (F : DatDesc I Γ #c) (γ : ⟦ Γ ⟧) (o : ⟦ I ⟧) : Set 
 ----------------------------------------
 -- Map
 
-descmap : ∀{I Γ dt X Y} (f : ∀{i : ⟦ I ⟧} → X i → Y i) (D : Desc I Γ dt) →
-          ∀{γ i} → ⟦ D ⟧ γ X i → ⟦ D ⟧ γ Y i
+descmap : ∀{I Γ dt X Y} (f : ∀{i : ⟦ I ⟧} → X i → Y i)
+  (D : Desc I Γ dt) →
+  ∀{γ i} → ⟦ D ⟧ γ X i → ⟦ D ⟧ γ Y i
 descmap {dt = isCon} f (ι o) refl = refl
 descmap {dt = isCon} f (S ⊗ xs) (s , v) = s , descmap f xs v
 descmap {dt = isCon} f (rec i ⊗ xs) (s , v) = f s , descmap f xs v

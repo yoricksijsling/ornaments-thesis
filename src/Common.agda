@@ -11,11 +11,29 @@ Extensionality a b =
   {A : Set a} {B : A → Set b} {f g : (x : A) → B x} →
   (∀ x → f x ≡ g x) → f ≡ g
 
-map× : ∀ {a₁ a₂ b₁ b₂} {A₁ : Set a₁} {A₂ : Set a₂} {B₁ : A₁ → Set b₁} {B₂ : A₂ → Set b₂}
+--------------------
+-- Some combinators
+
+-- S combinator, is also <*> of applicative functor
+infixl 4 _<S>_
+_<S>_ : ∀ {a b c} {Γ : Set a} {S : Γ → Set b} {T : (γ : Γ) → S γ → Set c} →
+  (f : (γ : Γ) (s : S γ) → T γ s) → (s : (γ : Γ) → S γ) →
+  (γ : Γ) → T γ (s γ)
+f <S> s = λ γ → f γ (s γ)
+
+-- S combined with K gives <$>, which is actually just function composition
+infixl 4 _<KS>_
+_<KS>_ : ∀ {a b c} {Γ : Set a} {S : Set b} {T : S → Set c} →
+  (f : (s : S) → T s) → (s : (γ : Γ) → S) →
+  (γ : Γ) → T (s γ)
+f <KS> s = const f <S> s
+
+--------------------
+-- Overwriting the implementations of some functions on products
+
+map× _***_ : ∀ {a₁ a₂ b₁ b₂} {A₁ : Set a₁} {A₂ : Set a₂} {B₁ : A₁ → Set b₁} {B₂ : A₂ → Set b₂}
        (f : A₁ → A₂) → (∀ {x} → B₁ x → B₂ (f x)) → Σ A₁ B₁ → Σ A₂ B₂
 map× f g p = f (fst p) , g (snd p)
-_***_ : ∀ {a₁ a₂ b₁ b₂} {A₁ : Set a₁} {A₂ : Set a₂} {B₁ : A₁ → Set b₁} {B₂ : A₂ → Set b₂}
-       (f : A₁ → A₂) → (∀ {x} → B₁ x → B₂ (f x)) → Σ A₁ B₁ → Σ A₂ B₂
 _***_ f g p = f (fst p) , g (snd p)
 
 uncurry : ∀ {a b c} {A : Set a} {B : A → Set b} {C : ∀ x → B x → Set c} →
@@ -68,6 +86,10 @@ open Semantics {{...}} public
 
 Pow : ∀{a} → Set a → Set _
 Pow {a} I = I → Set
+
+
+------------------------------
+-- Inverses
 
 -- (f ⁻¹ y) contains an x such that (f x ≡ y)
 data _⁻¹_ {a b}{A : Set a}{B : Set b}(f : A → B) : B → Set (a ⊔ b) where

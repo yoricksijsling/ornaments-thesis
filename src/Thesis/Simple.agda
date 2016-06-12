@@ -1,4 +1,3 @@
--- {-# OPTIONS --no-positivity-check #-}
 
 module Thesis.Simple where
 
@@ -17,7 +16,19 @@ IsLessThan7 n = n < 7
 lt7Desc : DatDesc 1
 lt7Desc = (λ γ → Nat) ⊗ (λ γ → IsLessThan7 (top γ)) ⊗ ι ⊕ `0
 lt7Desc′ : DatDesc 1
-lt7Desc′ = const Nat ⊗ IsLessThan7 ∘ top ⊗ ι ⊕ `0
+lt7Desc′ = const Nat ⊗ IsLessThan7 <KS> top ⊗ ι ⊕ `0
+
+module ContextCombinators where
+  postulate
+    Γ : Cx₀
+    f : Nat → Bool → String
+    x : ⟦ Γ ⟧ → Nat
+    y : ⟦ Γ ⟧ → Bool
+
+  fxy₁ fxy₂ fxy₃ : ⟦ Γ ⟧ → String
+  fxy₁ = λ γ → f (x γ) (y γ)
+  fxy₂ = const f <S> x <S> y
+  fxy₃ = f <KS> x <S> y
 
 IsShorter : {A : Set} → List A → Nat → Set
 IsShorter _ zero = ⊥
@@ -26,13 +37,13 @@ IsShorter (_ ∷ xs) (suc n) = IsShorter xs n
 
 shorterDesc : ∀{A} → DatDesc 1
 shorterDesc {A} = const (List A) ⊗ const Nat ⊗
-  (λ γ → IsShorter (top (pop γ)) (top γ)) ⊗ ι ⊕ `0
+  IsShorter <KS> top ∘ pop <S> top ⊗ ι ⊕ `0
 
 lt7-insertFin : DatOrn lt7Desc
-lt7-insertFin = -⊗ Fin ∘ top +⊗ -⊗ ι ⊕ `0
+lt7-insertFin = -⊗ Fin <KS> top +⊗ -⊗ ι ⊕ `0
 
 test-lt7-insertFin : ornToDesc lt7-insertFin ≡
-  (const Nat ⊗ Fin ∘ top ⊗ IsLessThan7 ∘ top ∘ pop ⊗ ι ⊕ `0)
+  (const Nat ⊗ Fin <KS> top ⊗ IsLessThan7 <KS> top ∘ pop ⊗ ι ⊕ `0)
 test-lt7-insertFin = refl
 
 -- nbsDesc : DatDesc 1
@@ -47,14 +58,14 @@ test-lt7-insertFin = refl
 -- See simplifiedcontexts
 
 ShorterEnv : {A : Set} → Set
-ShorterEnv {A} = ⊤′ ▶₀ (λ γ → List A) ▶₀ (λ γ → Nat) ▶₀
-  (λ γ → IsShorter (top (pop γ)) (top γ))
+ShorterEnv {A} = ⊤′ ▶₀ const (List A) ▶₀ const Nat ▶₀
+  IsShorter <KS> top ∘ pop <S> top
 
 shorterEnv : ShorterEnv {Nat}
 shorterEnv = ((tt , (3 ∷ 4 ∷ [])) , 10) , _
 
 ShorterCx : {A : Set} → Cx₀
-ShorterCx {A} = ε ▷′ List A ▷′ Nat ▷ (λ γ → IsShorter (top (pop γ)) (top γ))
+ShorterCx {A} = ε ▷′ List A ▷′ Nat ▷ IsShorter <KS> top ∘ pop <S> top
 
 test-ShorterCx : ∀{A} → ⟦ ShorterCx {A} ⟧ ≡ ShorterEnv {A}
 test-ShorterCx = refl
@@ -78,7 +89,7 @@ pairDesc₃ A B = const A ⊗ {!2!} ⊗ ι ⊕ `0
 -- |?2 : ⟦ ε ▷′ A ⟧ → Set|
 -- |?2 : ⊤′ ▶₀ const A → Set|
 -}
-pairDesc A B = const A ⊗ B ∘ top ⊗ ι ⊕ `0
+pairDesc A B = const A ⊗ B <KS> top ⊗ ι ⊕ `0
 
 pair-to : {A : Set}{B : A → Set} → Σ A B → μ (pairDesc A B)
 pair-to (x , y) = ⟨ 0 , x , y , tt ⟩
