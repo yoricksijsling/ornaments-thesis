@@ -26,6 +26,7 @@
 %format ?1 = "\Hole{?1}"
 %format ?2 = "\Hole{?2}"
 %format ?3 = "\Hole{?3}"
+%format ... = "\Hole{⋯}"
 
 %format _0 = "_{" 0 "}"
 %format _1 = "_{" 1 "}"
@@ -50,6 +51,7 @@
 %format +N = +
 %format >>⁺ = ≫⁺
 %format _>>⁺_ = _ >>⁺ _
+%format >>⁺-coherence = >>⁺ -coherence
 %format nat-example₁ = nat-example _1
 %format nat-example₂ = nat-example _2
 %format nat-example₃ = nat-example _3
@@ -64,13 +66,15 @@
 %format _⊗_ = _ ⊗ _
 %format +⊗ = + "\kern-.1em" ⊗
 %format _+⊗_ = _ +⊗ _
-%format rec-⊗ = "\V{rec}\Vlight{-}" ⊗
+%format rec-⊗ = rec "\Vlight{-}" ⊗
 %format rec-⊗_ = rec-⊗ _
+%format rec_⊗_ = rec_ ⊗ _
 % %format -⊗ = "\V{\textendash }" ⊗
 %format -⊗ = "\Vlight{\textendash}\kern.2em" ⊗
 %format -⊗_ = -⊗ _
-%format rec-+⊗ = "\V{rec}\Vlight{-}" +⊗
+%format rec-+⊗ = rec "\Vlight{-}" +⊗
 %format rec-+⊗_ = rec-+⊗ _
+%format rec_+⊗_ = rec_ +⊗ _
 
 % Semantics
 %format ⟧conDesc = ⟧ "_{\Vlight{conDesc}}"
@@ -107,5 +111,5 @@
 %format _<KS>_ = _ <KS> _
 %format <S> = "\V{\footnotesize$<$\kern-.13em$*$\kern-.13em$>$}"
 %format _<S>_ = _ <S> _
-%format <,> = "\V{\footnotesize$<$\kern-.1em$\normalsize\raisebox{.1ex}{,}\footnotesize$\kern-.1em$>$}"
+%format <,> = "\V{\footnotesize$<$\kern-.1em\normalsize$\raisebox{.1ex}{,}$\footnotesize\kern-.1em$>$}"
 %format _<,>_ = _ <,> _

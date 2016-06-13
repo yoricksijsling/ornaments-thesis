@@ -8,7 +8,7 @@ open import Cx.Named.Ornament public
 ----------------------------------------
 -- Algebraic ornament
 
-module _ {I : Cx}{J : Pow ⟦ I ⟧} where
+module _ {I : Cx}{J : ⟦ I ⟧ → Set} where
   -- Interestingly, algebraic ornaments only work when the Algebra is
   -- polymorphic in the datatype parameters. That is because during the
   -- definition of datatypes we do not know the values of the parameters, and

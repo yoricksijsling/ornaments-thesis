@@ -270,7 +270,6 @@ module ListIso (A : Set) where
     to-from : ∀ x → from (to x) ≡ x
     from-to : ∀ x → to (from x) ≡ x
 
-
 -- Maps/folds
 
 sumAlg : Alg (listDesc Nat) Nat

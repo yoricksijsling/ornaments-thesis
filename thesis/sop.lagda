@@ -208,8 +208,8 @@ constructors.
 \begin{code}
 nat-example₁ : μ natDesc
 nat-example₁ = ⟨ ?0 ⟩
--- ?0: |⟦ natDesc ⟧ (μ natDesc)|
--- ?0: |Σ (Fin 2) (λ k → ⟦ lookupCtor natDesc k ⟧ (μ natDesc))|
+-- |?0 : ⟦ natDesc ⟧ (μ natDesc)|
+-- |?0 : Σ (Fin 2) (λ k → ⟦ lookupCtor natDesc k ⟧ (μ natDesc))|
 \end{code}
 
 In |nat-example₂| we pick the second constructor (they start at number
@@ -223,9 +223,9 @@ i.e. the number 1.
 \begin{code}
 nat-example₂ : μ natDesc
 nat-example₂ = ⟨ 1 , ?1 ⟩
--- ?1: |⟦ lookupCtor natDesc 1 ⟧ (μ natDesc)|
--- ?1: |⟦ rec-⊗ ι ⟧ (μ natDesc)|
--- ?1: |μ natDesc × ⊤|
+-- |?1 : ⟦ lookupCtor natDesc 1 ⟧ (μ natDesc)|
+-- |?1 : ⟦ rec-⊗ ι ⟧ (μ natDesc)|
+-- |?1 : μ natDesc × ⊤|
 
 nat-example₃ : μ natDesc
 nat-example₃ = ⟨ 1 , ⟨ 0 , tt ⟩ , tt ⟩
@@ -281,9 +281,9 @@ are inverses of each other.
 \end{code}
 
 More often than not, we will skip the proofs and just give the
-embedding-projection pair or the constructor-functions. This rules out
-many mistakes and suffices to convince ourselves that a description is
-\emph{probably} right.
+embedding-projection pair or the constructor-functions. This already
+rules out many mistakes and suffices to convince ourselves that a
+description is \emph{probably} right.
 
 \section{Maps and folds}\label{sec:sop-map}
 

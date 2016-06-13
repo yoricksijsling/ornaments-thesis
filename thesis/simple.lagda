@@ -7,8 +7,9 @@ support dependent types. In the |_⊗_| constructor we used a |Set| to
 indicate which type that argument has. To encode dependent types, we
 want to allow this type to be determined by using a local
 environment. Arguments are thus encoded as a function from the
-environment |γ| to a |Set|. Using the definitions in the upcoming
-sections, the description of lists will look like this:
+environment |γ| to a |Set|. To maintain the old behavior, an argument
+can simply ignore the environment. Which the definitions in the
+upcoming sections, the description of lists becomes as follows:
 
 \begin{code}
 listDesc : (A : Set) → DatDesc 2
@@ -17,28 +18,37 @@ listDesc A = ι ⊕ (λ γ → A) ⊗ rec-⊗ ι ⊕ `0
 
 A typical use case for dependent types is in the usage of
 predicates. For instance, if the |IsLessThan7| predicate states that a
-given number is lower than 7, the type |Σ Nat| |IsLessThan7| contains a
-natural which is lower than seven. This can be encoded as a
-description, where |top γ| is used to refer to the only value in the
-environment |γ|.
+given number is lower than 7, the type |Lt7| contains a natural which
+is lower than seven:
 
 \begin{code}
 IsLessThan7 : Nat → Set
 IsLessThan7 n = n < 7
 
+data Lt7 : Set where
+  lt7 : (n : Nat) → IsLessThan7 n → Lt7
+\end{code}
+
+The constructor of |Lt7| uses the value of the first argument to
+determine the type of the second argument. This can be encoded as a
+description, where |top γ| is used to refer to the only value in the
+environment |γ|.
+
+\begin{code}
 lt7Desc : DatDesc 1
 lt7Desc = (λ γ → Nat) ⊗ (λ γ → IsLessThan7 (top γ)) ⊗ ι ⊕ `0
 \end{code}
 
-All the lambda-abstractions and parentheses make the syntax quite hard
-to read. McBride \cite{mcbride10} presents a solution; SKI combinators
-can do the hard work of plumbing the environment through the
-terms. Applicative functors are a generalisation of SKI
-combinators \cite{mcbride08} and they may be more familiar to
-functional programmers who are not into combinator calculus, so we
-will be writing our terms in an applicative functor style using
-|_<S>_| for the S combinator, |const| for the K combinator and
-|_<KS>_| as a combination of |const| and |_<S>_|. With these
+All the lambda-abstractions and parentheses are already obfuscating
+the syntax, and this problem will become worse when we use bigger
+environments and more complicated terms. McBride \cite{mcbride10}
+presents a solution; SKI combinators can do the hard work of plumbing
+the environment through the terms. Applicative functors are a
+generalisation of SKI combinators \cite{mcbride08} and they may be
+more familiar to functional programmers who are not into combinator
+calculus, so we will be writing our terms in an applicative functor
+style using |_<S>_| for the S combinator, |const| for the K combinator
+and |_<KS>_| as a combination of |const| and |_<S>_|. With these
 combinators, as defined in \fref{lst:simple-combinators}, the
 following expressions are all equal:
 
@@ -75,44 +85,39 @@ Of course, an environment can contain more than one value. The
 environment is basically a stack of values, where |pop| and |top| can
 be used to pick one. The behavior is like DeBruijn indices
 \cite{debruijn72}: |top| means variable 0, |top ∘ pop| means variable
-1, |top ∘ pop ∘ pop| means variable 2 and so forth. In the following
-example we assume that a predicate |IsShorter| of type |List A → Nat →
-Set| exists which says that some list is shorter than some length. The
-description |shorterDesc| describes a type with one constructor which
-contains a |Nat| and a |List A| such that they satisfy the
-predicate.
+1, |top ∘ pop ∘ pop| means variable 2 and so forth.
+
+In the following example we assume that a predicate |IsShorter| of
+type |List A → Nat| |→ Set| exists which says that some list is shorter
+than some length. A datatype |Shorter| can be defined which contains a
+list, a length, and a proof that the list is shorter than that length:
 
 \begin{code}
 IsShorter : {A : Set} → List A → Nat → Set
+IsShorter = ...
 
+data Shorter (A : Set) : Set where
+  shorter : (xs : List A) → (n : Nat) → IsShorter xs n → Shorter A
+\end{code}
+
+The description |shorterDesc| describes the |Shorter| datatype. In the
+third argument, |top ∘ pop| is used to refer to the list and |top|
+refers to the natural. With the use of the combinators |_<KS>_| and
+|_<S>_| we can pretend that this is just a normal application of the
+|IsShorter| predicate, but under the hood an environment is passed to
+|top ∘ pop| and to |top|.
+
+\begin{code}
 shorterDesc : ∀{A} → DatDesc 1
 shorterDesc {A} = const (List A) ⊗ const Nat ⊗
   IsShorter <KS> top ∘ pop <S> top ⊗ ι ⊕ `0
 \end{code}
 
-When descriptions support dependent types, ornaments must do so as
-well. We upgrade our ornaments to take contexts into account. One has
-to consider how the insertion or removal of arguments changes the
-context of the tail, and how the context can be used to insert
-arguments with types which can be dependent on earlier arguments. As a
-somewhat contrived example, we define an ornament on |lt7Desc| which
-inserts a |Fin n| argument, where |n| is the value of the first
-argument. Note how the |isLessThan| predicate now uses the second
-DeBruijn index.
-
-\begin{code}
-lt7-insertFin : DatOrn lt7Desc
-lt7-insertFin = -⊗ Fin <KS> top +⊗ -⊗ ι ⊕ `0
-
-test-lt7-insertFin : ornToDesc lt7-insertFin ≡
-  (const Nat ⊗ Fin <KS> top ⊗ IsLessThan7 <KS> top ∘ pop ⊗ ι ⊕ `0)
-test-lt7-insertFin = refl
-\end{code}
-
-In this chapter, we will start by showing how environments are exactly
-implemented. Descriptions are upgraded to support the propagation of
-environments in \fref{sec:simple-descriptions} and ornaments receive
-their upgrade in \fref{sec:simple-ornaments}.
+In the next section, we will start by showing how environments are
+exactly implemented. Descriptions are upgraded to support the
+propagation of environments in \fref{sec:simple-descriptions}. When
+descriptions support dependent types, ornaments must do so as
+well---they receive their upgrade in \fref{sec:simple-ornaments}.
 
 \section{Contexts and environments}
 
@@ -122,13 +127,12 @@ and each of those types should be able to use the values of the
 previous variables. For the purpose of building types of environments
 we define |_▶_|, which is a left-associative version of |Σ| where
 |fst| is renamed to |pop| and |snd| to |top|
-(\fref{lst:simple-env}). We can start with |⊤| as the empty
-environment, and extend it to the right with |_▶_| to add a
-variable. For each variable, an environment |γ| containing values for
-all variables to the left of it can be used. For example, if we want
-to write the type of an environment containing the variables |(xs :
-List A)|, |(n : Nat)| and |(p : IsShorter xs n)|, we could write it
-like this:
+(\fref{lst:simple-env}). The unit type |⊤′| can be used as the empty
+environment, and it is extended with a type by using |_▶_|. In each
+type, an environment |γ| containing values for all variables to the
+left of it can be used. For example, if we want to write the type of
+an environment containing the variables |(xs : List A)|, |(n : Nat)|
+and |(p : IsShorter xs n)|, we could write it like this:
 
 \begin{codelst}{Definition of |_▶_|}{simple-env}\begin{code}
 record _▶_ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
@@ -144,14 +148,14 @@ ShorterEnv {A} = ⊤′ ▶₀ const (List A) ▶₀ const Nat ▶₀
   IsShorter <KS> top ∘ pop <S> top
 \end{code}
 
-The basic types |_▶_| and |⊤| can contain an environment, but it is
-not a very structured approach. For integration into our universe of
-descriptions we will build a universe of contexts. The contexts decode
-to |_▶_|'s and |⊤|'s. The definition is given in
+The basic types |_▶_| and |⊤′| can contain an environment, but it is
+not a very secure approach. For integration into our universe of
+descriptions a universe of contexts is built. The contexts decode to
+|_▶_|'s and |⊤′|'s. The definition is given in
 \fref{lst:simple-cx}. This is quite a common approach to encode
 contexts \cite{danielsson2007, mcbride10}. While we are at it, we also
-define |_▷′_| as a shortcut when a variable does not need to use the
-context. With these definitions we can create a context which, when
+define |_▷′_| as a shortcut when a type does not need to use the
+environment. With these definitions we can create a context which, when
 decoded, is equal to the |ShorterEnv| type we defined before.
 
 \begin{codelst}{|Cx| definition and semantics}{simple-cx}\begin{code}
@@ -277,7 +281,7 @@ pairDesc₃ A B = const A ⊗ ?2 ⊗ ι ⊕ `0
 -- |?2 : ⊤′ ▶₀ const A → Set|
 \end{code}
 
-Finally, we give |B ∘ top| as the implementation of the hole,
+Finally, we give |B <KS> top| as the implementation of the hole,
 resulting in a description of dependent pairs.
 
 \begin{code}
@@ -314,14 +318,20 @@ conDescmap : ∀{Γ X Y} (f : X → Y) (D : ConDesc Γ) →
 
 \section{Ornaments}\label{sec:simple-ornaments}
 
-Contexts can be changed when ornaments are applied, as was shown in
-the introduction of this chapter. We add some parameters to the |ConOrn|
-datatype to store the starting context |Γ| and the resulting context
-|Δ|. This means that the ornament goes from a |ConDesc Γ| to a
+Ornaments have to be upgraded to use the new contexts. Particularly,
+the argument insertion ornament |_+⊗_| should be able to use the
+environment to determine the type it wants to insert. One also has to
+consider how the insertion or removal of arguments changes the context
+of the tail. When a new argument is inserted, the rest of the ornament
+should be able to make use of it.
+
+The changing of contexts is encoded by two parameters of the |DatOrn|
+datatype, a starting context |Γ| and an output context |Δ|. These
+parameters tell us that the ornament goes from a |ConDesc Γ| to a
 |ConDesc Δ|. To implement the ornamental algebra later on, we also
 have to be able to calculate the original environment from an
-environment of the ornamented type. That is, a function from |δ : ⟦ Δ
-⟧| to |⟦ Γ ⟧| is required which we will call the \emph{environment
+environment of the ornamented type. That is, a function from |(δ : ⟦ Δ
+⟧)| to |⟦ Γ ⟧| is required which we will call the \emph{environment
   transformer}. We will be working with functions between environments
 a lot, so an alias |Cxf Γ Δ| is defined to mean |⟦ Γ ⟧ → ⟦ Δ ⟧|. The
 environment transformer is a parameter of |ConDesc| as well. This
@@ -335,13 +345,19 @@ DatOrn : ∀{#c}(D : DatDesc #c) → Set₂
 ConOrn : ∀{Γ Δ} (f : Cxf Δ Γ) (D : ConDesc Γ) → Set₂
 \end{code}
 
+The environment transformer seems to go backwards here, from an
+environment of the ornamented type back to an environment of the
+original type. This is a result of the fact that every element of the
+ornamented type has a unique corresponding element in the original
+type.
+
 We are not aware of any previous work which implemented ornaments on
 datatypes with contexts like these. The treatment of them is however
-very similar to how indices are treated usually in ornament
-\cite{dagand14-transporting}\todo{cite some more}. Specifically in how
-a function from the ornamented thing to the original thing is used as
-a parameter for the ornament. In fact, the next chapter will show how
-indices and contexts can be implemented in exactly the same way.
+very similar to how indices are treated usually in ornaments
+\cite{mcbride11, dagand14-transporting}, specifically in how the
+environment transformer works and is used as a parameter on the
+ornament. In fact, the next chapter will show how indices can be
+implemented using the same components in a very similar way.
 
 The new definition of ornaments is given in full in
 \fref{lst:simple-ornament}. An ornament is always told from the
@@ -406,13 +422,14 @@ conOrnToDesc : ∀{Γ Δ}{c : Cxf Δ Γ}{D : ConDesc Γ} →
                ConOrn c D → ConDesc Δ
 \end{code}
 
-The implementation of |conOrnToDesc| is the same, except that the
-environment transformer is used in the |-⊗_| ornament. When we
-try to produce a description with |_⊗_|, we have to give a function |⟦
-Δ ⟧ → Set| representing a type within the ornamented context |Δ|. The ornament
-stored the type within the original context: |S| of type |⟦ Γ ⟧ →
-Set|. The environment transformer |c : Cxf Δ Γ| helps us to transform
-types within the context |Γ| to types with the context |Δ|:
+The implementation of |conOrnToDesc| is the same as before, except
+that the environment transformer is used in the |-⊗_| ornament. When
+we try to produce a description with |_⊗_|, we have to give a function
+|⟦ Δ ⟧ → Set| representing a type within the ornamented context
+|Δ|. The ornament stored the type within the original context: |S| of
+type |⟦ Γ ⟧ → Set|. The environment transformer |(c : Cxf Δ Γ)| helps
+us to transform types within the context |Γ| to types with the context
+|Δ|:
 
 \begin{code}
 conOrnToDesc {c = c} (-⊗_ {S = S} xs⁺) = S ∘ c ⊗ conOrnToDesc xs⁺
@@ -421,12 +438,12 @@ conOrnToDesc {c = c} (-⊗_ {S = S} xs⁺) = S ∘ c ⊗ conOrnToDesc xs⁺
 We have seen in \fref{sec:sop-ornalgs} how the ornamental algebra for
 an ornament |o| on a description |D| was built using a natural
 transformation from the pattern functor of |o| to the pattern functor
-of |D|. With contexts, we have to provide an environment before we get
+of |D|. With contexts, an environment has to be provided before we get
 a pattern functor for a description of a constructor, so the natural
 transformation must go from the pattern functor |⟦ conOrnToDesc o ⟧ δ|
 to |⟦ D ⟧ γ| for a suitable environment |γ|. By assuming that we know
 the environment |δ|, we can calculate the right |γ| by applying the
-environment transformer:
+environment transformer |c| to |δ|:
 
 \begin{code}
 conForgetNT : ∀{Γ Δ}{c : Cxf Δ Γ}{D : ConDesc Γ} →
@@ -434,6 +451,52 @@ conForgetNT : ∀{Γ Δ}{c : Cxf Δ Γ}{D : ConDesc Γ} →
               ∀{δ X} → ⟦ conOrnToDesc o ⟧ δ X → ⟦ D ⟧ (c δ) X
 \end{code}
 
+
+\begin{example}
+As a somewhat contrived example, we will define an ornament on the
+|lt7Desc′| description from the introduction of this chapter. The
+definition is reiterated here for convenience. The ornament inserts an
+argument of type |IsOdd n| which, obviously, says that |n| must be
+odd.
+
+\begin{code}
+lt7Desc′ : DatDesc 1
+lt7Desc′ = const Nat ⊗ IsLessThan7 <KS> top ⊗ ι ⊕ `0
+
+postulate
+  IsOdd : Nat → Set
+
+lt7odd : DatOrn lt7Desc′
+lt7odd = -⊗ IsOdd <KS> top +⊗ -⊗ ι ⊕ `0
+\end{code}
+
+Looking at the description of the ornamented type, we can see how the
+argument of |IsLessThan7| has been updated to use the second DeBruijn
+index instead of the first. The call to |cxf-forget| in the type of
+the |_+⊗_| constructor has caused the insertion of a |pop|.
+
+\begin{code}
+test-lt7odd : ornToDesc lt7odd ≡
+  (const Nat ⊗ IsOdd <KS> top ⊗ IsLessThan7 <KS> top ∘ pop ⊗ ι ⊕ `0)
+test-lt7odd = refl
+\end{code}
+
+If we postulate proofs that 3 is lower than 7 and that 3 is odd, we
+can create an element of |lt7odd| for the number 3. The |forget|
+function gives the expected result.
+
+\begin{code}
+postulate
+  proof-that-3<7 : (3 ofType Nat) < 7
+  proof-that-3-is-odd : IsOdd 3
+
+ex-lt7odd : μ (ornToDesc lt7odd)
+ex-lt7odd = ⟨ 0 , 3 , proof-that-3-is-odd , proof-that-3<7 , tt ⟩
+
+forget-lt7odd : forget lt7odd ex-lt7odd ≡ ⟨ 0 , 3 , proof-that-3<7 , tt ⟩
+forget-lt7odd = refl
+\end{code}
+\end{example}
 
 % \begin{itemize}
 % \item Right vs left nesting (see mcbride10: outrageous but meaningful coincidences).

@@ -92,7 +92,7 @@ module E where
   module NatToList where
     -- Index stays ⊤. Parameters become (ε ▷₁′ Set).
     
-    nat→list : DefOrn ε id (ε ▷₁′ Set) (λ _ → tt) natD
+    nat→list : Orn ε id (ε ▷₁′ Set) (λ _ → tt) natD
     nat→list = ι (λ δ → inv tt)
              ⊕ top +⊗ rec (λ δ → inv tt) ⊗ ι (λ δ → inv tt)
              ⊕ `0
@@ -107,7 +107,7 @@ module E where
     list-ex : μ listD (tt , Nat) tt
     list-ex = ⟨ 1 , 100 , ⟨ 1 , 33 , ⟨ 0 , refl ⟩ , refl ⟩ , refl ⟩
 
-    list→natlist : DefOrn ε id ε (λ x → x , Nat) listD
+    list→natlist : Orn ε id ε (λ x → x , Nat) listD
     list→natlist = ι (λ _ → inv tt)
                  ⊕ -⊗ rec (λ _ → inv tt) ⊗ ι (λ _ → inv tt)
                  ⊕ `0
@@ -122,7 +122,7 @@ module E where
     lengthAlg (suc zero , x , xs , refl) = suc xs
     lengthAlg (suc (suc ()) , _)
 
-    list→vec : DefOrn (ε ▷′ Nat) (λ _ → tt) (ε ▷₁′ Set) id listD
+    list→vec : Orn (ε ▷′ Nat) (λ _ → tt) (ε ▷₁′ Set) id listD
     list→vec = algOrn lengthAlg
 
     vecD′ : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
@@ -140,7 +140,7 @@ module E where
   module ReornamentNatToList where
     open NatToList
 
-    nat→vec : DefOrn (ε ▷ (λ γ → μ natD tt tt)) (λ _ → tt) (ε ▷₁′ Set) (λ _ → tt) natD
+    nat→vec : Orn (ε ▷ (λ γ → μ natD tt tt)) (λ _ → tt) (ε ▷₁′ Set) (λ _ → tt) natD
     nat→vec = reornament nat→list
 
     vecD′ : DatDesc (ε ▷ (λ γ → μ natD tt tt)) (ε ▷₁′ Set) 2

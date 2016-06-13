@@ -10,13 +10,17 @@ open import Cx.Simple
 listDesc : (A : Set) → DatDesc 2
 listDesc A = ι ⊕ (λ γ → A) ⊗ rec-⊗ ι ⊕ `0
 
--- Σ Nat isLessThan7
+
+---
+
 IsLessThan7 : Nat → Set
 IsLessThan7 n = n < 7
+
+data Lt7 : Set where
+  lt7 : (n : Nat) → IsLessThan7 n → Lt7
+
 lt7Desc : DatDesc 1
 lt7Desc = (λ γ → Nat) ⊗ (λ γ → IsLessThan7 (top γ)) ⊗ ι ⊕ `0
-lt7Desc′ : DatDesc 1
-lt7Desc′ = const Nat ⊗ IsLessThan7 <KS> top ⊗ ι ⊕ `0
 
 module ContextCombinators where
   postulate
@@ -30,26 +34,22 @@ module ContextCombinators where
   fxy₂ = const f <S> x <S> y
   fxy₃ = f <KS> x <S> y
 
+lt7Desc′ : DatDesc 1
+lt7Desc′ = const Nat ⊗ IsLessThan7 <KS> top ⊗ ι ⊕ `0
+
+---
+
 IsShorter : {A : Set} → List A → Nat → Set
 IsShorter _ zero = ⊥
 IsShorter [] (suc n) = ⊤
 IsShorter (_ ∷ xs) (suc n) = IsShorter xs n
 
+data Shorter (A : Set) : Set where
+  shorter : (xs : List A) → (n : Nat) → IsShorter xs n → Shorter A
+
 shorterDesc : ∀{A} → DatDesc 1
 shorterDesc {A} = const (List A) ⊗ const Nat ⊗
   IsShorter <KS> top ∘ pop <S> top ⊗ ι ⊕ `0
-
-lt7-insertFin : DatOrn lt7Desc
-lt7-insertFin = -⊗ Fin <KS> top +⊗ -⊗ ι ⊕ `0
-
-test-lt7-insertFin : ornToDesc lt7-insertFin ≡
-  (const Nat ⊗ Fin <KS> top ⊗ IsLessThan7 <KS> top ∘ pop ⊗ ι ⊕ `0)
-test-lt7-insertFin = refl
-
--- nbsDesc : DatDesc 1
--- nbsDesc = (λ γ → List Bool) ⊗ (λ γ → Nat) ⊗ ι ⊕ `0
--- nbs→shorter : DatOrn nbsDesc
--- nbs→shorter = -⊗ -⊗ (λ δ → IsShorter (top (pop δ)) (top δ)) +⊗ ι ⊕ `0
 
 
 --------------------
@@ -94,6 +94,33 @@ pairDesc A B = const A ⊗ B <KS> top ⊗ ι ⊕ `0
 pair-to : {A : Set}{B : A → Set} → Σ A B → μ (pairDesc A B)
 pair-to (x , y) = ⟨ 0 , x , y , tt ⟩
 
+
+--------------------
+-- Ornaments
+
+postulate
+  IsOdd : Nat → Set
+
+lt7odd : DatOrn lt7Desc′
+lt7odd = -⊗ IsOdd <KS> top +⊗ -⊗ ι ⊕ `0
+
+test-lt7odd : ornToDesc lt7odd ≡
+  (const Nat ⊗ IsOdd <KS> top ⊗ IsLessThan7 <KS> top ∘ pop ⊗ ι ⊕ `0)
+test-lt7odd = refl
+
+postulate
+  proof-that-3<7 : (3 ofType Nat) < 7
+  proof-that-3-is-odd : IsOdd 3
+
+ex-lt7odd : μ (ornToDesc lt7odd)
+ex-lt7odd = ⟨ 0 , 3 , proof-that-3-is-odd , proof-that-3<7 , tt ⟩
+
+forget-lt7odd : forget lt7odd ex-lt7odd ≡ ⟨ 0 , 3 , proof-that-3<7 , tt ⟩
+forget-lt7odd = refl
+
+
+--------------------
+-- Discussion
 
 open import Thesis.SigmaDesc
 

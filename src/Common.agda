@@ -84,21 +84,42 @@ record Semantics {α β : Level}(A : Set α) : Set (α ⊔ lsuc β) where
     ⟦_⟧ : A → ⟦⟧-Type
 open Semantics {{...}} public
 
-Pow : ∀{a} → Set a → Set _
-Pow {a} I = I → Set
+_→ⁱ_ : {I : Set} → (I → Set) → (I → Set) → Set
+X →ⁱ Y = ∀{i} → X i → Y i
 
 
 ------------------------------
 -- Inverses
 
--- (f ⁻¹ y) contains an x such that (f x ≡ y)
-data _⁻¹_ {a b}{A : Set a}{B : Set b}(f : A → B) : B → Set (a ⊔ b) where
-  inv : (x : A) → f ⁻¹ (f x)
-uninv : ∀{a b}{A : Set a}{B : Set b}{f : A → B}{y : B} → f ⁻¹ y → A
-uninv (inv x) = x
+module _ {a b}{A : Set a}{B : Set b} where
+  -- |f ⁻¹ y| contains an |x| such that |f x ≡ y|
+  data _⁻¹_ (f : A → B) : (y : B) → Set (a ⊔ b) where
+    inv : (x : A) → f ⁻¹ (f x)
 
-inv-eq : ∀{a b}{A : Set a}{B : Set b}{f : A → B}{y : B} → (x : f ⁻¹ y) → f (uninv x) ≡ y
-inv-eq (inv x) = refl
+  uninv : {f : A → B}{y : B} → f ⁻¹ y → A
+  uninv (inv x) = x
+
+  inv-eq : {f : A → B}{y : B} → (x : f ⁻¹ y) → f (uninv x) ≡ y
+  inv-eq (inv x) = refl
+
+module InverseImageAlt {a b}{A : Set a}{B : Set b} where
+  -- Alternative representation of |_⁻¹_|
+  AltInv : (f : A → B) (y : B) → Set (a ⊔ b)
+  AltInv f y = Σ A λ x → f x ≡ y
+
+  to : (f : A → B) (y : B) → f ⁻¹ y → AltInv f y
+  to f .(f x) (inv x) = x , refl
+  from : (f : A → B) (y : B) → AltInv f y → f ⁻¹ y
+  from f .(f x) (x , refl) = inv x
+  to-from : (f : A → B) (y : B) → ∀ i → to f y (from f y i) ≡ i
+  to-from f .(f x) (x , refl) = refl
+  from-to : (f : A → B) (y : B) → ∀ i → from f y (to f y i) ≡ i
+  from-to f .(f x) (inv x) = refl
+
+  AltInv-iso : (f : A → B) (y : B) → Iso (f ⁻¹ y) (AltInv f y)
+  AltInv-iso f y = record { to = to f y ; from = from f y
+                          ; to-from = to-from f y ; from-to = from-to f y
+                          }
 
 inv-∘ : ∀{a b c}{A : Set a}{B : Set b}{C : Set c}{f : B → C}{g : A → B}
         {z : C} → (y : f ⁻¹ z) → (x : g ⁻¹ uninv y) → (f ∘ g) ⁻¹ z

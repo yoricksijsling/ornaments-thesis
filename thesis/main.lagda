@@ -1,4 +1,4 @@
-% \documentclass[a4paper]{report}
+% \documentclass[a4paper]{report} % don't forget to disable the marker
 \documentclass[draft,a4paper]{report}
 
 \newif\ifsetmono
