@@ -6,7 +6,6 @@ open import Cx.HasDesc
 open import Cx.GenericOperations
 open import Cx.Named.Mutations
 open import Cx.Unquoting
-open HasDesc {{...}} using (from; to)
 
 -- data Nat : Set where
 --   zero : Nat
@@ -42,12 +41,27 @@ listTo = to
 listFrom : ∀{A} → μ listDesc (tt , A) tt → List A
 listFrom = from
 
+nat-id : Nat → Nat
+nat-id = gdepth
+
+nat-id-ok : ∀ n → nat-id n ≡ n
+nat-id-ok zero = refl
+nat-id-ok (suc n) = cong suc (nat-id-ok n)
+
 -- gdepth : ∀{A} → {{R : HasDesc A}} → A → Nat
 length : ∀{A} → List A → Nat
 length = gdepth
 
 length′ : ∀{A} → List A → Nat
 length′ = gfold (depthAlg listDesc)
+
+countBoolsAlg : Alg listDesc (tt , Bool) (λ x → Nat)
+countBoolsAlg (zero , refl) = 0
+countBoolsAlg (suc zero , x , xs , refl) = if x then suc xs else xs
+countBoolsAlg (suc (suc ()) , _)
+
+countBools : List Bool → Nat
+countBools = gfold countBoolsAlg
 
 --
 

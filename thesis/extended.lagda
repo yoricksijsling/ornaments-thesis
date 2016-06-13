@@ -806,7 +806,7 @@ turn is an ornament on |ornToDesc| of the first ornament. The
 descriptions contain higher order terms (terms depending on
 environments) which are not intensionally equal. We can however prove
 that they are pointwise equal, for each environment they give the same
-result. A small module is used wherein the extensionality lemma (|(∀ x
+result. A small module is used wherein the extensionality axiom (|(∀ x
 → f x ≡ g x) → f ≡ g|) is available, effectively making the normal
 equality |_≡_| extensional (within the module).
 

@@ -77,6 +77,8 @@
 %format rec_+⊗_ = rec_ +⊗ _
 
 % Semantics
+%format ⟧desc = ⟧ "_{\Vlight{desc}}"
+%format ⟦_⟧desc = ⟦_ ⟧desc
 %format ⟧conDesc = ⟧ "_{\Vlight{conDesc}}"
 %format ⟦_⟧conDesc = ⟦_ ⟧conDesc
 %format ⟧datDesc = ⟧ "_{\Vlight{datDesc}}"

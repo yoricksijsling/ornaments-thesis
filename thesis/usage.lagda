@@ -2,13 +2,13 @@
 
 \chapter{Usage}\label{sec:usage}
 
-In this section we provide a short overview of how the whole system
-works. It is meant to show how the different components fit together,
-so not all the details are explained. We focus on how an end-user with
-minimal knowledge about ornaments or generics would be able to use
-this system. The interested reader is asked to suspend their
-curiosity---the rest of this thesis explains how all these things
-really work.
+In this section we provide a short overview of how the our
+ornamentation library works. It is meant to show how the different
+components fit together, so not all implementation details will be
+presented here. We focus on how an end-user with minimal knowledge
+about ornaments or generics would use our library. The interested
+reader is asked to suspend their curiosity---the rest of this thesis
+explains how the library is implemented.
 
 To start with, we apply the |deriveHasDesc| function to the |Nat|
 datatype. This performs all kinds of meta-programming magic to
@@ -28,8 +28,7 @@ From our newly obtained |quotedNat| we can retrieve a
 \emph{description} which is the representation of a datatype
 declaration within the system. The description is of type |Desc ε ε
 _|; the arguments |ε| and |ε| indicate that this datatype has no
-parameters and no indices. For now we are only concerned with the type
-of the description; we can use it without actually looking at the
+parameters and no indices. For now we will not be looking at the
 description itself.
 
 \begin{code}
@@ -43,8 +42,8 @@ pair. The embedding-projection pair translates between values of the
 types |Nat| and |μ natDesc tt tt|, where |μ natDesc tt tt| is the
 |Set| which contains the elements as described by |natDesc|. The
 record is found automatically with instance search, so once
-|deriveHasDesc| has been the embedding-projection can be used by
-simply writing |to| or |from|:
+|deriveHasDesc| has been called the embedding-projection can be used
+by simply writing |to| or |from|:
 
 \begin{code}
 natTo : Nat → μ natDesc tt tt
@@ -73,10 +72,9 @@ listDesc : Desc ε (ε ▷₁′ Set) _
 listDesc = QuotedDesc.desc quotedList
 \end{code}
 
-The types of the |to| and |from| functions are slightly different this
-time, because they have to work for every value of the parameter, so
-for all |A| of type |Set|. The type |A| has to be passed to both |List| and
-|μ listDesc| to obtain proper |Set|s.
+Both |List| and |μ listDesc| are polymorphic in the type of their
+elements, so the |to| and |from| functions are now polymorphic as
+well:
 
 \begin{code}
 listTo : ∀{A} → List A → μ listDesc (tt , A) tt
@@ -86,13 +84,16 @@ listFrom : ∀{A} → μ listDesc (tt , A) tt → List A
 listFrom = from
 \end{code}
 
-With the |ListHasDesc| instance we can perform generic operations on
-|List|s. For instance the function |gdepth| of type |∀{A} → ⦃ R :
-HasDesc A ⦄ → A → Nat)| which calculates the depth of any value which
-has a generic representation. For the |List| type this is exactly the
-length of a list:
+With a |HasDesc| instance we can perform generic operations. For
+example the function |gdepth| of type |∀{A} → ⦃ R : HasDesc A ⦄ → A →
+Nat)| which calculates the depth of any value that has a generic
+representation. For the |Nat| type this is just the identity, but for
+|List| this is exactly the length of a list:
 
 \begin{code}
+nat-id : Nat → Nat
+nat-id = gdepth
+
 length : ∀{A} → List A → Nat
 length = gdepth
 \end{code}
@@ -107,6 +108,17 @@ length′ : ∀{A} → List A → Nat
 length′ = gfold (depthAlg listDesc)
 \end{code}
 
+A depth algebra can be calculated for any description---this allows
+|gdepth| to be fully generic (i.e. it works for all descriptions). One
+may also define algebras for a specific type, for instance a
+|countBoolsAlg| which counts the number of |true|s in a |List
+Bool|. The generic |gfold| function can be used to fold this algebra.
+
+\begin{code}
+countBools : List Bool → Nat
+countBools = gfold countBoolsAlg
+\end{code}
+
 We have taken a look at naturals and lists. These datatypes are
 similar in their recursive structure and we want to exploit that. We
 can create an ornament which can be used as a patch on the description
@@ -119,16 +131,16 @@ naturals:
 \item The recursive argument of suc must be renamed to |"xs"|. We can
   use the expression |renameArguments 1 (just "xs" ∷ [])| to build
   such an ornament.
-\item A parameter of type |Set| must be added, and be used as an
-  argument of the suc/cons constructor. The ornament to do that is
+\item A parameter of type |Set| must be added, which must be used as an
+  argument in the suc/cons constructor. The ornament to do that is
   |addParameterArg 1 "x"|.
 \end{itemize}
 
 These two ornaments have to be applied in sequence, so they are
-composed using |>>⁺|. The resulting ornament can be applied to produce
-a new description using |ornToDesc|, and we see that |ornToDesc
-nat→list| results in a description which is exactly the same as
-|listDesc|:
+composed using the |>>⁺| operator. The resulting ornament can be
+applied to produce a new description using |ornToDesc|, and we see
+that |ornToDesc nat→list| results in a description which is exactly
+the same as |listDesc|:
 
 \begin{code}
 nat→list : Orn _ _ natDesc
@@ -168,9 +180,9 @@ We have built a new description using ornamentation, but it does not
 yet have a corresponding Agda datatype. Our descriptions are defined
 in such a way that they can always be converted back to a real
 datatype definition. The reflection mechanism in Agda does not yet
-support the definition of datatypes, but we \emph{can} calculate what
-the type of the datatype and every constructor has to be. We do have to
-write the skeleton of the datatype definition, but not the types
+support the definition of datatypes, but we \emph{can} calculate the
+types of every constructor and of the datatype itself. All we have to
+do is write the skeleton of the datatype definition, but not the types
 themselves. Using |deriveHasDescExisting| we can derive |VecHasDesc|
 which connects the datatype |Vec| to the existing description
 |vecDesc|, so the |to| and |from| functions go between |Vec A n| and
@@ -202,3 +214,5 @@ the actual descriptions and ornaments which are used internally. In
 the rest of this thesis we will be taking a better look on how these
 descriptions and ornaments have to be defined and how meta-programming
 can be used to connect the descriptions to actual datatypes.
+
+\todo{Make the usage chapter longer to make the pages look nicer?}
