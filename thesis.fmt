@@ -28,6 +28,7 @@
 %format ?3 = "\Hole{?3}"
 %format ... = "\Hole{⋯}"
 
+%format __ = "\kern.1em\V{\_}\kern.1em"
 %format _0 = "_{" 0 "}"
 %format _1 = "_{" 1 "}"
 %format _2 = "_{" 2 "}"
@@ -50,7 +51,7 @@
 %format ++ = "\V{++}"
 %format +N = +
 %format >>⁺ = ≫⁺
-%format _>>⁺_ = _ >>⁺ _
+%format _>>⁺_ = __ >>⁺ __
 %format >>⁺-coherence = >>⁺ -coherence
 %format nat-example₁ = nat-example _1
 %format nat-example₂ = nat-example _2
@@ -60,21 +61,26 @@
 %format pairDesc₃ = pairDesc _3
 
 % Descriptions and ornaments
+%format _/ = __ "\V{/}"
 %format ⊕ = "\V{\Large\raisebox{-.15ex}{⊕}}"
-%format _⊕_ = _ "\V{\large\raisebox{-.1ex}{⊕}}" _
+%format _⊕_ = __ "\V{\large\raisebox{-.1ex}{⊕}}" __
 %format ⊗ = "\V{\large\raisebox{-.1ex}{⊗}}"
-%format _⊗_ = _ ⊗ _
+%format _⊗_ = __ ⊗ __
+%format _/_⊗_ = _/ _⊗_
 %format +⊗ = + "\kern-.1em" ⊗
-%format _+⊗_ = _ +⊗ _
+%format _+⊗_ = __ +⊗ __
+%format _/_+⊗_ = _/ _+⊗_
 %format rec-⊗ = rec "\Vlight{-}" ⊗
-%format rec-⊗_ = rec-⊗ _
-%format rec_⊗_ = rec_ ⊗ _
-% %format -⊗ = "\V{\textendash }" ⊗
+%format rec-⊗_ = rec-⊗ __
+%format rec_⊗_ = rec __ ⊗ __
+%format _/rec_⊗_ = _/ "\kern.1em" rec_⊗_
 %format -⊗ = "\Vlight{\textendash}\kern.2em" ⊗
-%format -⊗_ = -⊗ _
+%format -⊗_ = "\Vlight{\textendash}\kern.1em" ⊗ __
+%format _/-⊗_ = _/ -⊗_
 %format rec-+⊗ = rec "\Vlight{-}" +⊗
-%format rec-+⊗_ = rec-+⊗ _
-%format rec_+⊗_ = rec_ +⊗ _
+%format rec-+⊗_ = rec-+⊗ __
+%format rec_+⊗_ = rec __ +⊗ __
+%format _/rec_+⊗_ = _/ "\kern.1em" rec_+⊗_
 
 % Semantics
 %format ⟧desc = ⟧ "_{\Vlight{desc}}"
@@ -110,8 +116,8 @@
 %format ▶₁ = ▶
 %format _,ᵖ_ = _,_
 %format <KS> = "\V{\footnotesize$<$\kern-.1em$\$$\kern-.1em$>$}"
-%format _<KS>_ = _ <KS> _
+%format _<KS>_ = __ <KS> __
 %format <S> = "\V{\footnotesize$<$\kern-.13em$*$\kern-.13em$>$}"
-%format _<S>_ = _ <S> _
+%format _<S>_ = __ <S> __
 %format <,> = "\V{\footnotesize$<$\kern-.1em\normalsize$\raisebox{.1ex}{,}$\footnotesize\kern-.1em$>$}"
-%format _<,>_ = _ <,> _
+%format _<,>_ = __ <,> __

@@ -893,6 +893,23 @@ test-nat→vec = refl
 
 \section{Discussion}
 
+\todo{remember and recomputation}
+  % -- A 'remember' operation should be possible, see McBrides
+  % -- Ornamental Algebras/Algebraic Ornaments
+  % -- remember : ∀{Γ #c}(D : DatDesc I Γ #c) → (α : {γ : ⟦ Γ ⟧} → Alg D γ J) →
+  % --            ∀{γ i} → μ D γ (pop i) → μ (ornToDesc (algOrn D α)) γ i
+
+  % -- Also, the recomputation lemma should hold. Meaning that the
+  % -- forgetting over an algOrn and folding the algebra should result
+  % -- in the original index.
+  % -- E.g. (xs : Vec A n) → length (toList xs) ≡ n.
+  % -- recomputation : ∀{Γ #c}(D : DatDesc I Γ #c) → (α : {γ : ⟦ Γ ⟧} → Alg D γ J) →
+  % --                 ∀{γ j} → (x : μ (ornToDesc (algOrn D α)) γ j) →
+  % --                 fold α (forget (algOrn D α) x) ≡ top j
+
+
+\subsection{Separating parameters from contexts}\label{sec:ext-separateparams}
+
 One of the limitations of the current implementation of indices and
 parameters is that indices can not use the parameters. For instance in
 the description of the following datatype |Silly|, one gets stuck

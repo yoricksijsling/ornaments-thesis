@@ -15,38 +15,40 @@ is added in front of all the relevant constructors, separated by a
 slash.
 
 \begin{codelst}{Descriptions with names}{named-description}\begin{code}
-data ConDesc (I : Cx₀) : (Γ : Cx₁) → Set₁ where
-  ι : ∀{Γ} → (o : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → ConDesc I Γ
-  _/_⊗_ : ∀{Γ} → (nm : String) → (S : (γ : ⟦ Γ ⟧) → Set) → (xs : ConDesc I (Γ ▷ S)) → ConDesc I Γ
-  _/rec_⊗_ : ∀{Γ} → (nm : String) → (i : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → (xs : ConDesc I Γ) → ConDesc I Γ
+data ConDesc (I : Cx₀)(Γ : Cx₁) : Set₁ where
+  ι : (o : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → ConDesc I Γ
+  _/_⊗_ : (nm : String) → (S : (γ : ⟦ Γ ⟧) → Set) →
+    (xs : ConDesc I (Γ ▷ S)) → ConDesc I Γ
+  _/rec_⊗_ : (nm : String) → (i : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) →
+    (xs : ConDesc I Γ) → ConDesc I Γ
 data DatDesc (I : Cx)(Γ : Cx) : (#c : Nat) → Set₁ where
   `0 : DatDesc I Γ 0
-  _⊕_ : ∀{#c} → (x : ConDesc I Γ) → (xs : DatDesc I Γ #c) → DatDesc I Γ (suc #c)
+  _⊕_ : ∀{#c} → (x : ConDesc I Γ) →
+    (xs : DatDesc I Γ #c) → DatDesc I Γ (suc #c)
 \end{code}\end{codelst}
 
 Ornaments are changed accordingly. The copying and insertion operators
 all require a name. The definition of ornaments is in Listing \ref{lst:named-ornament}.
 
 \begin{codelst}{Ornaments with names}{named-ornament}\begin{code}
-data Orn {I J}(u : Cxf J I) : ∀{Γ Δ dt} (c : Cxf Δ Γ) (D : Desc I Γ dt) → Set₁ where
-  ι : ∀{Γ Δ i}{c : Cxf Δ Γ} → (j : (δ : ⟦ Δ ⟧) → u ⁻¹ (i (c δ))) → Orn u c (ι i)
-  _/-⊗_ : ∀{Γ Δ nm S xs}{c : Cxf Δ Γ} → (nm′ : String) →
-          (xs⁺ : Orn u (cxf-both c) xs) → Orn u c (nm / S ⊗ xs)
-  _/rec_⊗_ : ∀{Γ Δ nm i xs}{c : Cxf Δ Γ} → (nm′ : String) →
-             (j : (δ : ⟦ Δ ⟧) → u ⁻¹ (i (c δ))) → (xs⁺ : Orn u c xs) → Orn u c (nm /rec i ⊗ xs)
+data Orn {I} J (u : Cxf J I)
+  {Γ} Δ (c : Cxf Δ Γ) : ∀{dt}(D : Desc I Γ dt) → Set₁ where
+  ι : ∀{i} → (j : (δ : ⟦ Δ ⟧) → u ⁻¹ (i (c δ))) → Orn _ u _ c (ι i)
+  _/-⊗_ : ∀{nm S xs} (nm′ : String) →
+    (xs⁺ : Orn _ u _ (cxf-both c) xs) → Orn _ u _ c (nm / S ⊗ xs)
+  _/rec_⊗_ : ∀{nm i xs} (nm′ : String) → (j : (δ : ⟦ Δ ⟧) → u ⁻¹ (i (c δ))) →
+    (xs⁺ : Orn _ u _ c xs) → Orn _ u _ c (nm /rec i ⊗ xs)
 
-  _/_+⊗_ : ∀{Γ Δ}{c : Cxf Δ Γ}{xs : ConDesc I Γ} →
-            (nm : String) (S : (δ : ⟦ Δ ⟧) → Set) (xs⁺ : Orn u (cxf-forget c S) xs) → Orn u c xs
-  _/rec_+⊗_ : ∀{Γ Δ}{c : Cxf Δ Γ}{xs : ConDesc I Γ} →
-               (nm : String) (j : (δ : ⟦ Δ ⟧) → ⟦ J ⟧) (xs⁺ : Orn u c xs) → Orn u c xs
-  give-K : ∀{Γ Δ S xs nm}{c : Cxf Δ Γ} →
-           (s : (δ : ⟦ Δ ⟧) → S (c δ)) →
-           (xs⁺ : Orn u (cxf-instantiate c s) xs) →
-           Orn u c (nm / S ⊗ xs)
+  _/_+⊗_ : {xs : ConDesc I Γ} (nm : String) (S : (δ : ⟦ Δ ⟧) → Set)
+    (xs⁺ : Orn _ u _ (cxf-forget c S) xs) → Orn _ u _ c xs
+  _/rec_+⊗_ : {xs : ConDesc I Γ} (nm : String) (j : (δ : ⟦ Δ ⟧) → ⟦ J ⟧)
+    (xs⁺ : Orn _ u _ c xs) → Orn _ u _ c xs
+  give-K : ∀{S xs nm} → (s : (δ : ⟦ Δ ⟧) → S (c δ)) →
+    (xs⁺ : Orn _ u _ (cxf-inst c s) xs) → Orn _ u _ c (nm / S ⊗ xs)
 
-  `0 : ∀{Γ Δ}{c : Cxf Δ Γ} → Orn u c `0
-  _⊕_ : ∀{Γ Δ #c x}{c : Cxf Δ Γ}{xs : DatDesc I Γ #c}
-         (x⁺ : Orn u c x) (xs⁺ : Orn u c xs) → Orn u c (x ⊕ xs)
+  `0 : Orn _ u _ c `0
+  _⊕_ : ∀{#c x}{xs : DatDesc I Γ #c}
+    (x⁺ : Orn _ u _ c x) (xs⁺ : Orn _ u _ c xs) → Orn _ u _ c (x ⊕ xs)
 \end{code}\end{codelst}
 
 \section{Results of the quoting of a datatype}

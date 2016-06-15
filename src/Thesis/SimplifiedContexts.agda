@@ -11,7 +11,7 @@ record _▶_ {a b} (A : Set a) (B : A → Set b) : Set (a ⊔ b) where
   field
     pop : A
     top : B pop
-open _▶_
+open _▶_ public
 
 infixl 0 _▷_
 mutual
