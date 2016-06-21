@@ -20,9 +20,9 @@ module _ {I R} where
   algOrn′ {dt = isDat _} (x ⊕ xs) α = algOrn′ x (curry α 0)
     ⊕ algOrn′ xs (α ∘ (suc *** id))
 
-  algOrn : ∀{Γ dt}{D : Desc I Γ dt} →
+  algOrn : ∀{Γ dt}(D : Desc I Γ dt) →
            ({γ : ⟦ Γ ⟧} → Alg D γ R) → Orn (I ▷ R) pop Γ id D
-  algOrn {D = D} = algOrn′ D
+  algOrn = algOrn′
 
 
 ----------------------------------------
@@ -86,4 +86,4 @@ module _ {I J J′}{u : Cxf J I}{v : Cxf J′ J} where
 
 reornament : ∀{I J u Δ}{c : Cxf Δ ε}{#c}{D : DatDesc I ε #c} →
   (o : Orn J u Δ c D) → Orn (J ▷ μ D tt ∘ u) (u ∘ pop) Δ c D
-reornament o = o >>⁺ (algOrn (λ {δ} → forgetAlg o {δ}))
+reornament o = o >>⁺ (algOrn _ (λ {δ} → forgetAlg o {δ}))

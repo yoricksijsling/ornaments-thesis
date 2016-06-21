@@ -1,6 +1,6 @@
 %include thesis.fmt
 
-\chapter{Usage}\label{sec:usage}
+\chapter{Usage}\label{chap:usage}
 
 In this section we provide a short overview of how the our
 ornamentation library works. It is meant to show how the different
@@ -143,7 +143,7 @@ that |ornToDesc nat→list| results in a description which is exactly
 the same as |listDesc|:
 
 \begin{code}
-nat→list : Orn _ _ natDesc
+nat→list : Orn _ _ _ _natDesc
 nat→list = renameArguments 1 (just "xs" ∷ [])
   >>⁺ addParameterArg 1 "x"
 
@@ -163,7 +163,7 @@ list, but we can also use it with |algOrn| to build an ornament which
 inserts a length index:
 
 \begin{code}
-list→vec : Orn _ _ listDesc
+list→vec : Orn _ _ _ _ listDesc
 list→vec = algOrn (depthAlg listDesc)
 \end{code}
 

@@ -5,7 +5,7 @@ open import Reflection
 open import Common
 open import Cx.Named public
 open import Cx.Quoting.Constructor
-open import Cx.Quoting.QuotedDesc
+open import Cx.Quoting.QuotedDesc public
 
 quoteConstructors : (`dt : Name) (#p : Nat) → ∀ I Γ → (cnames : List Name) →
                     TC (DatDesc I Γ (length cnames))

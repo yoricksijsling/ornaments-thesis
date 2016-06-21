@@ -4,9 +4,7 @@
 \newif\ifsetmono
 \setmonofalse
 
-%include lhs2TeX.fmt
-%include lhs2TeX.sty
-%include polycode.fmt
+%include thesis.fmt
 
 \usepackage{main}
 
@@ -26,15 +24,16 @@
 % \end{flushright}
 
 \ifdraft{\listoftodos}{}
-% \input{abstract.tex}
+\input{abstract.tex}
 \tableofcontents
+% \input{presentationstuff.tex}
 \input{introduction.tex}
 \input{usage.tex}
 \input{sop.tex}
 \input{simple.tex}
 \input{extended.tex}
 \input{named.tex}
-\input{implementation.tex}
+%%% \input{implementation.tex}
 \input{discussion.tex}
 \input{conclusion.tex}
 

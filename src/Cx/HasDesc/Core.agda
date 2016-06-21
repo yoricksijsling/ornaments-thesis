@@ -4,7 +4,6 @@ module Cx.HasDesc.Core where
 open import Common
 open import Reflection
 
-open import Cx.Quoting.QuotedDesc public
 open import Cx.Named
 
 record HasDesc (A : Set) : Set₂ where
@@ -18,9 +17,13 @@ record HasDesc (A : Set) : Set₂ where
     to′ : A → μ desc γ i
     from′ : μ desc γ i → A
 
-open HasDesc
+-- Alternative way of defining |to| and |from|
+-- open HasDesc {{...}} renaming (to′ to to; from′ to from) using () public
 
-to : {A : Set} {{r : HasDesc A}} → A → μ (desc r) (γ r) (i r)
-to {{r}} = to′ r
-from : {A : Set} {{r : HasDesc A}} → μ (desc r) (γ r) (i r) → A
-from {{r}} = from′ r
+to : {A : Set} {{r : HasDesc A}} →
+  A → μ (HasDesc.desc r) (HasDesc.γ r) (HasDesc.i r)
+to {{r}} = HasDesc.to′ r
+
+from : {A : Set} {{r : HasDesc A}} →
+  μ (HasDesc.desc r) (HasDesc.γ r) (HasDesc.i r) → A
+from {{r}} = HasDesc.from′ r

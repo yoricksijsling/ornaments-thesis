@@ -140,7 +140,7 @@ vec-to (x ∷ xs) = ⟨ 1 , _ , x , vec-to xs , refl ⟩
 -- Algebraic ornaments
 
 list→vec₁ : Orn (ε ▷ const Nat) pop (ε ▷₁′ Set) id listDesc
-list→vec₁ = algOrn lengthAlg
+list→vec₁ = algOrn listDesc lengthAlg
 
 vecDesc₁ : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
 vecDesc₁ = ι (const (tt , 0))
@@ -202,8 +202,38 @@ fooDesc : DatDesc (ε ▷ (λ γ → Fin {!!})) (ε ▷′ Nat) 1
 fooDesc = {!!}
 -}
 
--- SEE HERE --> Thesis/SeparateContexts.agda
+module L where
+  postulate
+    remember : ∀{I R Γ #c}(D : DatDesc I Γ #c) →
+      (α : ∀{γ} → Alg D γ R) →
+      ∀{γ i} → (x : μ D γ i) → μ (ornToDesc (algOrn D α)) γ (i , (fold α x))
+    recomputation : ∀{I R Γ #c}(D : DatDesc I Γ #c) →
+      (α : {γ : ⟦ Γ ⟧} → Alg D γ R) →
+      ∀{γ j} → (x : μ (ornToDesc (algOrn D α)) γ j) →
+      fold α (forget (algOrn D α) x) ≡ top j
 
+  vecDesc′ : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
+  vecDesc′ = ornToDesc (algOrn listDesc lengthAlg)
+
+  length′ : ∀{A} → μ listDesc (tt , A) tt → Nat
+  length′ = fold lengthAlg
+
+  vec-to-list : ∀{A n} → μ vecDesc′ (tt , A) (tt , n) →
+    μ listDesc (tt , A) tt
+  vec-to-list = forget (algOrn listDesc lengthAlg)
+
+  list-to-vec : ∀{A} → (x : μ listDesc (tt , A) tt) →
+    μ vecDesc′ (tt , A) (tt , length′ x)
+  list-to-vec = remember listDesc lengthAlg
+
+  length-recomputation : ∀{A n} → (x : μ vecDesc′ (tt , A) (tt , n)) →
+    length′ (vec-to-list x) ≡ n
+  length-recomputation x = recomputation listDesc lengthAlg x
+
+
+--------------------
+-- SEE HERE --> Thesis/SeparateContexts.agda
+--------------------
 
 
 {-

@@ -207,7 +207,7 @@ defined name, nothing else. It can not be a variable or a term, so a
 construction like |λ x → quote x| or even |quote ((λ x → x) Nat)| is
 invalid.
 
-\begin{example}
+\begin{example}\label{ex:reflection-evalt}
   Once we have a |Name| for a datatype we can get the |Type| and
   |Definition| for it using the |getType| and |getDefinition|
   functions. Both of these functions return a monad and we need a

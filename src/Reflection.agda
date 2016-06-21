@@ -94,7 +94,7 @@ macro
   ShouldFailᵐ tc = evalTC (ShouldFail tc)
 
 giveTC : TC Term → Tactic
-giveTC tm hole = tm >>= give hole
+giveTC tm hole = tm >>=′ give hole
 
 macro
   giveT : TC Term → Tactic

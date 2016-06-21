@@ -121,3 +121,8 @@
 %format _<S>_ = __ <S> __
 %format <,> = "\V{\footnotesize$<$\kern-.1em\normalsize$\raisebox{.1ex}{,}$\footnotesize\kern-.1em$>$}"
 %format _<,>_ = __ <,> __
+
+% Records
+%format _R = "\unskip_{\V{R}}"
+%format _AR = "\unskip_{\V{AR}}"
+%format _BR = "\unskip_{\V{BR}}"

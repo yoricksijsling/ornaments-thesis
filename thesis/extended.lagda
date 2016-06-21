@@ -35,7 +35,7 @@ parameter on the |DatDesc| type. A type like |Vec|, which has one
 parameter of type |Set| and one index of type |Nat|, is described with
 the type |DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2|.
 
-\section{Descriptions}
+\section{Descriptions}\label{sec:ext-descriptions}
 
 Descriptions of constructors where already parametrised by a |(Γ :
 Cx₁)|, now we also add a parameter |(I : Cx₀)|. Descriptions for
@@ -200,11 +200,13 @@ finDesc = const Nat ⊗ ι ?1
 
 All the open holes happen to have a local context where just one |Nat|
 exists, so they all require a term of type |⟦ ε ▷′ Nat ⟧ → ⟦ ε ▷′ Nat
-⟧|. This situation is comparable to what we would get if we defined
-|Fin| using one parameter of type |⟦ ε ⟧| and one index of type |⟦ ε
-▷′ Nat ⟧|. In the following definition all the holes have |(A : ⟦ ε
-⟧)| and |(n : Nat)| in the context, and have to be of type |⟦ ε ▷′ Nat
-⟧|.
+⟧|. The |⟦ ε ▷′ Nat ⟧| that goes in is the environement, while the |⟦
+ε ▷′ Nat ⟧| contains the index of type |Nat|. This situation is
+comparable to what we would get if we defined |Fin| using one
+parameter of type |⟦ ε ⟧| and one index of type |⟦ ε ▷′ Nat ⟧|. In the
+following alternative definition of |Fin|, all the holes have |(A : ⟦
+ε ⟧)| and |(n : Nat)| in the context, and have to be of type |⟦ ε ▷′
+Nat ⟧|.
 
 \begin{code}
 data FinTT (A : ⟦ ε ⟧) : ⟦ ε ▷′ Nat ⟧ → Set where
@@ -214,21 +216,13 @@ data FinTT (A : ⟦ ε ⟧) : ⟦ ε ▷′ Nat ⟧ → Set where
 
 The definition of |FinTT| could be completed by filling in |(tt , suc
 n)|, |(tt , n)| and |(tt , suc n)| in the holes. To complete the
-definition of |finDesc|, we have to consider how the environment is
-passed around as well. We use the combinator |_<,>_|, as defined in
-\fref{lst:ext-envpair}, to spread the environment over its
-arguments:
-
-\begin{codelst}{Definition of |_<,>_|}{ext-envpair}\begin{code}
-_<,>_ : ∀ {a b c} → {Γ : Set c}{A : Set a}{B : A → Set b} →
-        (f : (γ : Γ) → A) → (g : (γ : Γ) → B (f γ)) → (γ : Γ) → A ▶ B
-f <,> g = _,_ <KS> f <S> g
-\end{code}\end{codelst}
+definition of |finDesc|, we merely need to replace |n| with |top γ|
+and add the lambda-abstractions:
 
 \begin{code}
 finDesc : DatDesc (ε ▷′ Nat) ε 2
-finDesc = const Nat ⊗ ι (const tt <,> suc <KS> top)
-  ⊕ const Nat ⊗ rec (const tt <,> top) ⊗ ι (const tt <,> suc <KS> top)
+finDesc = const Nat ⊗ ι (λ γ → tt , suc (top γ))
+  ⊕ const Nat ⊗ rec (λ γ → tt , top γ) ⊗ ι (λ γ → tt , suc (top γ))
   ⊕ `0
 \end{code}
 
@@ -263,7 +257,7 @@ the |⟦ I ⟧ → Set| category, one has to reconsider what the arrows
 are. The arrows are characterised as functions which respect indexing,
 they are defined as |_→ⁱ_| in
 \fref{lst:ext-indexedarrows}\footnote{Actually, the |_→ⁱ_| definition
-  works for the more general category |I → Set|, of which |⟦ I ⟧ →
+  works for a more general category |A → Set|, of which |⟦ I ⟧ →
   Set| is an instance.}.
 
 \begin{codelst}{Arrows in the |I → Set| category}{ext-indexedarrows}\begin{code}
@@ -272,10 +266,10 @@ X →ⁱ Y = ∀{i} → X i → Y i
 \end{code}\end{codelst}
 
 A map function for a functor |F| in the |I → Set| category should lift
-an arrow |X →ⁱ Y| to an arrow |F X →ⁱ F Y|. By choosing |⟦ D ⟧ γ| as
-|F| we get the type for |descmap|, which is fully defined in
+an arrow |X →ⁱ Y| to an arrow |F X →ⁱ F Y|. By instantiating |⟦ D ⟧ γ|
+to |F| we get the type for |descmap|, which is fully defined in
 \fref{lst:ext-map}. The implementation is straightforward, but it is
-listed for completeness. 
+listed for completeness.
 
 \begin{codelst}{Map for pattern functors with indices}{ext-map}\begin{code}
 descmap : ∀{I Γ dt X Y} (f : X →ⁱ Y) (D : Desc I Γ dt) →
@@ -328,9 +322,9 @@ raise : ∀{n} → (m : Nat) → Fin n → Fin (n + m)
 \end{code}
 
 An algebra on |finDesc| which calculates this value should have |μ
-finDesc tt (tt ,| |n + m)| as its return type, where |n| is the index of
-the |Fin| which was given. This can be represented using the |⟦ I ⟧ →
-Set| function which is required by |Alg|. To refer to |n| we take the
+finDesc tt (tt ,| |n + m)| as its return type, where |n| is the index
+of the |Fin| that was given. This can be represented with a |⟦ I ⟧ →
+Set| function, as is required by |Alg|. To refer to |n| we take the
 |top| of the indices, giving us the following type for |raiseAlg|:
 
 \begin{code}
@@ -368,9 +362,9 @@ raise : ∀{n} → (m : Nat) → Fin n → Fin (n + m)
 raise m = fin-from ∘ fold (raiseAlg m) ∘ fin-to
 \end{code}
 
-The |raise| function is verified by creating a |Fin 5| with the value
-2 and raising it with 4. The result is a |Fin 9| with the value 2, as
-expected.
+The |raise| function is verified to work by creating a |Fin 5| with
+the value 2 and raising it with 4. The result is a |Fin 9| with the
+value 2, as expected.
 
 \begin{code}
 f2<5 : Fin 5
@@ -409,20 +403,33 @@ data Orn {I} J (u : Cxf J I) {Γ} Δ (c : Cxf Δ Γ) :
 \end{code}
 
 Remember that the type |Cxf J I| of the index transformer |u| expands
-to |⟦ J ⟧ → ⟦ I ⟧|.  This type can be interpreted as a one-to-many
-mapping from One way to interpret such a type, is that It is a mapping
-from the indices of elements in the ornamented type back to indices in
-the original type. It ensures that the index |J| is more informative
-than |I|, and that that extra information can be forgotten. When the
-origina. Like McBride, we use a datatype to define the inverse image
-of a function: \todo{fix explanation of inv}.
+to |⟦ J ⟧ → ⟦ I ⟧|. It is \emph{meant} to allow the mapping from
+indices of elements in the ornamented type, back to indices of the
+original type. The existence of such a function ensures that the index
+|J| is more informative than |I|, and that the extra information can
+be forgotten. The index transformer |u| does \emph{not} ensure that an
+ornamented index maps back to the \emph{same} original index. So when
+a |ι i| is ornamented to a |ι j|, where |(i : ⟦ I ⟧)| and |(j : ⟦ J
+⟧)|, the |j| could be mapped back to a |(i′ : ⟦ I ⟧)| which is
+different than the original |i|. For the correct behavior of
+ornaments, we need to know that |u j| gives the original |i|---|j|
+must lie in the \emph{inverse image} of |i| for the function |u|.
 
-An small module is used with for the parameters |a|, |b|, |A| and
-|B|. These arguments are shared between all three functions. Because
-the module is nameless (it is named |_|), the module is transparent to
-function calls---Meaning that outside the module, these functions can
-be called as if they had been defined there with the module parameters
-as function arguments.
+Like McBride \cite{mcbride11}, we use a datatype to define the inverse
+image of a function (\Fref{lst:ext-inverseimage}). The only
+constructor of |f ⁻¹ y| says that the index |y| must be |f x|, so a
+value of type |f ⁻¹ y| always contains an |x| such that |f x ≡ y|. The
+function |uninv| extracts the |x| from |inv|, to avoid having to
+pattern match in other places. The |inv-eq| function delivers the |f x
+≡ y| equality, which will proof useful later.
+
+Note also that a small module is used with for the parameters |a|,
+|b|, |A| and |B|. These arguments are shared between all three
+functions. Because the module is nameless (it is named |_|), the
+module is transparent to function calls---Meaning that outside the
+module, these functions can be called as if they had been defined
+outside of the module, with the module parameters as function
+arguments.
 
 \begin{codelst}{Inverse image of functions}{ext-inverseimage}\begin{code}
 module _ {a b}{A : Set a}{B : Set b} where
@@ -433,7 +440,7 @@ module _ {a b}{A : Set a}{B : Set b} where
   uninv : {f : A → B}{y : B} → f ⁻¹ y → A
   uninv (inv x) = x
 
-  inv-eq : {f : A → B}{y : B} → (x : f ⁻¹ y) → f (uninv x) ≡ y
+  inv-eq : {f : A → B}{y : B} → (invx : f ⁻¹ y) → f (uninv invx) ≡ y
   inv-eq (inv x) = refl
 \end{code}\end{codelst}
 
@@ -659,8 +666,8 @@ in a value of type |R| gives an ornament which goes from a |Desc I Γ
 dt| to a |Desc (I ▷ R) Γ dt|.
 
 \begin{code}
-  algOrn : ∀{I R Γ dt}{D : Desc I Γ dt} →
-           ({γ : ⟦ Γ ⟧} → Alg D γ R) → DefOrn (I ▷ R) pop Γ id D
+  algOrn : ∀{Γ dt}(D : Desc I Γ dt) →
+           ({γ : ⟦ Γ ⟧} → Alg D γ R) → Orn (I ▷ R) pop Γ id D
 \end{code}
 
 Interestingly, algebraic ornaments only work when the Algebra is
@@ -740,9 +747,9 @@ module _ {I R} where
   algOrn′ {dt = isDat _} (x ⊕ xs) α = algOrn′ x (curry α 0)
     ⊕ algOrn′ xs (α ∘ (suc *** id))
 
-  algOrn : ∀{Γ dt}{D : Desc I Γ dt} →
+  algOrn : ∀{Γ dt}(D : Desc I Γ dt) →
            ({γ : ⟦ Γ ⟧} → Alg D γ R) → Orn (I ▷ R) pop Γ id D
-  algOrn {D = D} = algOrn′ D
+  algOrn = algOrn′
 \end{code}\end{codelst}
 
 \begin{example}
@@ -753,7 +760,7 @@ is introduced, because that is the result type of |lengthAlg|.
 
 \begin{code}
 list→vec₁ : Orn (ε ▷ const Nat) pop (ε ▷₁′ Set) id listDesc
-list→vec₁ = algOrn lengthAlg
+list→vec₁ = algOrn listDesc lengthAlg
 \end{code}
 
 The ornament results in a description of |Vec|. Do note that the order
@@ -826,7 +833,7 @@ the environment can be instantiated with |tt|.
 \begin{code}
 reornament : ∀{I J u Δ}{c : Cxf Δ ε}{#c}{D : DatDesc I ε #c} →
   (o : Orn J u Δ c D) → Orn (J ▷ μ D tt ∘ u) (u ∘ pop) Δ c D
-reornament o = o >>⁺ (algOrn (λ {δ} → forgetAlg o {δ}))
+reornament o = o >>⁺ (algOrn _ (λ {δ} → forgetAlg o {δ}))
 \end{code}
 
 With the current descriptions, reornaments on descriptions with
@@ -893,19 +900,84 @@ test-nat→vec = refl
 
 \section{Discussion}
 
-\todo{remember and recomputation}
-  % -- A 'remember' operation should be possible, see McBrides
-  % -- Ornamental Algebras/Algebraic Ornaments
-  % -- remember : ∀{Γ #c}(D : DatDesc I Γ #c) → (α : {γ : ⟦ Γ ⟧} → Alg D γ J) →
-  % --            ∀{γ i} → μ D γ (pop i) → μ (ornToDesc (algOrn D α)) γ i
+This chapter has shown how descriptions the descriptions with contexts
+can be extended to support both parameters and indices. Parameters are
+a fairly simple addition, but indices required some rethinking of what
+the types of our functors had to be (the change from |Set| to |⟦ I ⟧ →
+Set|. Existing literature on ornaments adapts well to this universe,
+and most importantly we were able to implement ornamental
+algebras. Additionally algebraic ornaments, ornament composition and
+reornaments were implemented.
 
-  % -- Also, the recomputation lemma should hold. Meaning that the
-  % -- forgetting over an algOrn and folding the algebra should result
-  % -- in the original index.
-  % -- E.g. (xs : Vec A n) → length (toList xs) ≡ n.
-  % -- recomputation : ∀{Γ #c}(D : DatDesc I Γ #c) → (α : {γ : ⟦ Γ ⟧} → Alg D γ J) →
-  % --                 ∀{γ j} → (x : μ (ornToDesc (algOrn D α)) γ j) →
-  % --                 fold α (forget (algOrn D α) x) ≡ top j
+Some interesting functionality from McBride's \cite{mcbride11} work
+relating to algebraic ornaments has not yet been implemented. One is
+the |remember| function, which is the inverse of |forget| for
+algebraic ornaments. For example; if one has a list and its length
+algebra, it may be used to convert lists to |Vec|s. The type will be
+stated here, but it has not been implemented. McBride uses a general
+induction principle to define |remember|, which has not (yet) been
+implemented either.
+
+\begin{code}
+    remember : ∀{I R Γ #c}(D : DatDesc I Γ #c) →
+      (α : ∀{γ} → Alg D γ R) →
+      ∀{γ i} → (x : μ D γ i) → μ (ornToDesc (algOrn D α)) γ (i , (fold α x))
+\end{code}
+
+The |recomputation| lemma states: When an algebraic ornament is
+forgotten, folding the same algebra over the result recomputes the
+index of the original value. It is stated as follows:
+
+\begin{code}
+    recomputation : ∀{I R Γ #c}(D : DatDesc I Γ #c) →
+      (α : {γ : ⟦ Γ ⟧} → Alg D γ R) →
+      ∀{γ j} → (x : μ (ornToDesc (algOrn D α)) γ j) →
+      fold α (forget (algOrn D α) x) ≡ top j
+\end{code}
+
+\begin{example}
+The |remember| and |recomputation| functions have not been implemented
+for this thesis. If one were to define them, some interesting results
+could be obtained. Consider the length algebra for lists. It is used
+to define the |length′| function and the |Vec| type:
+
+\begin{code}
+  length′ : ∀{A} → μ listDesc (tt , A) tt → Nat
+  length′ = fold lengthAlg
+
+  vecDesc′ : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
+  vecDesc′ = ornToDesc (algOrn listDesc lengthAlg)
+\end{code}
+
+Like any ornament, the length algebraic ornament can be forgotten to
+convert any |Vec| back to a list:
+
+\begin{code}
+  vec-to-list : ∀{A n} → μ vecDesc′ (tt , A) (tt , n) →
+    μ listDesc (tt , A) tt
+  vec-to-list = forget (algOrn listDesc lengthAlg)
+\end{code}
+
+The |remember| function would allow the |list-to-vec| function to be
+defined in terms of |lengthAlg|. The length index is computed with
+|fold lengthAlg|, which we have defined as |length′|.
+
+\begin{code}
+  list-to-vec : ∀{A} → (x : μ listDesc (tt , A) tt) →
+    μ vecDesc′ (tt , A) (tt , length′ x)
+  list-to-vec = remember listDesc lengthAlg
+\end{code}
+
+One would expect that when a |Vec A n| in converted to a list, the length
+of that list would be |n|. The |recomputation| lemma would help to
+prove this fact:
+
+\begin{code}
+  length-recomputation : ∀{A n} → (x : μ vecDesc′ (tt , A) (tt , n)) →
+    length′ (vec-to-list x) ≡ n
+  length-recomputation x = recomputation listDesc lengthAlg x
+\end{code}
+\end{example}
 
 
 \subsection{Separating parameters from contexts}\label{sec:ext-separateparams}

@@ -197,7 +197,7 @@ datatypes. The following contributions are made:
   description makes sense or not.
 \item Ornaments are defined for each version of these descriptions
   (section \ref{sec:sop-ornaments}, \ref{sec:simple-ornaments},
-  \ref{sec:ext-ornaments} and \ref{sec:named-ornaments}). The
+  \ref{sec:ext-ornaments} and \ref{sec:named-descriptions}). The
   ornaments allow refinement using indices and insertion and deletion
   of arguments. Many ornament-related concepts are translated to our
   universe, including ornamental algebras, algebraic ornaments
@@ -219,3 +219,15 @@ used for experimentation with ornaments, as well as a practical
 example of how ornaments can be integrated into a language. Along the
 way a library for the reflection of datatypes has been built, which
 does not yet exist for Agda as far as we are aware.
+
+%%%%
+
+I would like to thank Wouter Swierstra, my supervisor, for good
+discussions, inspiration and mentoring. The time he spent guiding me
+is absolutely appreciated, and without him this project would
+certainly not have turned out as well as it did.
+
+Lastly, i want to thank Maartje for always being so supportive and
+helping me manage my life and this thesis. She makes me happy and i
+could not have wished for a better partner to spend the rest of my
+life with.

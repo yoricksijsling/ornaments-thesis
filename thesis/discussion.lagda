@@ -7,7 +7,7 @@ actual datatype declarations. Only those parts which can contain
 arbitrary terms are represented as higher order arguments in our
 descriptions.
 
-\section{Separating parameter use from other arguments}
+\section{Detecting parameter use}
 
 In our descriptions, starting with \fref{chap:simple}, 'types within a
 context' were represented with a function of type |⟦ Γ ⟧ → Set|. This

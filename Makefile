@@ -57,7 +57,7 @@ cleanproposal:
 # Thesis --------------------
 
 THESIS_TEX=main abstract introduction usage sop simple extended \
-           named implementation reflection discussion conclusion
+           named implementation reflection discussion conclusion presentationstuff
 
 thesis: AGDA_PARAMS = $(INCLUDE_PARAMS) --latex-dir=src-tex --latex --allow-unsolved-metas
 thesis: thesis/main.pdf

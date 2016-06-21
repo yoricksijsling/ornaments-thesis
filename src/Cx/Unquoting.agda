@@ -150,3 +150,10 @@ dumpDatatype D = datatype D >>= (λ f → typeError (f []))
 macro
   dumpDatatypeᵐ : QuotedDesc → Tactic
   dumpDatatypeᵐ D = evalTC (dumpDatatype D)
+
+-- dumpDatatype′ : ∀{Γ I #c} → DatDesc Γ I #c → TC ⊤
+-- dumpDatatype′ D = dumpDatatype (mk (quote Self) (pure (quote Self)) D)
+
+-- macro
+--   dumpDatatype′ᵐ : ∀{Γ I #c} → DatDesc Γ I #c → Tactic
+--   dumpDatatype′ᵐ D = evalTC (dumpDatatype′ D)

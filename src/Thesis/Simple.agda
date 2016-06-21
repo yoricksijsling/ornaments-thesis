@@ -22,20 +22,8 @@ data Lt7 : Set where
 lt7Desc : DatDesc 1
 lt7Desc = (λ γ → Nat) ⊗ (λ γ → IsLessThan7 (top γ)) ⊗ ι ⊕ `0
 
-module ContextCombinators where
-  postulate
-    Γ : Cx₀
-    f : Nat → Bool → String
-    x : ⟦ Γ ⟧ → Nat
-    y : ⟦ Γ ⟧ → Bool
-
-  fxy₁ fxy₂ fxy₃ : ⟦ Γ ⟧ → String
-  fxy₁ = λ γ → f (x γ) (y γ)
-  fxy₂ = const f <S> x <S> y
-  fxy₃ = f <KS> x <S> y
-
 lt7Desc′ : DatDesc 1
-lt7Desc′ = const Nat ⊗ IsLessThan7 <KS> top ⊗ ι ⊕ `0
+lt7Desc′ = const Nat ⊗ IsLessThan7 ∘ top ⊗ ι ⊕ `0
 
 ---
 
@@ -49,7 +37,7 @@ data Shorter (A : Set) : Set where
 
 shorterDesc : ∀{A} → DatDesc 1
 shorterDesc {A} = const (List A) ⊗ const Nat ⊗
-  IsShorter <KS> top ∘ pop <S> top ⊗ ι ⊕ `0
+  (λ γ → IsShorter (top (pop γ)) (top γ)) ⊗ ι ⊕ `0
 
 
 --------------------
@@ -59,13 +47,13 @@ shorterDesc {A} = const (List A) ⊗ const Nat ⊗
 
 ShorterEnv : {A : Set} → Set
 ShorterEnv {A} = ⊤′ ▶₀ const (List A) ▶₀ const Nat ▶₀
-  IsShorter <KS> top ∘ pop <S> top
+  (λ γ → IsShorter (top (pop γ)) (top γ))
 
 shorterEnv : ShorterEnv {Nat}
 shorterEnv = ((tt , (3 ∷ 4 ∷ [])) , 10) , _
 
 ShorterCx : {A : Set} → Cx₀
-ShorterCx {A} = ε ▷′ List A ▷′ Nat ▷ IsShorter <KS> top ∘ pop <S> top
+ShorterCx {A} = ε ▷′ List A ▷′ Nat ▷ (λ γ → IsShorter (top (pop γ)) (top γ))
 
 test-ShorterCx : ∀{A} → ⟦ ShorterCx {A} ⟧ ≡ ShorterEnv {A}
 test-ShorterCx = refl
@@ -89,7 +77,7 @@ pairDesc₃ A B = const A ⊗ {!2!} ⊗ ι ⊕ `0
 -- |?2 : ⟦ ε ▷′ A ⟧ → Set|
 -- |?2 : ⊤′ ▶₀ const A → Set|
 -}
-pairDesc A B = const A ⊗ B <KS> top ⊗ ι ⊕ `0
+pairDesc A B = const A ⊗ B ∘ top ⊗ ι ⊕ `0
 
 pair-to : {A : Set}{B : A → Set} → Σ A B → μ (pairDesc A B)
 pair-to (x , y) = ⟨ 0 , x , y , tt ⟩
@@ -102,10 +90,10 @@ postulate
   IsOdd : Nat → Set
 
 lt7odd : DatOrn lt7Desc′
-lt7odd = -⊗ IsOdd <KS> top +⊗ -⊗ ι ⊕ `0
+lt7odd = -⊗ IsOdd ∘ top +⊗ -⊗ ι ⊕ `0
 
 test-lt7odd : ornToDesc lt7odd ≡
-  (const Nat ⊗ IsOdd <KS> top ⊗ IsLessThan7 <KS> top ∘ pop ⊗ ι ⊕ `0)
+  (const Nat ⊗ IsOdd ∘ top ⊗ IsLessThan7 ∘ top ∘ pop ⊗ ι ⊕ `0)
 test-lt7odd = refl
 
 postulate

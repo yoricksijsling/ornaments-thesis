@@ -1,20 +1,92 @@
 %include thesis.fmt
 
-\chapter{Ornaments on reflected datatypes}\label{chap:named}
+\chapter{Generic programming with descriptions}\label{chap:named}
 
-Usage of quoting. Show how the names fit into descriptions. Also show
-|dumpDatatype|?
+The previous chapter defined descriptions and ornaments with all the
+core features we wish to have. In this chapter, the last minor changes
+are made to descriptions to make them store names of
+arguments. The surrounding functionality as introduced in \fref{chap:usage}
+is presented to get a true generic programming library which allows
+the derivation of descriptions and embedding-projection pairs from
+user-defined datatypes.
 
-\section{Descriptions and ornaments}
+One of the major goals of this thesis is to allow quoting of
+datatypes. We use the term \emph{quoting} in general for the
+conversion of \emph{code} to \emph{data}. More concretely, actual
+definitions and terms in your Agda program may be \emph{quoted} to
+representations using datatypes. In the case of the quoting of
+datatypes, it primarily means that a description is being calculated
+for a user-defined datatype.
 
-The changes to the descriptions are fairly small. The only difference
-is that each argument can now contain a name of type string. The full
-definition of descriptions is given in Listing
-\ref{lst:named-description}. The name
-is added in front of all the relevant constructors, separated by a
-slash.
+Once a datatype has been quoted, one will want to derive an
+embedding-projection pair to translate between the original type and
+the representation. The term 'derive' is used in the way that it is in
+Haskell, where certain record instances can be automatically derived
+from datatypes with the |deriving| keyword. This is most easily
+explained with an example---Assume that the |Vec| datatype has been
+defined as follows:
 
-\begin{codelst}{Descriptions with names}{named-description}\begin{code}
+\begin{code}
+data Vec (A : Set) : Nat → Set where
+  nil : Vec A 0
+  cons : ∀ n → (x : A) → (xs : Vec A n) → Vec A (suc n)
+\end{code}
+
+Note that the |n| argument of cons is visible, not hidden as it
+usually is. The reason for this is that hidden arguments are currently
+not supported by the library. The constructor is named |cons| instead
+of |_∷_| because it requires 3 visible arguments, so the infix
+notation does not work as one would expect.
+
+The |deriveHasDesc| function can be used in conjunction with
+|unquoteDecl| metaprogramming keyword. The behavior of the
+|unquoteDecl| keyword is explained in \todo{ref unquotedecl}. The most
+important thing to know is that it is not a definition, but
+|deriveHasDesc| is being executed \emph{in place} during the
+type-checking. It may throw type errors if the quoting fails for some
+reason (like when the name is not the name of a datatype or when the
+datatype can not be described by our descriptions). When
+|deriveHasDesc| is used on the |Vec| datatype, \emph{two} new
+functions are defined: |quotedVec| and |VecHasDesc|.
+
+\begin{code}
+-- Quote the |Vec| datatype
+unquoteDecl quotedVec VecHasDesc =
+  deriveHasDesc quotedVec VecHasDesc (quote Vec)
+
+-- Two new functions have been defined:
+-- |quotedVec : QuotedDesc|
+-- |VecHasDesc : {A : Set} {n : Nat} → HasDesc (Vec A n)|
+\end{code}
+
+The |quotedVec| function is of type |QuotedDesc|. It contains, among
+other things, the generated description and will be defined in
+\fref{sec:named-quoting}. The |VecHasDesc| function returns a |HasDesc
+(Vec A n)| for any |A| and |n|. The |HasDesc| record contains the
+derived embedding-projection pair and is further explained in
+\fref{sec:named-deriving}.
+
+The execution of |deriveHasDesc| on a datatype |Dt| will often be
+called \emph{the quoting of |Dt|}. So when we talk about 'after |Vec|
+has been quoted', we mean after |deriveHasDesc| has been executed by
+|unquoteDecl| like in the code above. By convention, we will always
+use names like |quotedDt| and |DtHasVec| for the results of the
+quoting of |Dt|.
+
+\section{Descriptions and ornaments}\label{sec:named-descriptions}
+
+When quoting datatypes, the library can see what the names of
+arguments are within the constructors. A fairly small change to
+descriptions allows each argument to contain such a name, of type
+|String|. This is the \emph{only} change relative to the descriptions
+of \fref{chap:extended}. The full definition of descriptions is given
+in \fref{lst:named-desc}. The argument names have been added in front
+of |_⊗_| and |rec_⊗_|, separated by a forward slash. The rest of the
+definition and semantics are exactly like in
+\fref{sec:ext-descriptions}. The |Vec| type can now be described in
+the following way:
+
+\begin{codelst}{Descriptions with names}{named-desc}\begin{code}
 data ConDesc (I : Cx₀)(Γ : Cx₁) : Set₁ where
   ι : (o : (γ : ⟦ Γ ⟧) → ⟦ I ⟧) → ConDesc I Γ
   _/_⊗_ : (nm : String) → (S : (γ : ⟦ Γ ⟧) → Set) →
@@ -27,8 +99,22 @@ data DatDesc (I : Cx)(Γ : Cx) : (#c : Nat) → Set₁ where
     (xs : DatDesc I Γ #c) → DatDesc I Γ (suc #c)
 \end{code}\end{codelst}
 
-Ornaments are changed accordingly. The copying and insertion operators
-all require a name. The definition of ornaments is in Listing \ref{lst:named-ornament}.
+\begin{code}
+vecDesc : DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2
+vecDesc = ι (const (tt , 0))
+  ⊕ "n" / const Nat ⊗
+    "x" / top ∘ pop ⊗
+    "xs" /rec (λ γ → tt , top (pop γ)) ⊗
+    ι (λ γ → tt , suc (top (pop γ)))
+  ⊕ `0
+\end{code}
+
+Ornaments are changed accordingly. The copying operators |_/-⊗_| and
+|_/rec_⊗_| require a name, which will overwrite the old name of the
+argument. The insertion operators |_/_+⊗_| and |_/rec_+⊗_| need a name
+as well for the argument being inserted. The names are the only change
+compared to the ornaments in \fref{sec:ext-ornaments}. The new
+definition of ornaments is in \fref{lst:named-ornament}.
 
 \begin{codelst}{Ornaments with names}{named-ornament}\begin{code}
 data Orn {I} J (u : Cxf J I)
@@ -51,18 +137,26 @@ data Orn {I} J (u : Cxf J I)
     (x⁺ : Orn _ u _ c x) (xs⁺ : Orn _ u _ c xs) → Orn _ u _ c (x ⊕ xs)
 \end{code}\end{codelst}
 
-\section{Results of the quoting of a datatype}
+The |ornToDesc| function has been slightly updated to make sure that
+the description gets the names as specified in the ornament. Some
+other functions, like |forget| simply ignore the names. All the
+changes required to support the new descriptions and ornaments with
+names are trivial, and they will not be listed here.
 
-Real datatype definitions also contain the names for the datatype and
-the constructors. When a datatype is quoted we want to keep this
-information. Additionally, the quoting of a datatype results in a
-|DatDesc I Γ #c|, but we do not know \emph{which} |I|, |Γ| and
-|#c|. We define a |QuotedDesc| record (Listing \ref{lst:quoteddesc},
-which can contain all the information which we can extract from a
-datatype definition including the indices, parameters, constructor
-count, names and description.
 
-\begin{codelst}{Quoted descriptions}{quoteddesc}\begin{code}
+\section{Quoting datatypes}\label{sec:named-quoting}
+
+% What |QuotedDesc| contains
+The quoting of a datatype gives a |DatDesc I Γ #c| for \emph{some}
+|I|, |Γ| and |#c| which are not known in advance. Additionally, the
+name of the datatype and a list of names of the constructors can be
+read during the quoting operation, so we would like to store them as
+well. The |QuotedDesc| record (\Fref{lst:named-quoteddesc}) can
+contain all the information which we can extract from a datatype
+definition including the indices, parameters, constructor count, names
+and description.
+
+\begin{codelst}{Quoted descriptions}{named-quoteddesc}\begin{code}
 record QuotedDesc : Set₂ where
   constructor mk
   field
@@ -74,13 +168,89 @@ record QuotedDesc : Set₂ where
     desc : DatDesc I Γ #c
 \end{code}\end{codelst}
 
-The |HasDesc| record (Listing \ref{lst:hasdesc}) contains an
-embedding-projection pair for a certain type. The type on which it
-works is passed as a parameter and has to be fully applied; so an
-embedding-projection pair for |Vec| is of type |HasDesc (Vec A n)|,
-for a specific |A| and |n|.
+% About |Name|
+The |Name| type has been used to store the names of constructors and
+of the datatype. It is built-in to Agda, and represents a direct
+reference to a definition in the program. The |`datatypeName| is
+connected to a real datatype, and each of the |`constructorNames| is
+tied to a real constructor. A |Name| can not be created without being
+bound to some definition\footnote{This is the case outside of the |TC|
+  monad (\fref{sec:reflection-tc}). Within the |TC| monad there are no
+  such guarantees. There is a function which gives a |TC Name|, where
+  the name is unbound.}. If we wish to display a name, we must write
+it with the |quote| keyword: The name for the |Vec| datatype, for
+instance, is |quote Vec|. The name for the |zero| constructor is
+|quote zero| or |quote Vec.zero| if the name is ambiguous
+otherwise. Names are explained further in \fref{sec:reflection}.
 
-\begin{codelst}{HasDesc definition}{hasdesc}\begin{code}
+% Difference datatype/constructor names and argument names
+One may note that datatype/constructor names and argument names are
+handled very differently. Argument names are not bound to
+definitions---they are always merely a |String|. It is still easy to
+write a new description by hand. If the programmer does not have a
+name for an argument they can always resort to writing |''_''|. If
+constructor names were included in |DatDesc|, which is definitely
+possible, one would not be able to write new descriptions without
+needing to grab a |Name| from somewhere. A newly written description
+is not bound to a real datatype, so it does not make sense to have to
+connect the constructors to definitions. A |quotedDesc| \emph{is}
+bound to a real datatype by the |Name|s of the datatype and
+constructors.
+
+%
+As noted before, the quoting of a datatype (by the use of
+|deriveHasDesc|) will result in a |QuotedDesc| being defined. As an
+example we quote the |Vec| datatype, just like in the introduction of
+this chapter. We can verify that |(quotedVec : QuotedDesc)| is correct
+with a simple equality, and we note that the datatype name and the
+constructor names match with those of |Vec| and that the description
+contained in the |QuotedDesc| is exactly the |vecDesc| of the previous
+section. The following code will run when only the |Vec| datatype has
+been defined (and the right library module has been opened).
+
+\begin{code}
+unquoteDecl quotedVec VecHasDesc =
+  deriveHasDesc quotedVec VecHasDesc (quote Vec)
+
+quotedVec-check : quotedVec ≡
+  mk (quote Vec) (quote Vec.nil ∷ quote Vec.cons ∷ []) vecDesc
+quotedVec-check = refl
+\end{code}
+
+Alternatively, the |desc| field of the |QuotedDesc| record can be extracted
+with the function |QuotedDesc.desc|:
+
+\begin{code}
+vecDesc-check : QuotedDesc.desc quotedVec ≡ vecDesc
+vecDesc-check = refl
+\end{code}
+
+
+\section{Deriving an embedding-projection pair}\label{sec:named-deriving}
+
+No generic programming framework is complete without having some way
+to derive an embedding-projection pair for a given datatype. Looking
+at the type of for instance the |vec-to| function below, we see that
+it is parameterised over the parameters (|A|) and indices (|n|) of the
+datatype. In a sense, what we called an embedding-projection pair is
+actually a \emph{family} of embedding-projection pairs (similar to how
+|Vec| is a family of types), with a family member for each combination
+of parameters and indices.
+
+\begin{code}
+vec-to : ∀{A n} → Vec A n → μ vecDesc (tt , A) (tt , n)
+vec-from : ∀{A n} → μ vecDesc (tt , A) (tt , n) → Vec A n
+\end{code}
+
+The |HasDesc| record, as defined in \fref{lst:named-hasdesc}, can
+contain one member of the family of embedding-projection pairs. It has
+a type parameter |A| and the contained pair converts values between
+|A| and |μ desc γ i|. The fields |desc|, |γ| and |i| together
+represent a fully applied type, so the type |A| must be fully applied
+as well. One could have a |HasDesc (Vec Nat 10)| or a |HasDesc (Fin
+7)|, but |HasDesc Vec| is not a correct type.
+
+\begin{codelst}{HasDesc definition}{named-hasdesc}\begin{code}
 record HasDesc (A : Set) : Set₂ where
   constructor mk
   field
@@ -93,85 +263,520 @@ record HasDesc (A : Set) : Set₂ where
     from′ : μ desc γ i → A
 \end{code}\end{codelst}
 
-The |HasDesc| record is supposed to be used as an instance, so:
+To fully cover the use cases of the family of embedding-projections
+defined by |vec-to| and |vec-from|, one would have to define a family
+of |HasDesc| records. The signature of the family of |HasDesc|s for
+|Vec| is straightforward, simply parameterise by the |A| and |n|:
 
 \begin{code}
-to : {A : Set} ⦃r : HasDesc A⦄ → A → μ (desc r) (γ r) (i r)
-to ⦃r⦄ = to′ r
-from : {A : Set} ⦃r : HasDesc A⦄ → μ (desc r) (γ r) (i r) → A
-from ⦃r⦄ = from′ r
+instance
+  VecHasDesc : ∀{A n} → HasDesc (Vec A n)
 \end{code}
 
-\begin{example}
+This is exactly the signature of the definition which is generated by
+the quoting of |Vec|. The |instance| keyword allows the |VecHasDesc|
+definition to be used for instance searching. That is, if a function
+requires a n instance argument |⦃ r : HasDesc B ⦄|, Agda will try to
+use |VecHasDesc| to build a record of type |HasDesc B|. Of course,
+|VecHasDesc| will only be able to return a result if |B| is |Vec A n|
+for some |A| and |n|.
+
+Outside of the record, |HasDesc.to′| and |HasDesc.from′| are of type
+|{A : Set} (r : HasDesc A) → ...|. They require a |HasDesc| record to
+be passed explicitly. We expect |HasDesc| records to be defined as
+instances, so we would be better off by using instance search for
+these functions. The functions |to| and |from| are the versions of
+|to′| and |from′| which use instance search to find the right
+|HasDesc| record\footnote{The same effect could be achieved by |open
+  HasDesc ⦃...⦄| with the proper qualifiers.}:
+
 \begin{code}
-unquoteDecl quotedVec vecHasDesc =
-  deriveHasDesc quotedVec vecHasDesc (quote Vec)
+to : {A : Set} ⦃r : HasDesc A⦄ →
+  A → μ (HasDesc.desc r) (HasDesc.γ r) (HasDesc.i r)
+to ⦃r⦄ = HasDesc.to′ r
+
+from : {A : Set} ⦃r : HasDesc A⦄ →
+  μ (HasDesc.desc r) (HasDesc.γ r) (HasDesc.i r) → A
+from ⦃r⦄ = HasDesc.from′ r
 \end{code}
 
+Any time after |Vec| has
+been quoted, one may use |to| or |from| for |Vec|s and the right
+|HasDesc| will be found automatically. The definition
+of |vec-to| and |vec-from| thus becomes trivial:
+
 \begin{code}
-quotedVec : QuotedDesc
-
-vecHasDesc : {A : Set} {n : Nat} → HasDesc (Vec A n)
-
-vecto : ∀{A n} → Vec A n → μ vecDesc (tt , A) (tt , n)
-vecto = to
+vec-to : ∀{A n} → Vec A n → μ vecDesc (tt , A) (tt , n)
+vec-to = to
+vec-from : ∀{A n} → μ vecDesc (tt , A) (tt , n) → Vec A n
+vec-from = from
 \end{code}
 
-\end{example}
 
-\section{Generic functions and algebras}
+\section{Generic functions}\label{sec:named-generic}
 
-Some of the operations on descriptions and ornaments can be lifted to
-work on real datatypes.
+Now that embedding-projection pairs are readily available in their
+|HasDesc| instances, generic programming with actual datatypes becomes
+possible. A typical example is the |fold| function. Remember the
+signature of |fold| in \fref{lst:ext-fold}:
 
 \begin{code}
-fold : ∀{I Γ #c}{D : DatDesc I Γ #c}{γ X} (α : Alg D γ X) →
-  {i : ⟦ I ⟧} → μ D γ i → X i
-gfold : ∀{A}⦃R : HasDesc A⦄ → ∀{X} → Alg (desc R) (γ R) X → A → X (i R)
-gfold α = fold α ∘ to
+fold : ∀{I Γ #c}{D : DatDesc I Γ #c}{γ X}
+  (α : Alg D γ X) → μ D γ →ⁱ X
 \end{code}
 
-\section{More ornament combinators}
-
-Algebraic ornaments, composition (|>>⁺|) and reornament may be
-considered as ornament combinators.
+One may expand the |_→ⁱ_| and reorder some variables to get the
+following equivalent signature:
 
 \begin{code}
-idOrn : ∀{I Γ Δ dt c}{D : Desc I Γ dt} → DefOrn I id Δ c D
-idOrn {dt = isCon} {c} {ι o} = ι (λ δ → inv (o (c δ)))
-idOrn {dt = isCon} {c} {nm / S ⊗ xs} = nm /-⊗ idOrn
-idOrn {dt = isCon} {c} {nm /rec i ⊗ xs} = nm /rec (λ δ → inv (i (c δ))) ⊗ idOrn
-idOrn {dt = isDat _} {c} {`0} = `0
-idOrn {dt = isDat _} {c} {x ⊕ xs} = idOrn ⊕ idOrn
+fold : ∀{I Γ #c γ i}{desc : DatDesc I Γ #c} → ∀{X} →
+  (α : Alg desc γ X) → μ D γ i → X i
 \end{code}
 
+The |μ D γ i| which goes in is the generic representation of some
+type. If we want to define a |gfold| which works for real types, the
+|μ D γ i| must be replaced by some |A|. The |A| is required to be
+representable with a description, so a |HasDesc A| is expected. This
+|HasDesc| contains all the values for |I|, |Γ|, |#c|, |desc|, |γ| and
+|i|---all these variables can be removed from the signature. We end up
+with the following signature for |gfold|, where the notation |var _R|
+is used to take the field |var| from the record |R|\footnote{In Agda,
+  |var _R| can be written as |var R| \emph{if} the |HasDesc| module
+  has been opened. Without opening the module one must write
+  |HasDesc.var R|.}.
+
 \begin{code}
-updateConstructor : ∀{I Γ #c}{D : DatDesc I Γ #c} → (k : Fin #c) →
-                    ∀{Δ c} → DefOrn I id Δ c (lookupCtor D k) →
-                    DefOrn I id Δ c D
+  gfold : ∀{A}⦃ R : HasDesc A ⦄ → ∀{X} →
+    Alg (desc _R) (γ _R) X → A → X (i _R)
+  gfold α = fold α ∘ to
+\end{code}
+
+Now |gfold| can be used to calculate, for instance, the sum of a
+|Vec|. If we assume that some algebra |vecSumAlg| exists, it can
+simply be |gfold|ed over a |Vec| and the |HasDesc| record is found
+automatically.
+
+\begin{code}
+vecSumAlg : Alg vecDesc (tt , Nat) (λ i → Nat)
+vecSumAlg = ...
+
+vec-example : Vec Nat 4
+vec-example = cons _ 3 (cons _ 1 (cons _ 5 (cons _ 6 nil)))
+
+vec-example-sum : gfold vecSumAlg vec-example ≡ 15
+vec-example-sum = refl
+\end{code}
+
+Other functions on descriptions can be transformed to generic
+functions as well, including some which work with ornaments. The
+|gforget| function is a version of |forget| which works on datatypes
+which have been quoted. Let us quote the |List| datatype and create a
+|list→vec| ornament:
+
+\begin{code}
+unquoteDecl quotedList ListHasDesc =
+  deriveHasDesc quotedList ListHasDesc (quote List)
+
+listDesc : DatDesc ε (ε ▷₁′ Set) 2
+listDesc = QuotedDesc.desc quotedList
+
+list→vec : Orn (ε ▷′ Nat) (λ i → tt) (ε ▷₁′ Set) id listDesc
+list→vec = ι (λ δ → inv (tt , 0))
+  ⊕ "n" / const Nat +⊗
+     "x" /-⊗
+     "xs" /rec (λ δ → inv (tt , top (pop δ))) ⊗
+     ι (λ δ → inv (tt , suc (top (pop δ))))
+  ⊕ `0
+\end{code}
+
+The forget function for the |list→vec| ornament goes from |μ vecDesc
+(tt , A) (tt , n)| to |μ listDesc (tt , A) tt|. With the right
+definition of |gforget|, |forget| can be used to transform a |Vec A n|
+into a |List A|. The following works:
+
+\begin{code}
+vec-example-forget :
+  gforget list→vec vec-example ≡ 3 ∷ 1 ∷ 5 ∷ 6 ∷ []
+vec-example-forget = refl
+\end{code}
+
+The signature |gforget| is rather unwieldy and uncovers some problems
+with the current structure of the records. This problem and how a
+solution would improve the type of |gforget| is discussed in
+\fref{sec:named-discussion}.
+
+
+\section{Unquoting descriptions}
+
+The functionality defined in \fref{sec:named-quoting},
+\fref{sec:named-deriving} and \fref{sec:named-generic} is similar to
+what generic deriving \cite{magalhaes10} does for Haskell. A
+description is calculated for a given datatype and an
+embedding-projection pair is generated. Generic functions like |gfold|
+and |gdepth| can be implemented. Our descriptions are carefully
+engineered to \emph{always} be convertible to a real datatype, which
+is what we will do in this section.
+
+The process of generating a datatype based on a description will be
+called \emph{unquoting}. Agda (version 2.5.1) does not yet support the
+declaration of datatypes from the reflection mechanism, so it can not
+be fully automated. We \emph{can} write the skeleton of a datatype,
+and unquote the types of the constructors and of the datatype, as
+Pierre-Evariste Dagand suggested. So if one has a |finDesc| of type
+|DatDesc (ε ▷′ Nat) ε 2| which describes the |Fin| type, the user
+would at least have to write the following:
+
+\begin{code}
+data Fin : ... where
+  zero : ...
+  suc : ...
+\end{code}
+
+Two macros are responsible for generating the types for the ...'s:
+|unquoteDat| and |unquoteCon|:
+
+\begin{code}
+macro
+  unquoteDat : {I Γ #c} (D : DatDesc I Γ #c) → Tactic
+  unquoteCon : {I Γ #c} (D : DatDesc I Γ #c) →
+    (k : Fin #c) → (`self : Term) → Tactic
+\end{code}
+
+Macros result in a |Tactic| which is executed at the spot where the
+macro is called. The tactic \emph{must} place a value in that same
+spot. This means that |unquoteDat finDesc| is not of type |Tactic|,
+but it is the \emph{result} of that tactic---in the case of
+|unquoteDat finDesc| the result is |Set| of type |Set₁|. With these
+macros the following definition of |Fin| can be built:
+
+\begin{code}
+data Fin : unquoteDat finDesc where
+  zero : unquoteCon finDesc 0 Fin
+  suc : unquoteCon finDesc 1 Fin
+\end{code}
+
+Now we have the |Fin| datatype and a description |finDesc|, but no
+|QuotedDesc| and |HasDesc| records connecting the two. The usual
+quoting operation |deriveHasDesc| also calculates a description, so it
+is not the best option when a description is already available. For
+this purpose, |deriveHasDescExisting| has been implemented. It is
+similar to |deriveHasDesc|, but takes an additional description and
+will ensure that it matches with the generated description. If it does
+not, an error will occur. After the following call to
+|deriveHasDescExisting|, the |quotedFin| and |FinHasDesc| functions
+will be defined.
+
+\begin{code}
+unquoteDecl quotedFin FinHasDesc =
+  deriveHasDescExisting quotedFin FinHasDesc
+  (quote Fin) finDesc
+\end{code}
+
+We have now used a description to first unquote a datatype
+semi-automatically. After that, we derived the |QuotedDesc| and
+|HasDesc| records. Ideally, one would merge these operations into a
+single call, but that is not possible in the current version of Agda
+(2.5.1). Even if the definition of datatypes were possible, one would
+still need to give the names for all the constructors. If tactics
+would support the definition of datatypes, but the existing |unquoteDecl|
+would have to be used, it might look as follows:
+
+\begin{code}
+-- Speculative:
+unquoteDecl quotedFin FinHasDesc Fin zero suc =
+  unquoteDatatype quotedFin FinHasDesc
+  finDesc Fin (zero ∷ suc ∷ [])
+\end{code}
+
+\section{Building more ornaments}
+
+Writing ornaments with the |Orn| datatypes is verbose and requires a
+decent understanding of how descriptions work. The ornaments do not do
+a particularly good job of communicating ideas like 'add a parameter'
+or 'rename these constructors'. For instance, it is not obvious at
+first sight that the following ornament only renames 'x' to 'y' and
+'xs' to 'ys':
+
+\begin{code}
+list-rename₁ : Orn ε id (ε ▷₁′ Set) id listDesc
+list-rename₁ = ι (λ δ → inv tt)
+  ⊕ "y" /-⊗
+    "ys" /rec (λ δ → inv tt) ⊗
+    ι (λ δ → inv tt)
+  ⊕ `0
+\end{code}
+
+The |Orn| datatype provides a good low-level language which
+guarantees that there the ornament induces a |forget| function. For
+actual programming, higher-level abstractions may be easier to work
+with. These abstractions take the form of functions that generate
+ornaments, and we have already seen some examples: algebraic
+ornaments, ornament composition with |>>⁺| and reornamentation. In
+this section we give some more examples of operations like that. We
+try to bring ornaments closer to how programmers think about
+the relatedness of datatypes.
+
+To start with, we will talk about ornaments which preserve the
+\emph{structure} of the description. That is, it keeps all the |ι|'s,
+|_⊗_|'s and |rec_⊗_|'s in the same place. The most obvious example of
+such an ornament is the identity ornament, which does nothing. A more
+general version allows changes to parameters and indices. We define it
+as |reCx|:
+
+\begin{code}
+reCx : ∀{I J u Γ Δ c dt}{D : Desc I Γ dt} →
+  (f : ∀ i → u ⁻¹ i) → Orn J u Δ c D
+reCx {c = c} {isCon} {ι o} f = ι (f ∘ o ∘ c)
+reCx {c = _} {isCon} {nm / S ⊗ xs} f = nm /-⊗ reCx f
+reCx {c = c} {isCon} {nm /rec i ⊗ xs} f = nm /rec f ∘ i ∘ c ⊗ reCx f
+reCx {c = _} {isDat _} {`0} f = `0
+reCx {c = _} {isDat _} {x ⊕ xs} f = reCx f ⊕ reCx f
+\end{code}
+
+For every ornament, a copy ornament is created which updates the
+indices and context. In the case for |ι|, an index has to be given
+using an ornamented environment. We get an unornamented environment
+with |c|, see what the old index is under that environment with |o|
+and use |f| to convert an old index into a new index. Intuitively, the
+function |f| should be seen as a function of type |⟦ I ⟧ → ⟦ J ⟧|,
+with the extra requirement that |u| is the inverse of this function.
+
+The |reCx| function can be specialised in three ways: by only allowing
+updates to indices, by only allowing updates to the context/parameters
+or by not allowing either. This gives the functions |reindex|,
+|reparam| and |idOrn|:
+
+\begin{code}
+reindex : ∀{I J u Γ dt}{D : Desc I Γ dt} →
+  (f : ∀ i → u ⁻¹ i) → Orn J u Γ id D
+reindex = reCx
+
+reparam : ∀{I Γ Δ c dt}{D : Desc I Γ dt} → Orn I id Δ c D
+reparam = reCx inv
+
+idOrn : ∀{I Γ dt}{D : Desc I Γ dt} → Orn I id Γ id D
+idOrn = reCx inv
+\end{code}
+
+Programmers may only want to ornament one of the constructors of a
+datatype. This idea is expressed by |updateConstructor|. The
+programmer can specify which of the constructors to update with a |Fin
+#c|, and must only give an ornament for that constructor. The identity
+ornament is used for the rest of the constructors.
+
+\begin{code}
+updateConstructor : ∀{I Γ #c}{D : DatDesc I Γ #c} →
+  (k : Fin #c) → Orn I id Γ id (lookupCtor D k) →
+  Orn I id Γ id D
 updateConstructor {D = `0} () o
 updateConstructor {D = x ⊕ xs} zero o = o ⊕ idOrn
-updateConstructor {D = x ⊕ xs} (suc k) o = idOrn ⊕ updateConstructor k o
+updateConstructor {D = x ⊕ xs} (suc k) o =
+  idOrn ⊕ updateConstructor k o
 \end{code}
+
+The ornament from |Nat| to |List| adds a type parameter, and then
+inserts an argument of that type in the |suc| constructor. The
+|addParameterArg| ornament does exactly that. The new parameter is
+specified by the |(Γ ▷₁′ Set)| in the type, and |reparam| is used to
+modify the whole description to work with the new context, without
+really using the newly added type. After that, by using composition,
+|updateConstructor| inserts one new argument in the |k|th
+constructor. Because the argument is added at the start of the
+constructor, the parameter can be referred to with |top|. It is
+currently hard to insert the argument somewhere else in the
+constructor, but it would probably be easy when the separation of
+parameters discussed in \fref{sec:ext-separateparams} is implemented.
 
 \begin{code}
-addParameterArg : ∀{I Γ #c}{D : DatDesc I Γ #c} → Fin #c → String →
-                DefOrn I id (Γ ▷₁′ Set) pop D
-addParameterArg k str = updateConstructor k (str / top +⊗ idOrn)
+addParameterArg : ∀{I Γ #c}{D : DatDesc I Γ #c} →
+  Fin #c → String → Orn I id (Γ ▷₁′ Set) pop D
+addParameterArg k str = reparam
+  >>⁺ updateConstructor k (str / top +⊗ reparam)
 \end{code}
+
+Another common operation when ornamenting datatypes is the renaming of
+arguments. This is done for a specific constructor by the
+|renameArguments| function. The user picks a constructor with |(k :
+Fin #c)| and gives a list of |Maybe String|'s, one for each argument
+in the constructor. If a |Nothing| is given for an argument, the old
+name is kept. The |conRenameArguments| function is a variant which
+works directly on a constructor.
 
 \begin{code}
-conRenameArguments : ∀{I Γ}{D : ConDesc I Γ} → Vec (Maybe String) (countArguments D) → Orn id id D
-conRenameArguments {D = ι o} [] = ι (inv ∘ o)
-conRenameArguments {D = nm / S ⊗ xs} (nm′ ∷ nms) = maybe nm id nm′ /-⊗ (conRenameArguments nms)
-conRenameArguments {D = nm /rec i ⊗ xs} (nm′ ∷ nms) = maybe nm id nm′ /rec (inv ∘ i) ⊗ conRenameArguments nms
+renameArguments : ∀{I Γ #c}{D : DatDesc I Γ #c} →
+  (k : Fin #c) →
+  Vec (Maybe String) (countArguments (lookupCtor D k)) →
+  Orn I id Γ id D
+
+conRenameArguments : ∀{I Γ}{D : ConDesc I Γ} →
+  Vec (Maybe String) (countArguments D) →
+  Orn I id Γ id D
 \end{code}
+
+These are some examples of functions which create ornaments. Small
+components like |idOrn|, |reparam|, |reindex|, |reCx|,
+|renameArguments| and |updateConstructor| can be combined
+easily. \Fref{chap:usage} already showed an example of what |nat→list|
+could look like:
 
 \begin{code}
-renameArguments : ∀{I Γ #c}{D : DatDesc I Γ #c}(k : Fin #c) →
-                  Vec (Maybe String) (countArguments (lookupCtor D k)) → Orn id id D
-renameArguments k nms = updateConstructor k (conRenameArguments nms)
+nat→list′ : Orn _ _ _ _ natDesc
+nat→list′ = renameArguments 1 (just "xs" ∷ [])
+  >>⁺ addParameterArg 1 "x"
 \end{code}
 
-\section{Discussion}
+This definitely does a better job at communicating the essence of the
+changes than the original ornament:
 
+\begin{code}
+nat→list : Orn ε id (ε ▷₁′ Set) (λ _ → tt) natDesc
+nat→list = ι (λ δ → inv tt)
+  ⊕ "x" / top +⊗
+    "xs" /rec (λ δ → inv tt) ⊗
+    ι (λ δ → inv tt)
+  ⊕ `0
+\end{code}
+
+These are two extremes, where the former is very high-level and the
+later is very low-level. There is nothing wrong with something in between:
+
+\begin{code}
+nat→list″ : Orn ε id (ε ▷₁′ Set) (λ _ → tt) natDesc
+nat→list″ = reparam
+  ⊕ "x" / top +⊗
+  (reparam >>⁺ conRenameArguments (just "xs" ∷ []))
+  ⊕ `0
+\end{code}
+
+
+\section{Discussion}\label{sec:named-discussion}
+
+This chapter presented the final iteration of descriptions, which is
+suited to describe a fairly large class of datatypes. We showed how
+datatypes can be quoted to these descriptions, and how descriptions
+can be unquoted to datatypes. Some generic functions were defined,
+which work on actual datatypes once their embedding-projection pairs
+are derived (which is automatically done when quoting a
+datatype). Finally, some higher-level ornaments were defined.
+
+With all these components together, we hope to have made the barrier
+to start working with descriptions and ornaments low enough. A user
+does not necessarily need to know much about the theory to quote a
+datatype, make some basic modifications, and unquote it to a new
+datatype. At the very least, it is easy to figure out what the
+description for a certain datatype should be by simply quoting
+it. These abstractions are still leaky---if one does not write
+everything just right, they will get errors which can not be
+understood without a deeper understanding of these descriptions and
+ornaments.
+
+\subsection{Embedding-projection instances}
+
+The |HasDesc| record is indexed by the represented type |A|, this
+allows for easy instance searching \emph{by type}. When one has a
+value of type |A| this works well, for instance in the use of |to|. In
+the following example, the |HasDesc (Vec Nat 4)| instance is found
+which contains the description, |γ| and |i|. The type of |?0| is
+inferred as |μ vecDesc (tt , Nat) (tt , 4)|.
+
+\begin{code}
+vec-example-rep : ?0 -- |μ vecDesc (tt , Nat) (tt , 4)|
+vec-example-rep = to vec-example
+\end{code}
+
+The other way around is not so easy. If one only knows |γ|, |i| and
+the description itself, Agda can not search for a |HasDesc|
+instance. This means that the type of |from vec-example-rep|, the hole
+in the following example, can not be inferred. If the result type is
+given by the user, or known in some other way, that can be used to
+find the |HasDesc|. So the following does type check:
+
+\begin{code}
+vec-example′ : Vec Nat 4
+vec-example′ = from vec-example-rep
+\end{code}
+
+While |to| and |from| seem to behave the same, this is only the case
+when all the types are known. The difference is that |to| uses its
+input to find the record, and |from| requires the result type before a
+record can be found. One of the consequences is that the signature of
+|gforget| becomes very complicated:
+
+\begin{code}
+  gforget : ∀{A}⦃ AR : HasDesc A ⦄{B}⦃ BR : HasDesc B ⦄ →
+    ∀{u c} (o : Orn (I _BR) u (Γ _BR) c (desc _AR)) →
+    ⦃ ieq : i _AR ≡ u (i _BR) ⦄
+    ⦃ γeq : γ _AR ≡ c (γ _BR) ⦄
+    ⦃ #ceq : #c _AR ≡ #c _BR ⦄
+    ⦃ deq : transport (DatDesc (I _BR) (Γ _BR)) #ceq (ornToDesc o)
+      ≡ desc _BR ⦄ →
+    B → A
+\end{code}
+
+The ornament goes from |A| to |B|, so the forget function goes from
+|B| to |A|. The |HasDesc B| instance can be searched for, which is
+necessary to transform the |B| into a |μ (desc _BR) (γ _BR) (i _BR)|. By
+ornamenting with |o| we get a |μ (ornToDesc o) (c (γ _BR))| |(u (i _BR))|. In
+the current implementation, the result type |A| is used to find a
+|HasDesc A| instance, which gives us a way to transform a |μ (desc _AR)
+(γ _AR) (i _AR)| into an |A|. The types |μ (ornToDesc o) (c (γ _BR)) (u
+(i _BR))| and |μ (desc _AR) (γ _AR) (i _AR)| do not line up, which is why
+all the equalities are required.
+
+A solution to this problem is to the |HasDesc| record into several
+records. \Fref{lst:named-altrecords} shows how that might work. The
+embedding-projection pair is in a separate record parameterised by
+|A|, |desc|, |γ| and |i|. The |Embeddable| record takes over the role
+of |HasDesc| and is suitable for instance search by type, while the
+|Projectable| record enables searching by description. Using these
+records, the |to| and |from| functions can be implemented in a way
+where type information always flows from the input to the output, so
+the result types of |to| and |from| can be inferred.
+
+\begin{codelst}{Alternative embedding-projection records}{named-altrecords}\begin{code}
+  record EmbeddingProjection (A : Set) {I Γ #c}
+    (desc : DatDesc I Γ #c) (γ : ⟦ Γ ⟧) (i : ⟦ I ⟧) : Set₂ where
+    constructor mk
+    field
+      to′ : A → μ desc γ i
+      from′ : μ desc γ i → A
+
+  record Embeddable (A : Set) : Set₂ where
+    constructor mk
+    field
+      {I Γ} : Cx
+      {#c} : Nat
+      desc : DatDesc I Γ #c
+      γ : ⟦ Γ ⟧
+      i : ⟦ I ⟧
+      ep : EmbeddingProjection A desc γ i
+
+  record Projectable {I Γ #c}
+    (desc : DatDesc I Γ #c) (γ : ⟦ Γ ⟧) (i : ⟦ I ⟧) : Set₂ where
+    constructor mk
+    field
+      A : Set
+      ep : EmbeddingProjection A desc γ i
+
+  to : ∀{A}⦃ R : Embeddable A ⦄ → A → μ (desc _R) (γ _R) (i _R)
+  to ⦃ mk desc γ i ep ⦄ = to′ ep
+
+  from : ∀{I Γ #c desc γ i}⦃ R : Projectable {I} {Γ} {#c} desc γ i ⦄ →
+    μ desc γ i → A _R
+  from ⦃ mk A ep ⦄ = from′ ep
+\end{code}\end{codelst}
+
+The signature of the generic forget function becomes a lot
+simpler. The embedding-projection pair of the result is obtained by
+searching a |Projectable| with the calculated environment and indices,
+so there is no need to check afterwards that the types line up.
+The |ornToDesc o ≡ desc _BR| equality is still required to make sure
+that the given ornament matches with the input type |B|.
+
+\begin{code}
+  gforget′ : ∀{B}⦃ BR : Embeddable B ⦄ →
+    ∀{AI AΓ Adesc u c} (o : Orn {AI} (I _BR) u {AΓ} (Γ _BR) c Adesc) →
+    ⦃ deq : ornToDesc o ≡ desc _BR ⦄ →
+    ⦃ AR : Projectable Adesc (c (γ _BR)) (u (i _BR)) ⦄ →
+    B → A _AR
+\end{code}

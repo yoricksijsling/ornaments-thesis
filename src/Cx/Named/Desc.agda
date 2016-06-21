@@ -73,7 +73,7 @@ descmap {dt = isDat _} f xs (k , v) = k , descmap f (lookupCtor xs k) v
 -- sumAlg : Alg listD (ε ▶ Nat) (const Nat)
 -- lengthAlg : ∀{A} → Alg listD (ε ▶ A) (const Nat)
 
-Alg : ∀{I Γ dt} → Desc I Γ dt → (γ : ⟦ Γ ⟧) → (⟦ I ⟧ → Set) → Set
+Alg : ∀{I Γ dt} → Desc I Γ dt → (γ : ⟦ Γ ⟧) → ((i : ⟦ I ⟧) → Set) → Set
 Alg {I} D γ X = ⟦ D ⟧ γ X →ⁱ X
 
 module Fold {I Γ #c}{D : DatDesc I Γ #c}{γ X} (α : Alg D γ X) where
