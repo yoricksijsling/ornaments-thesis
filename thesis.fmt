@@ -16,9 +16,11 @@
 %format quote = "\K{quote}"
 %format quoteTerm = "\K{quoteTerm}"
 %format unquote = "\K{unquote}"
-%format unquoteDecl = "\K{unquotedecl}"
+%format unquoteDecl = "\K{unquoteDecl}"
+%format unquoteDef = "\K{unquoteDef}"
 %format quoteGoal = "\K{quoteGoal}"
 %format tactic = "\K{tactic}"
+%format instance = "\K{instance}"
 
 % Holes
 %format ? = "\Hole{?}"

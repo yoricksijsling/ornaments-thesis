@@ -10,6 +10,7 @@ is presented to get a true generic programming library which allows
 the derivation of descriptions and embedding-projection pairs from
 user-defined datatypes.
 
+% What is quoting
 One of the major goals of this thesis is to allow quoting of
 datatypes. We use the term \emph{quoting} in general for the
 conversion of \emph{code} to \emph{data}. More concretely, actual
@@ -18,13 +19,61 @@ representations using datatypes. In the case of the quoting of
 datatypes, it primarily means that a description is being calculated
 for a user-defined datatype.
 
+% Deriving
 Once a datatype has been quoted, one will want to derive an
 embedding-projection pair to translate between the original type and
 the representation. The term 'derive' is used in the way that it is in
-Haskell, where certain record instances can be automatically derived
-from datatypes with the |deriving| keyword. This is most easily
-explained with an example---Assume that the |Vec| datatype has been
-defined as follows:
+Haskell, where certain record instances like |Show|, |Read| and
+|Generic| can be automatically derived from datatypes by the
+|deriving| keyword. We will be using the |deriveHasDesc| function to
+perform a similar process:
+
+\begin{code}
+deriveHasDesc : (`quotedDesc `hasDesc `dt : Name) → TC ⊤
+\end{code}
+
+% TC
+The result of |deriveHasDesc| is a computation in the |TC| monad. This
+monad is built into Agda, and can be run by using keywords like
+|unquoteDecl|. The |TC| computation can access types in the context,
+define new functions, perform unification of types, normalise types,
+and more. Essentially, it is a way to directly control the
+type-checker. A |TC| computation is run during the type-checking at
+the exact point where it was called, and type-checking will only
+continue once the result has been computed. Type errors can occur
+during the execution, for instance because one tries to unify two
+types which can not be unified, or because an error is thrown
+manually.
+
+% Names
+The |deriveHasDesc| function requires three values of the |Name|
+type. The |Name| type is also built-in, and is a reference to a
+definition in the program. \emph{Every} |Name| is directly connected
+to a function, datatype, record or other kind of definition. Agda
+makes sure that this is always the case\footnote{Within a |TC|
+  computation, new |Name|s can be created which are not necessarily
+  bound to a definition. There is, however, no way for these |Name|s
+  to escape the |TC| monad.}. We will be using two ways to create
+|Name|s:
+
+\begin{itemize}
+\item With the |quote| keyword, a |Name| is given for an existing
+  definition. So the expression |quote Vec| results in a |Name| which
+  refers to the |Vec| datatype.
+\item A statement like |unquoteDecl x_1 x_2 ⋯ x_n = m|. The expression
+  |m| must be of type |TC ⊤|, and \emph{must} declare functions with
+  the names |x_1 ⋯ x_n|. Within |m|, these names are of type
+  |Name|. After the |unquoteDecl| statement |n| new definitions have
+  been created.
+\end{itemize}
+
+% deriveHasDesc again
+Back to our |deriveHasDesc| function. It is used in combination with
+the |unquoteDecl| keyword such that |`quotedDesc| and |`hasDesc| are
+functions which must be declared by |deriveHasDesc|. The |`dt|
+argument is the name of the datatype which must be quoted. This is
+most easily explained with an example---Assume that the |Vec| datatype
+has been defined as follows:
 
 \begin{code}
 data Vec (A : Set) : Nat → Set where
@@ -32,22 +81,21 @@ data Vec (A : Set) : Nat → Set where
   cons : ∀ n → (x : A) → (xs : Vec A n) → Vec A (suc n)
 \end{code}
 
-Note that the |n| argument of cons is visible, not hidden as it
-usually is. The reason for this is that hidden arguments are currently
-not supported by the library. The constructor is named |cons| instead
-of |_∷_| because it requires 3 visible arguments, so the infix
-notation does not work as one would expect.
+% Note on visibility of |n|
+\begin{remark}
+  The |n| argument of cons is visible, not hidden as it usually
+  is. Hidden arguments are currently not supported by the
+  library. This is why the constructor is named |cons| instead of
+  |_∷_|.  With 3 visible arguments, the infix notation would not give
+  the intended result.
+\end{remark}
 
-The |deriveHasDesc| function can be used in conjunction with
-|unquoteDecl| metaprogramming keyword. The behavior of the
-|unquoteDecl| keyword is explained in \todo{ref unquotedecl}. The most
-important thing to know is that it is not a definition, but
-|deriveHasDesc| is being executed \emph{in place} during the
-type-checking. It may throw type errors if the quoting fails for some
-reason (like when the name is not the name of a datatype or when the
-datatype can not be described by our descriptions). When
-|deriveHasDesc| is used on the |Vec| datatype, \emph{two} new
-functions are defined: |quotedVec| and |VecHasDesc|.
+% Using deriveHasDesc
+We use |deriveHasDesc| on the |Vec| datatype and run the |TC|
+computation by using |unquoteDecl|. This process defines two functions
+for us: |quotedVec| and |VecHasDesc|. If the name does not match a
+datatype, or if the datatype can not be described by our descriptions,
+a type error is thrown.
 
 \begin{code}
 -- Quote the |Vec| datatype
@@ -168,20 +216,18 @@ record QuotedDesc : Set₂ where
     desc : DatDesc I Γ #c
 \end{code}\end{codelst}
 
+
 % About |Name|
 The |Name| type has been used to store the names of constructors and
-of the datatype. It is built-in to Agda, and represents a direct
-reference to a definition in the program. The |`datatypeName| is
-connected to a real datatype, and each of the |`constructorNames| is
-tied to a real constructor. A |Name| can not be created without being
-bound to some definition\footnote{This is the case outside of the |TC|
-  monad (\fref{sec:reflection-tc}). Within the |TC| monad there are no
-  such guarantees. There is a function which gives a |TC Name|, where
-  the name is unbound.}. If we wish to display a name, we must write
-it with the |quote| keyword: The name for the |Vec| datatype, for
-instance, is |quote Vec|. The name for the |zero| constructor is
-|quote zero| or |quote Vec.zero| if the name is ambiguous
-otherwise. Names are explained further in \fref{sec:reflection}.
+of the datatype. As explained in the introduction of this chapter,
+this means that |`datatypeName| is connected to a real datatype, and
+each of the |`constructorNames| is tied to a real
+constructor\footnote{Strictly speaking, these names could be connected
+  to any definition. So |`datatypeName| could just as well be the name
+  of a function.}. If we wish to display a name, we will write it with
+the |quote| keyword: The name for the |Vec| datatype, for instance, is
+|quote Vec|. The name for the |zero| constructor is |quote zero|, or
+if that is ambiguous |quote Vec.zero|.
 
 % Difference datatype/constructor names and argument names
 One may note that datatype/constructor names and argument names are
@@ -198,15 +244,15 @@ bound to a real datatype by the |Name|s of the datatype and
 constructors.
 
 %
-As noted before, the quoting of a datatype (by the use of
-|deriveHasDesc|) will result in a |QuotedDesc| being defined. As an
-example we quote the |Vec| datatype, just like in the introduction of
-this chapter. We can verify that |(quotedVec : QuotedDesc)| is correct
-with a simple equality, and we note that the datatype name and the
-constructor names match with those of |Vec| and that the description
-contained in the |QuotedDesc| is exactly the |vecDesc| of the previous
-section. The following code will run when only the |Vec| datatype has
-been defined (and the right library module has been opened).
+The quoting of a datatype (by the use of |deriveHasDesc|) will result
+in a |QuotedDesc| being defined. As an example we quote the |Vec|
+datatype, just like in the introduction of this chapter. We can verify
+that |(quotedVec : QuotedDesc)| is correct with a simple equality, and
+we note that the datatype name and the constructor names match with
+those of |Vec| and that the description contained in the |QuotedDesc|
+is exactly the |vecDesc| of the previous section. The following code
+will work whenever the |Vec| datatype has been defined and our library
+module has been opened.
 
 \begin{code}
 unquoteDecl quotedVec VecHasDesc =
@@ -217,8 +263,8 @@ quotedVec-check : quotedVec ≡
 quotedVec-check = refl
 \end{code}
 
-Alternatively, the |desc| field of the |QuotedDesc| record can be extracted
-with the function |QuotedDesc.desc|:
+Alternatively, the |desc| field of the |QuotedDesc| record can be
+extracted by the function |QuotedDesc.desc|:
 
 \begin{code}
 vecDesc-check : QuotedDesc.desc quotedVec ≡ vecDesc

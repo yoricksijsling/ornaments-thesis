@@ -32,30 +32,27 @@
 }
 
 % Theorem styles
-\newtheorem{theorem}{Theorem}[section]
-\newtheorem{remark}{Remark}[section]
-\newtheorem{conjecture}{Conjecture}[section]
+\newtheorem{remark}{Remark}[chapter]
 \theoremstyle{definition}
 \newtheorem{examplex}{Example}[section]
 \newenvironment{example}
   {\pushQED{\qed}\renewcommand{\qedsymbol}{$\triangle$}\examplex}
   {\popQED\endexamplex}
-\newtheorem{definition}{Definition}[section]
 
-% Shortcuts
-\newcommand{\definedin}[1]{\footnote{Module: #1}}
+% % Shortcuts
+% \newcommand{\definedin}[1]{\footnote{Module: #1}}
 
-% Styling things
-\newcommand{\args}[1]{\overline{#1}}
-\newcommand{\ttargs}[1]{\(\args{\texttt{#1}}\)}
-\newcommand{\ttunderline}[1]{\(\underline{\texttt{#1}}\)}
-\definecolor{ttemph1}{rgb}{0.7,0,0}
-\definecolor{ttemph2}{rgb}{0,0,0.7}
-\newcommand{\codeemph}[2]{%
-\ifnum#1=1\textcolor{ttemph1}{\textsf{\textbf{#2}}}%
-\else\ifnum#1=2\textcolor{ttemph2}{\textsf{\textbf{#2}}}%
-\else\textbf{#2}%
-\fi\fi}
+% % Styling things
+% \newcommand{\args}[1]{\overline{#1}}
+% \newcommand{\ttargs}[1]{\(\args{\texttt{#1}}\)}
+% \newcommand{\ttunderline}[1]{\(\underline{\texttt{#1}}\)}
+% \definecolor{ttemph1}{rgb}{0.7,0,0}
+% \definecolor{ttemph2}{rgb}{0,0,0.7}
+% \newcommand{\codeemph}[2]{%
+% \ifnum#1=1\textcolor{ttemph1}{\textsf{\textbf{#2}}}%
+% \else\ifnum#1=2\textcolor{ttemph2}{\textsf{\textbf{#2}}}%
+% \else\textbf{#2}%
+% \fi\fi}
 
 %--------------------------------------------------
 
