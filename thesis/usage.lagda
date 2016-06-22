@@ -207,7 +207,7 @@ vecToList : ∀{A n} → Vec A n → List A
 vecToList = gforget list→vec
 \end{code}
 
-We have seen how we this implementation can be used to perform generic
+We have seen how this implementation can be used to perform generic
 operations and to build and use ornaments on a high level with a
 fairly limited amount of knowledge. We did not once have to look at
 the actual descriptions and ornaments which are used internally. In

@@ -21,18 +21,37 @@ takeᵥ : ∀{A m} → (n : Nat) → Vec A (n + m) → Vec A n
 takeᵥ zero _ = []
 takeᵥ (suc n) (x ∷ xs) = x ∷ takeᵥ n xs
 
-smallest : List Nat → Maybe Nat
-smallest [] = nothing
-smallest (x ∷ xs) with smallest xs
-smallest (x ∷ _) | nothing = just x
-smallest (x ∷ _) | just m = just (if (lessNat x m) then x else m)
+--------------------
 
-smallestᵥ : ∀{n} → Vec Nat n → Maybe Nat
-smallestᵥ [] = nothing
-smallestᵥ (x ∷ xs) with smallestᵥ xs
-smallestᵥ (x ∷ _) | nothing = just x
-smallestᵥ (x ∷ _) | just m = just (if (lessNat x m) then x else m)
+find : List Nat → (P : Nat → Bool) → Maybe Nat
+find [] P = nothing
+find (x ∷ xs) P = if (P x) then (just x) else (find xs P)
 
+findᵥ : ∀{n} → Vec Nat n → (P : Nat → Bool) → Maybe Nat
+findᵥ [] P = nothing
+findᵥ (x ∷ xs) P = if (P x) then (just x) else (findᵥ xs P)
+
+--
+
+data BoundedNatList (mx : Nat) : Set where
+  [] : BoundedNatList mx
+  _∷_ : (x : Nat) {{p : IsTrue (x ≤? mx)}} →
+    (xs : BoundedNatList mx) → BoundedNatList mx
+
+data SortedNatList : (l : Nat) → Set where
+  [] : ∀{l} → SortedNatList l
+  _∷_ : ∀{l} → (x : Nat) {{p : IsTrue (x ≤? l)}} →
+    (xs : SortedNatList l) → SortedNatList x
+
+find_b : ∀{mx} → BoundedNatList mx → (P : Nat → Bool) → Maybe Nat
+find_b [] P = nothing
+find_b (x ∷ xs) P = if (P x) then (just x) else (find_b xs P)
+
+find_s : ∀{l} → SortedNatList l → (P : Nat → Bool) → Maybe Nat
+find_s [] P = nothing
+find_s (x ∷ xs) P = if (P x) then (just x) else (find_s xs P)
+
+--------------------
 
 -- _++_ : ∀{A} → List A → List A → List A
 -- []       ++ ys = ys

@@ -30,6 +30,11 @@
 %format ?3 = "\Hole{?3}"
 %format ... = "\Hole{⋯}"
 
+% Introduction
+%format findᵥ = find "_{" v "}"
+%format find_b = find "_{" b "}"
+%format find_s = find "_{" s "}"
+
 %format __ = "\kern.1em\V{\_}\kern.1em"
 %format _0 = "_{" 0 "}"
 %format _1 = "_{" 1 "}"
@@ -95,6 +100,8 @@
 %format ⟦_⟧Cx = ⟦_ ⟧Cx
 %format ⟧DescΣ = ⟧ "_{\Vlight{DescΣ}}"
 %format ⟦_⟧DescΣ = ⟦_ ⟧DescΣ
+%format ⟧∋Set = ⟧ "_{\Vlight{∋Set}}"
+%format ⟦_⟧∋Set = ⟦_ ⟧∋Set
 
 % Σ suffixes
 %format _Σ = "_{\Vlight{Σ}}"

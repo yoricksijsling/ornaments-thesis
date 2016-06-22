@@ -2,18 +2,30 @@
 
 \chapter{Discussion}\label{chap:discussion}
 
-The structure of our descriptions match closely with the structure of
-actual datatype declarations. Only those parts which can contain
-arbitrary terms are represented as higher order arguments in our
-descriptions.
+The structure of our descriptions matches closely with the structure
+of actual datatype declarations. We have chosen to split them up into
+constructor descriptions and datatype descriptions, and to have a
+first-order structure to determine which arguments each constructor
+has. Functions are only allowed within parts where arbitrary terms
+could occur in real datatypes. Our descriptions have strict control
+over what can and what can not be influenced by the context.
+
+Descriptions encode indexed functors that are of the form |(I → Set) →
+(O → Set)|. There are many ways to encode indexed functors, including
+ways that build on the Σ-descriptions of \fref{sec:sop-Σdesc}. Indexed
+containers\cite{altenkirch09} can also be used, but for our purposes
+they have the same problems as Σ-descriptions: They can be used to
+define a lot of exotic types that do not correspond to an Agda
+datatype.
+
 
 \section{Detecting parameter use}
 
-In our descriptions, starting with \fref{chap:simple}, 'types within a
-context' were represented with a function of type |⟦ Γ ⟧ → Set|. This
-allows any type to be represented and the type may depend on a local
-environment. While this is a very powerful approach if one only cares
-about representing types, it is not very helpful when the
+In our descriptions, starting with those in \fref{chap:simple}, 'types
+within a context' were represented with a function of type |⟦ Γ ⟧ →
+Set|. This allows any type to be represented and the type may depend
+on a local environment. While this is a very powerful approach if one
+only cares about representing types, it is not very helpful when the
 representation needs to be \emph{inspected}. For instance, one can not
 decide whether a given term uses a certain parameter. More precisely,
 the following definition of |isTop| can not be completed. For an
@@ -203,117 +215,6 @@ the constructor type is changed from |(S : ⟦ Γ ⟧ → Set) → ...| to |{S
   : ⟦ Γ ⟧ → Set} → Γ ⋆ S → ...|. It remains to be seen how ornaments
 will work out with such descriptions.
 
-% The decoding for this universe is of type |Code → (P : Set) → (X :
-% Set) → Set|, where the decoding of |par| results in the parameter type
-% |P|. With simple pattern matching, the usage of the (single) parameter
-% can be detected. This exact solution does not work for our
-% descriptions, because they can have multiple (or zero)
-% parameters. Within our descriptions, a better approach might be to
-% replace the |(S : ⟦ Γ ⟧ → Set)| in the |_⊗_| constructor with
-% something more inspectable. If 'types within a context' were
-% represented as a datatype, we would be able to use pattern matching to
-% detect the use of parameters. We will show that such an approach is
-% feasible.
-
-% At its core, the issue of representing dependent types is intertwined
-% with representing terms with dependent types, because the full
-% language of terms can be used to construct types. There is existing
-% literature dealing with the internalisation of the syntax and
-% semantics of type theory \cite{danielsson07}. Particularly, McBride
-% \cite{mcbride10} has defined a deep embedding of a language of terms
-% with dependent types within Agda where type-is-representable
-% predicates are used In the style of Crary et al \cite{crary98}. This
-% implementation is based on the work of McBride.
-
-% Three definitions form the foundation of the representation of
-% dependent types: the datatypes |_⋆_| and |_⊢_|, and the function
-% |⟦_⟧⊢|. The datatype |Γ ⋆ T| \emph{represents types}, where the index
-% |T| is the Agda interpretation of that type. This type exists within
-% the context |Γ|, so |T| requires an environment of type |⟦ Γ ⟧| to
-% give an actual Agda type. The datatype |Γ ⊢ Ty| \emph{represents
-%   terms} of type |Ty|, where the type |Ty| is represented with a |Γ ⋆
-% T|\footnote{In McBride's implementation, |_⊢_| was only indexed by |T|
-%   and not by a |Γ ⋆ T|. This choice solves pattern matching issues
-%   later on.}. The function |⟦_⟧⊢| interprets terms |Γ ⊢ Ty| to real
-% values in Agda. If the encoded type of a term is a |Γ ⋆ T|, the term
-% can be interpreted as a function |(γ : ⟦ Γ ⟧) → T γ|. The signatures
-% are as follows:
-
-% \begin{code}
-% mutual
-%   data _⋆_ (Γ : Cx) : (⟦ Γ ⟧ → Set) → Set₁ where
-%   ...
-
-%   data _⊢_ (Γ : Cx) : ∀{T} → (Γ ⋆ T) → Set₁ where
-%   ...
-
-%   ⟦_⟧⊢ : ∀{Γ T}{Ty : Γ ⋆ T} → Γ ⊢ Ty → (γ : ⟦ Γ ⟧) → T γ
-%   ⟦_⟧⊢ = ...
-% \end{code}
-
-% As a simple example of how these definitions work, we define the |Nat|
-% type within this language. The type itself is added as a constructor
-% for |_⋆_|, and the index |const Nat| indicates that under every
-% environment it corresponds to the Agda type |Nat|. The constructors
-% for |Nat| are terms, so they are added as constructors to
-% |_⊢_|. Corresponding clauses are added to the interpretation
-% function. 
-
-% \begin{code}
-% -- Constructor for |_⋆_|:
-%     `Nat : Γ ⋆ const Nat
-% -- Constructors for |_⊢_|:
-%     `zero : Γ ⊢ `Nat
-%     `suc : Γ ⊢ `Nat → Γ ⊢ `Nat
-% -- Cases for |⟦_⟧⊢|:
-%   ⟦ `zero ⟧⊢ γ = zero
-%   ⟦ `suc n ⟧⊢ γ = suc (⟦ n ⟧⊢ γ)
-% \end{code}
-
-% A term of the encoded type |`Nat| can be created using |`suc| and
-% |`zero|. As expected, a value of type |ε ⊢ `Nat| can be interpreted as a |Nat|.
-
-% \begin{code}
-% `Nat-example : ε ⊢ `Nat 
-% `Nat-example = `suc `zero
-
-% interpret-`Nat-example : Nat
-% interpret-`Nat-example = ⟦ `Nat-example ⟧⊢ tt
-% \end{code}
-
-% One can add many new types and terms to this embedding. For the use in
-% descriptions of datatypes, we will need to lookup types in the
-% context. One has to be careful that the thing being looked up is
-% really a type, something of type |Set|, because normal values exist in
-% the environment as well. The type |Γ ∋Set| is a proof that a context
-% ∣Γ| contains a |Set|---it contains a sequence of |pop′| and |top′|s to
-% indicate the position in the context. The function |⟦_⟧∋Set| takes
-% such a proof and finds the specified |Set| in an environment |γ|. Note
-% that |_∋Set| and |⟦_⟧∋Set| are specifically meant to lookup
-% \emph{types} in the environment. The same can be done to lookup values
-% in the environment, but other definitions are needed \cite{mcbride10}.
-
-% \begin{code}
-% data _∋Set : (Γ : Cx) → Set₁ where
-%   top′ : ∀{Γ} → (Γ ▷′ Set) ∋Set
-%   pop′ : ∀{Γ S} → Γ ∋Set → (Γ ▷ S) ∋Set
-
-% ⟦_⟧∋Set : ∀{Γ} → Γ ∋Set → (γ : ⟦ Γ ⟧) → Set
-% ⟦ top′ ⟧∋Set (γ , t) = t
-% ⟦ pop′ i ⟧∋Set (γ , s) = ⟦ i ⟧∋Set γ
-% \end{code}
-
-% These definitions are used to add a new type to the embedding. The
-% encoded type |`TypeVar| takes a proof that the context |Γ| contains a
-% |Set|, and uses that value of type |Set| as a type.
-
-% \begin{code}
-% -- Constructor for |_⋆_|
-%     `TypeVar : (i : Γ ∋Set) → Γ ⋆ ⟦ i ⟧∋Set
-% \end{code}
-
-
-%%%%%%%%%%%%%%%
 
 % De |rec-⊗_| is nu ook erg beperkt, omdat het alleen directe recursieve
 % calls toestaat. Dit datatype kan nu niet:
@@ -333,15 +234,11 @@ will work out with such descriptions.
 % strict-positivity te ondersteunen wil je, net als de semantiek van
 % descs, een context-indexed pattern functor opleveren.
 
+\section{Other shortcomings}
 
-\section{Indexed containers}
+\todo{About rec}
+About why recs are not added to the context. Strict-positivity and
+stuff. Try to find a counter-example!
 
-What are containers? They are entirely higher-order, while our descriptions are mostly first-order. Containers are useful when one only cares about the behavior of the datatypes (semantic vs ..).
-
-\section{How ornaments influence the choice of descriptions}
-
-\section{Comparison with IODesc}
-
-\section{Williams, Dagand, Remy: Ornaments in practice}
-
-What's the overlap, what are the differences?
+\todo{About pi}
+About why we do not have pi-types (yet).

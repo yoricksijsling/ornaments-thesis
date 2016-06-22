@@ -68,8 +68,8 @@ makes sure that this is always the case\footnote{Within a |TC|
 \end{itemize}
 
 % deriveHasDesc again
-Back to our |deriveHasDesc| function. It is used in combination with
-the |unquoteDecl| keyword such that |`quotedDesc| and |`hasDesc| are
+Our |deriveHasDesc| function is used in combination with the
+|unquoteDecl| keyword, such that |`quotedDesc| and |`hasDesc| are
 functions which must be declared by |deriveHasDesc|. The |`dt|
 argument is the name of the datatype which must be quoted. This is
 most easily explained with an example---Assume that the |Vec| datatype
@@ -452,7 +452,7 @@ solution would improve the type of |gforget| is discussed in
 \fref{sec:named-discussion}.
 
 
-\section{Unquoting descriptions}
+\section{Unquoting descriptions}\label{sec:named-unquoting}
 
 The functionality defined in \fref{sec:named-quoting},
 \fref{sec:named-deriving} and \fref{sec:named-generic} is similar to
@@ -468,8 +468,8 @@ called \emph{unquoting}. Agda (version 2.5.1) does not yet support the
 declaration of datatypes from the reflection mechanism, so it can not
 be fully automated. We \emph{can} write the skeleton of a datatype,
 and unquote the types of the constructors and of the datatype, as
-Pierre-Evariste Dagand suggested. So if one has a |finDesc| of type
-|DatDesc (ε ▷′ Nat) ε 2| which describes the |Fin| type, the user
+Pierre-Evariste Dagand pointed out to me. So if one has a |finDesc| of
+type |DatDesc (ε ▷′ Nat) ε 2| which describes the |Fin| type, the user
 would at least have to write the following:
 
 \begin{code}
@@ -534,7 +534,7 @@ unquoteDecl quotedFin FinHasDesc Fin zero suc =
   finDesc Fin (zero ∷ suc ∷ [])
 \end{code}
 
-\section{Building more ornaments}
+\section{Building more ornaments}\label{sec:named-moreornaments}
 
 Writing ornaments with the |Orn| datatypes is verbose and requires a
 decent understanding of how descriptions work. The ornaments do not do
