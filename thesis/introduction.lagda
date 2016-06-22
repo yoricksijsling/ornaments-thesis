@@ -203,10 +203,10 @@ datatypes. The following contributions are made:
 
 \begin{enumerate}
 \item A universe of descriptions is built to encode datatypes. The
-  descriptions support dependent types (\fref{chap:simple}) by passing
+  descriptions support dependent types (\cref{chap:simple}) by passing
   along a context within the constructors. Multiple parameters and
-  multiple indices can be encoded (\fref{chap:extended}) and the names
-  of arguments can be stored (\fref{chap:named}). The descriptions are
+  multiple indices can be encoded (\cref{chap:extended}) and the names
+  of arguments can be stored (\cref{chap:named}). The descriptions are
   structured such that they are guaranteed to be convertable to Agda
   datatypes, so modifications to descriptions can be made freely
   without having to worry whether the resulting description makes
@@ -220,15 +220,15 @@ datatypes. The following contributions are made:
   algebraic ornaments (section \ref{sec:ext-algorn}) and reornaments
   (section \ref{sec:ext-reornaments}. Some high-level operations are
   defined which can be used to modify descriptions without having deep
-  knowledge of our implementation (\fref{sec:named-moreornaments}).
+  knowledge of our implementation (\cref{sec:named-moreornaments}).
 \item We implement a framework which uses reflection to derive
   descriptions and their embedding-projection pairs for real datatypes
-  (\fref{chap:named}). Some operations like fold and depth are defined
+  (\cref{chap:named}). Some operations like fold and depth are defined
   generically, to work on every datatype for which a description has
-  been derived (\fref{sec:named-generic}). Ornaments can be applied to
+  been derived (\cref{sec:named-generic}). Ornaments can be applied to
   descriptions, and these descriptions can be used to
   semi-automatically declare the corresponding datatype
-  (\fref{sec:named-unquoting}).
+  (\cref{sec:named-unquoting}).
 \end{enumerate}
 
 With these contributions we hope to provide a framework which can be

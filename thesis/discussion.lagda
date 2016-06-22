@@ -12,7 +12,7 @@ over what can and what can not be influenced by the context.
 
 Descriptions encode indexed functors that are of the form |(I → Set) →
 (O → Set)|. There are many ways to encode indexed functors, including
-ways that build on the Σ-descriptions of \fref{sec:sop-Σdesc}. Indexed
+ways that build on the Σ-descriptions of \cref{sec:sop-Σdesc}. Indexed
 containers\cite{altenkirch09} can also be used, but for our purposes
 they have the same problems as Σ-descriptions: They can be used to
 define a lot of exotic types that do not correspond to an Agda
@@ -21,7 +21,7 @@ datatype.
 
 \section{Detecting parameter use}
 
-In our descriptions, starting with those in \fref{chap:simple}, 'types
+In our descriptions, starting with those in \cref{chap:simple}, 'types
 within a context' were represented with a function of type |⟦ Γ ⟧ →
 Set|. This allows any type to be represented and the type may depend
 on a local environment. While this is a very powerful approach if one
@@ -46,7 +46,7 @@ common function in generic programming frameworks is |flatten|; it
 takes a value of a type with a type parameter |A|, and converts it
 into a |List A|. Another is the parametric map function |pmap| which
 maps a function |(f : A → B)| over elements in a structure. With the
-descriptions of \fref{chap:extended}, these functions would have the
+descriptions of \cref{chap:extended}, these functions would have the
 following type:
 
 \begin{code}
@@ -95,7 +95,7 @@ data _∋Set : (Γ : Cx) → Set₁ where
 \end{code}
 
 With these definitions, the PolyP universe can be modified to support
-multiple parameters. \Fref{lst:disc-multipolyp} defines the
+multiple parameters. \Cref{lst:disc-multipolyp} defines the
 descriptions and semantics of the new universe. The semantics are
 mostly business as usual---the parameters are decoded with |⟦_⟧∋Set|.
 
@@ -139,7 +139,7 @@ tree-to (node xs ys) = ⟨ right (tree-to xs , tree-to ys) ⟩
 \end{code}
 
 So far so good, we can do what we already could in
-\fref{chap:extended}. To show that we have indeed made progress, we
+\cref{chap:extended}. To show that we have indeed made progress, we
 will define the |flatten| function, for which parameter use needs to
 be recognised. Using straightforward definitions for |Alg| and |fold|,
 a |flattenAlg| algebra can be defined which works for any
@@ -181,7 +181,7 @@ us back:
   parameter \emph{always} looks like |par top′|, so a simple pattern
   match suffices. In our descriptions, contexts do not remain
   constant but depend on where in a constructor we are. The
-  descriptions of \fref{sec:ext-separateparams}, where the parameters
+  descriptions of \cref{sec:ext-separateparams}, where the parameters
   are separated from internal contexts, do not have this problem.
 \item The possibility of false negatives. If one introduces a new
   constructor for parameter argumenst while keeping the old |_⊗_|

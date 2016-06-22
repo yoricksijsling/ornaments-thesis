@@ -69,7 +69,7 @@ We have seen how recursive types can be built using a few basic
 components, namely the unit type, products, coproducts and
 fixpoints. To be able to reason about these types we have to formalise
 the fact that only these components, and no others, can be used to
-form our types. In \fref{sec:sop-descriptions} we reify these
+form our types. In \cref{sec:sop-descriptions} we reify these
 components to build a \emph{universe of descriptions}.  In general,
 the concept of a universe in Martin Löf's type theory
 \cite{martinloef84} involves two things: firstly there are codes which
@@ -82,13 +82,13 @@ descriptions. By taking the fixpoint of the resulting pattern functor
 we obtain a |Set| which can be used as a type.
 
 With descriptions and their interpretations in place, ornaments for
-these descriptions are defined in \fref{sec:sop-ornaments}. Every
+these descriptions are defined in \cref{sec:sop-ornaments}. Every
 ornament is built for a specific description, and can represent the
 copying, insertion and removal of parts of the description. If something
 is to be called an ornament, it must be possible to produce a |forget|
 function for every ornament. The |forget| function goes from elements
 of the ornamented type to elements of the original type. In
-\fref{sec:sop-ornalgs} an \emph{ornamental algebra} is defined which
+\cref{sec:sop-ornalgs} an \emph{ornamental algebra} is defined which
 gives rise to the |forget| function.
 
 
@@ -112,7 +112,7 @@ codes:
 \end{itemize}
 
 These codes are formalised using the |ConDesc| and |DatDesc|
-datatypes, defined in \fref{lst:sop-descriptions}. |ConDesc| contains
+datatypes, defined in \cref{lst:sop-descriptions}. |ConDesc| contains
 the constructors |ι|, |_⊗_| and |rec-⊗_|; these are sufficient to
 describe constructors of the supported types. |DatDesc| is basically a
 |Vec| of |ConDesc|s; it is indexed by the number of constructors and
@@ -153,11 +153,11 @@ listDesc A = ι ⊕ A ⊗ rec-⊗ ι ⊕ `0
 It's noteworthy that even though we can parameterise these
 descriptions, the descriptions themselves are not really aware of
 it. The parameterisation takes place outside of the descriptions. The
-extended descriptions in \fref{chap:extended} internalise the
+extended descriptions in \cref{chap:extended} internalise the
 parameterisation, such that the parameters are included within the
 descriptions.
 
-\Fref{lst:sop-semantics} shows how descriptions are decoded to pattern
+\Cref{lst:sop-semantics} shows how descriptions are decoded to pattern
 functors. The decoding of |ConDesc| is fairly straightforward,
 producing |λ X → S × X × ⊤| for |S ⊗ rec-⊗ ι|. The decoding of
 |DatDesc| is somewhat more involved. While the conventional approach
@@ -189,7 +189,7 @@ data μ {#c : Nat}(F : DatDesc #c) : Set where
   ⟨_⟩ : ⟦ F ⟧ (μ F) → μ F
 \end{code}\end{codelst}
 
-The fixpoint |μ| (\fref{lst:sop-semantics}) is similar to the fixpoint
+The fixpoint |μ| (\Cref{lst:sop-semantics}) is similar to the fixpoint
 in the introduction of this chapter, but specialised to the decoding
 of |DatDesc|. This specialisation is necessary to convince Agda that
 the datatype |μ| is strictly positive. This works as long as there are
@@ -291,7 +291,7 @@ In the previous section, we claimed that the decoding of a description
 results in a so-called pattern functor. Clearly, |⟦_⟧datDesc| returns
 something of type |Set → Set|, but we have not yet shown that it is
 really a functor. To prove this, we define the functorial map for the
-decoding of any description in \fref{lst:sop-map}. For a function |f :
+decoding of any description in \cref{lst:sop-map}. For a function |f :
 X → Y| and a description |D|, we can always return a function |⟦ D ⟧ X
 → ⟦ D ⟧ Y|.
 
@@ -308,10 +308,10 @@ datDescmap f xs (k , v) = k , conDescmap f (lookupCtor xs k) v
 \end{code}\end{codelst}
 
 A typical operation which can be performed generically is
-\emph{folding}, defined in \fref{lst:sop-fold}. Given a description
+\emph{folding}, defined in \cref{lst:sop-fold}. Given a description
 |D| and an algebra of type |Alg D X|, the |fold| function can
 calculate a result of type |X| for any value of type |μ D|. As seen in
-\fref{lst:sop-fold}, we define |Alg D X| to be |⟦ D ⟧ X → X|. The
+\cref{lst:sop-fold}, we define |Alg D X| to be |⟦ D ⟧ X → X|. The
 intuition here is that the user has to provide the |fold| function
 with a method to calculate a result for every possible value, given
 that a result has already been calculated for the recursive
@@ -364,7 +364,7 @@ by Dagand and McBride \cite{dagand14-transporting}. Our choice of
 descriptions does require some unique adaptations to the ornaments.
 
 The ornaments and the interpretation of them are defined in
-\fref{lst:sop-ornaments}. Ornaments for constructors and datatypes are
+\cref{lst:sop-ornaments}. Ornaments for constructors and datatypes are
 defined separately; |ConOrn| works on |ConDesc|s and |DatOrn| works on
 |DatDesc|s. Both are indexed by their respective descriptions, such
 that an ornament for a datatype description |D| has type |DatOrn
@@ -383,7 +383,7 @@ D|. The ornaments contain several groups of operations:
   inserted or removed with the chosen ornaments, so the |`0| and |_⊕_|
   have to be copied. An ornament has to be given for every constructor
   in the datatype. The choice to disallow insertion and removal of
-  constructors is discussed in \fref{sec:sop-discussion}.
+  constructors is discussed in \cref{sec:sop-discussion}.
 \end{itemize}
 
 \begin{codelst}[t]{Definition of ornaments}{sop-ornaments}\begin{code}
@@ -461,7 +461,7 @@ So the |forget| function can be implemented using |forgetNT|. In other
 words; when we can transform one pattern functor into another pattern
 functor, we can make that same transformation between the fixed points
 of those pattern functors. The full definition is given in
-\fref{lst:sop-forget}. Note that we use the function |_***_|, which is
+\cref{lst:sop-forget}. Note that we use the function |_***_|, which is
 defined as the bimap on pairs such that |(f *** g) (x , y)| is |(f x ,
 g y)|. The actual ornamental \emph{algebra} |forgetAlg| arises as an
 intermediary step between |forgetNT| and |forget|.
@@ -576,7 +576,7 @@ library for Haskell which has a similar scope, where parameters and
 indices are not supported. An Agda formalisation of the Regular
 library is presented by Magalhães and Löh \cite{magalhaes12}. The
 codes for the universe they use are shown in
-\fref{lst:sop-regular-codes}. There are codes for units, recursive
+\cref{lst:sop-regular-codes}. There are codes for units, recursive
 positions, sums and products. The decoding function |⟦_⟧| and the
 fixpoint datatype |μ| are similar to those in this chapter.
 
@@ -610,7 +610,7 @@ arguments. The split between |ConDesc| and |DatDesc| enforces this
 structure.
 
 Our descriptions also differ from those in
-\fref{lst:sop-regular-codes} in that ours have a list-like structure
+\cref{lst:sop-regular-codes} in that ours have a list-like structure
 where |ι| and |_`0_| function as nil and |_⊗_|, |rec-⊗_| and |_⊕_| as
 cons. This has two benefits: It ensures that every description has one
 canonical representation and it is easier to work with, both in
@@ -623,7 +623,7 @@ and |_⊗_|. In dependently typed languages we have Σ-types, which can
 be used to encode both sums and products \cite{chapman10}. Some of the
 work on ornaments which we will be referring to uses descriptions with
 Σ's, so we will take a look at them. To start with, we define a
-universe of descriptions and their decoding in \fref{lst:sop-Σdesc}.
+universe of descriptions and their decoding in \cref{lst:sop-Σdesc}.
 
 \begin{codelst}{Universe of Σ-descriptions}{sop-Σdesc}\begin{code}
 data DescΣ : Set₁ where
@@ -666,7 +666,7 @@ eitherDescΣ-right x = ⟨ 1 , x , tt ⟩
 \end{code}
 
 The types which are encoded by our universe are a subset of those
-which can be encoded by Σ-descriptions. \Fref{tab:sop-Σ-comparison}
+which can be encoded by Σ-descriptions. \Cref{tab:sop-Σ-comparison}
 shows how a |ConDesc| or |DatDesc| can be translated into a |DescΣ|
 with an equivalent semantics. Note how |DatDesc| needs multiple
 constructors to encode a sum where |DescΣ| uses just one |σ|. That is
@@ -687,7 +687,7 @@ why we need the |lookupCtor| function to define the decoding and
 \label{tab:sop-Σ-comparison}
 \end{table}
 
-In \fref{lst:sop-Σorn} we define ornaments for copying of |ι|, |σ| and
+In \cref{lst:sop-Σorn} we define ornaments for copying of |ι|, |σ| and
 |rec-×_| and for insertion and deletion of |σ|'s. They are similar to
 those defined by Dagand and McBride \cite{dagand14-transporting}. The
 |insert-σ| and |delete-σ| ornaments match our |_+⊗_| and |give-K|
@@ -731,7 +731,7 @@ nat→listΣ A = σ (Fin 2) λ
 Σ-descriptions are a way to describe sums of products using a very
 small number of components. All the types which can be encoded in our
 universe or in the regular types universe of
-\fref{lst:sop-regular-codes} can be encoded with Σ-descriptions
+\cref{lst:sop-regular-codes} can be encoded with Σ-descriptions
 too. Additionally, because the tail description |xs| of a |σ| is a
 function of type |S → DescΣ| the full computational power of functions
 can be used. This results in the ability to encode rather exotic
@@ -772,16 +772,16 @@ transformation from one description to another is an ornament
 requirement, so by defining the |forget| function we have shown that
 our ornaments can really be called ornaments.
 
-The ornaments we use, defined in \fref{lst:sop-ornaments}, are mostly
+The ornaments we use, defined in \cref{lst:sop-ornaments}, are mostly
 adapted from the ornaments for Σ-descriptions in
-\fref{lst:sop-Σorn}. \Fref{tab:sop-ornΣ-comparison} shows how they
+\cref{lst:sop-Σorn}. \Cref{tab:sop-ornΣ-comparison} shows how they
 relate to each other.  The exact meaning of each row is as follows:
 Given a description |D| and a Σ-description |DΣ| which both decode to
 \emph{Original PF}, the application of |o| to |D| and |oΣ| to |DΣ|
 both result in descriptions which decode to \emph{Ornamented PF}. We
 already knew that our descriptions and their corresponding
 Σ-descriptions had the same underlying pattern functors
-(\fref{tab:sop-Σ-comparison}), and now it turns out that the ornaments
+(\Cref{tab:sop-Σ-comparison}), and now it turns out that the ornaments
 on our descriptions and the corresponding ornaments on Σ-descriptions
 perform the same operation on the underlying pattern functors as
 well. The overloaded notation |⟦_⟧| is used to mean |⟦ ornToDesc o ⟧|

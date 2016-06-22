@@ -5,7 +5,7 @@
 The previous chapter defined descriptions and ornaments with all the
 core features we wish to have. In this chapter, the last minor changes
 are made to descriptions to make them store names of
-arguments. The surrounding functionality as introduced in \fref{chap:usage}
+arguments. The surrounding functionality as introduced in \cref{chap:usage}
 is presented to get a true generic programming library which allows
 the derivation of descriptions and embedding-projection pairs from
 user-defined datatypes.
@@ -109,10 +109,10 @@ unquoteDecl quotedVec VecHasDesc =
 
 The |quotedVec| function is of type |QuotedDesc|. It contains, among
 other things, the generated description and will be defined in
-\fref{sec:named-quoting}. The |VecHasDesc| function returns a |HasDesc
+\cref{sec:named-quoting}. The |VecHasDesc| function returns a |HasDesc
 (Vec A n)| for any |A| and |n|. The |HasDesc| record contains the
 derived embedding-projection pair and is further explained in
-\fref{sec:named-deriving}.
+\cref{sec:named-deriving}.
 
 The execution of |deriveHasDesc| on a datatype |Dt| will often be
 called \emph{the quoting of |Dt|}. So when we talk about 'after |Vec|
@@ -127,11 +127,11 @@ When quoting datatypes, the library can see what the names of
 arguments are within the constructors. A fairly small change to
 descriptions allows each argument to contain such a name, of type
 |String|. This is the \emph{only} change relative to the descriptions
-of \fref{chap:extended}. The full definition of descriptions is given
-in \fref{lst:named-desc}. The argument names have been added in front
+of \cref{chap:extended}. The full definition of descriptions is given
+in \cref{lst:named-desc}. The argument names have been added in front
 of |_⊗_| and |rec_⊗_|, separated by a forward slash. The rest of the
 definition and semantics are exactly like in
-\fref{sec:ext-descriptions}. The |Vec| type can now be described in
+\cref{sec:ext-descriptions}. The |Vec| type can now be described in
 the following way:
 
 \begin{codelst}{Descriptions with names}{named-desc}\begin{code}
@@ -161,8 +161,8 @@ Ornaments are changed accordingly. The copying operators |_/-⊗_| and
 |_/rec_⊗_| require a name, which will overwrite the old name of the
 argument. The insertion operators |_/_+⊗_| and |_/rec_+⊗_| need a name
 as well for the argument being inserted. The names are the only change
-compared to the ornaments in \fref{sec:ext-ornaments}. The new
-definition of ornaments is in \fref{lst:named-ornament}.
+compared to the ornaments in \cref{sec:ext-ornaments}. The new
+definition of ornaments is in \cref{lst:named-ornament}.
 
 \begin{codelst}{Ornaments with names}{named-ornament}\begin{code}
 data Orn {I} J (u : Cxf J I)
@@ -199,7 +199,7 @@ The quoting of a datatype gives a |DatDesc I Γ #c| for \emph{some}
 |I|, |Γ| and |#c| which are not known in advance. Additionally, the
 name of the datatype and a list of names of the constructors can be
 read during the quoting operation, so we would like to store them as
-well. The |QuotedDesc| record (\Fref{lst:named-quoteddesc}) can
+well. The |QuotedDesc| record (\Cref{lst:named-quoteddesc}) can
 contain all the information which we can extract from a datatype
 definition including the indices, parameters, constructor count, names
 and description.
@@ -288,7 +288,7 @@ vec-to : ∀{A n} → Vec A n → μ vecDesc (tt , A) (tt , n)
 vec-from : ∀{A n} → μ vecDesc (tt , A) (tt , n) → Vec A n
 \end{code}
 
-The |HasDesc| record, as defined in \fref{lst:named-hasdesc}, can
+The |HasDesc| record, as defined in \cref{lst:named-hasdesc}, can
 contain one member of the family of embedding-projection pairs. It has
 a type parameter |A| and the contained pair converts values between
 |A| and |μ desc γ i|. The fields |desc|, |γ| and |i| together
@@ -364,7 +364,7 @@ vec-from = from
 Now that embedding-projection pairs are readily available in their
 |HasDesc| instances, generic programming with actual datatypes becomes
 possible. A typical example is the |fold| function. Remember the
-signature of |fold| in \fref{lst:ext-fold}:
+signature of |fold| in \cref{lst:ext-fold}:
 
 \begin{code}
 fold : ∀{I Γ #c}{D : DatDesc I Γ #c}{γ X}
@@ -449,13 +449,13 @@ vec-example-forget = refl
 The signature |gforget| is rather unwieldy and uncovers some problems
 with the current structure of the records. This problem and how a
 solution would improve the type of |gforget| is discussed in
-\fref{sec:named-discussion}.
+\cref{sec:named-discussion}.
 
 
 \section{Unquoting descriptions}\label{sec:named-unquoting}
 
-The functionality defined in \fref{sec:named-quoting},
-\fref{sec:named-deriving} and \fref{sec:named-generic} is similar to
+The functionality defined in \cref{sec:named-quoting},
+\cref{sec:named-deriving} and \cref{sec:named-generic} is similar to
 what generic deriving \cite{magalhaes10} does for Haskell. A
 description is calculated for a given datatype and an
 embedding-projection pair is generated. Generic functions like |gfold|
@@ -631,7 +631,7 @@ constructor. Because the argument is added at the start of the
 constructor, the parameter can be referred to with |top|. It is
 currently hard to insert the argument somewhere else in the
 constructor, but it would probably be easy when the separation of
-parameters discussed in \fref{sec:ext-separateparams} is implemented.
+parameters discussed in \cref{sec:ext-separateparams} is implemented.
 
 \begin{code}
 addParameterArg : ∀{I Γ #c}{D : DatDesc I Γ #c} →
@@ -662,7 +662,7 @@ conRenameArguments : ∀{I Γ}{D : ConDesc I Γ} →
 These are some examples of functions which create ornaments. Small
 components like |idOrn|, |reparam|, |reindex|, |reCx|,
 |renameArguments| and |updateConstructor| can be combined
-easily. \Fref{chap:usage} already showed an example of what |nat→list|
+easily. \Cref{chap:usage} already showed an example of what |nat→list|
 could look like:
 
 \begin{code}
@@ -770,7 +770,7 @@ the current implementation, the result type |A| is used to find a
 all the equalities are required.
 
 A solution to this problem is to the |HasDesc| record into several
-records. \Fref{lst:named-altrecords} shows how that might work. The
+records. \Cref{lst:named-altrecords} shows how that might work. The
 embedding-projection pair is in a separate record parameterised by
 |A|, |desc|, |γ| and |i|. The |Embeddable| record takes over the role
 of |HasDesc| and is suitable for instance search by type, while the

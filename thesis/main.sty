@@ -165,26 +165,5 @@
 %--------------------------------------------------
 % References
 
-\usepackage[plain]{fancyref}
-
-\newcommand*{\fancyreflstlabelprefix}{lst}
-\fancyrefaddcaptions{english}{%
-  \providecommand*{\freflstname}{listing}%
-  \providecommand*{\Freflstname}{Listing}%
-}
-\frefformat{plain}{\fancyreflstlabelprefix}{\freflstname\fancyrefdefaultspacing#1}
-\Frefformat{plain}{\fancyreflstlabelprefix}{\Freflstname\fancyrefdefaultspacing#1}
-\frefformat{vario}{\fancyreflstlabelprefix}{\freflstname\fancyrefdefaultspacing#1#3}
-\Frefformat{vario}{\fancyreflstlabelprefix}{\Freflstname\fancyrefdefaultspacing#1#3}
-
-\newcommand*{\fancyrefexlabelprefix}{ex}
-\fancyrefaddcaptions{english}{%
-  \providecommand*{\frefexname}{example}%
-  \providecommand*{\Frefexname}{Example}%
-}
-\frefformat{plain}{\fancyrefexlabelprefix}{\frefexname\fancyrefdefaultspacing#1}
-\Frefformat{plain}{\fancyrefexlabelprefix}{\Frefexname\fancyrefdefaultspacing#1}
-\frefformat{vario}{\fancyrefexlabelprefix}{\frefexname\fancyrefdefaultspacing#1#3}
-\Frefformat{vario}{\fancyrefexlabelprefix}{\Frefexname\fancyrefdefaultspacing#1#3}
-
-\endinput
+\usepackage[hidelinks,linktoc=all,draft=false]{hyperref}
+\usepackage{cleveref}

@@ -44,7 +44,7 @@ indices |I| stay constant across all constructors. The context |Γ| is
 initially equal to the parameters, but can be extended within the
 constructors like in the previous chapter.
 
-\Fref{lst:ext-desc} shows the new definitions for |ConDesc|
+\Cref{lst:ext-desc} shows the new definitions for |ConDesc|
 and |DatDesc|. The interesting changes are in the |ι| and |rec_⊗_|
 constructors, which both have gained a new argument. In the |ι|
 constructor, the user must tell us an index of type |⟦ I ⟧|. They are
@@ -69,7 +69,7 @@ take a slight detour. In previous chapters many functions for
 and |DatDesc| have some overlapping parameters, it will become
 bothersome to have to write many of the same function signatures for
 both of them. This is circumvented by defining a small universe in
-\fref{lst:ext-desctag}. Using |DescTag| and |Desc|, we can refer to
+\cref{lst:ext-desctag}. Using |DescTag| and |Desc|, we can refer to
 |ConDesc I Γ| as |Desc I Γ isCon| and to |DatDesc I Γ #c| as |Desc I Γ
 (isDat #c)|. Functions which have to be defined on both |ConDesc| and
 |DatDesc| can now be defined on |Desc dt| for all |dt|.
@@ -109,9 +109,9 @@ in the following type:
 \end{code}
 
 The full definition of |⟦_⟧desc| is given in
-\fref{lst:ext-semantics}. In every clause, we get a local environment
+\cref{lst:ext-semantics}. In every clause, we get a local environment
 |γ| just like we did in |⟦_⟧conDesc| in
-\fref{sec:simple-descriptions}---this time including the
+\cref{sec:simple-descriptions}---this time including the
 parameters. The value |X| of type |⟦ I ⟧ → Set| is used in the clause
 for |rec i ⊗ xs| to pick one of the members of the inductive
 family. The |o| is what we are being told what the index of the type
@@ -153,8 +153,8 @@ listDesc = ι (const tt) ⊕
 \end{code}
 
 Comparing this to how |listDesc| was defined in
-\fref{sec:sop-descriptions} and the introduction of
-\fref{chap:simple}, we see that the use of the parameter has been
+\cref{sec:sop-descriptions} and the introduction of
+\cref{chap:simple}, we see that the use of the parameter has been
 internalised. Where it used to say |A|, we now see a |top|.
 
 The fixpoint of descriptions is aware of parameters and indices, and
@@ -169,7 +169,7 @@ list-to [] = ⟨ 0 , refl ⟩
 list-to (x ∷ xs) = ⟨ 1 , x , list-to xs , refl ⟩
 \end{code}
 
-With the descriptions of \fref{chap:sop} and \fref{chap:simple}, the
+With the descriptions of \cref{chap:sop} and \cref{chap:simple}, the
 type of |list-to| would have been |∀{A} → List A → μ (listDesc A)|.
 \end{example}
 
@@ -256,7 +256,7 @@ to the |Set| category, with functions as the arrows. When working in
 the |⟦ I ⟧ → Set| category, one has to reconsider what the arrows
 are. The arrows are characterised as functions which respect indexing,
 they are defined as |_→ⁱ_| in
-\fref{lst:ext-indexedarrows}\footnote{Actually, the |_→ⁱ_| definition
+\cref{lst:ext-indexedarrows}\footnote{Actually, the |_→ⁱ_| definition
   works for a more general category |A → Set|, of which |⟦ I ⟧ →
   Set| is an instance.}.
 
@@ -268,7 +268,7 @@ X →ⁱ Y = ∀{i} → X i → Y i
 A map function for a functor |F| in the |I → Set| category should lift
 an arrow |X →ⁱ Y| to an arrow |F X →ⁱ F Y|. By instantiating |⟦ D ⟧ γ|
 to |F| we get the type for |descmap|, which is fully defined in
-\fref{lst:ext-map}. The implementation is straightforward, but it is
+\cref{lst:ext-map}. The implementation is straightforward, but it is
 listed for completeness.
 
 \begin{codelst}{Map for pattern functors with indices}{ext-map}\begin{code}
@@ -280,7 +280,7 @@ descmap {dt = isCon} f (rec i ⊗ xs) (s , v) = f s , descmap f xs v
 descmap {dt = isDat _} f xs (k , v) = k , descmap f (lookupCtor xs k) v
 \end{code}\end{codelst}
 
-The definitions of the |Alg| and |fold| in \fref{lst:ext-fold} are
+The definitions of the |Alg| and |fold| in \cref{lst:ext-fold} are
 lifted to the |⟦ I ⟧ → Set| category in a similar way, by replacing
 some of the arrows |_→_| with |_→ⁱ_|. An environment |⟦ Γ ⟧| has to be
 passed to |Alg|, because an algebra may only work for a specific
@@ -383,14 +383,14 @@ check-f2<9 = refl
 
 The definition of ornaments on descriptions with parameters and
 indices is mostly based on the constructor ornaments of
-\fref{sec:simple-ornaments} (\fref{lst:simple-ornament}). The same
-context transformers (\fref{lst:simple-cxf}) are used, but this time
+\cref{sec:simple-ornaments} (\Cref{lst:simple-ornament}). The same
+context transformers (\Cref{lst:simple-cxf}) are used, but this time
 on both the indices and the context/parameters. Many of the parts
 relating to indices are based on McBride's ornaments \cite{mcbride11}.
 
 Using our |DescTag| codes, a single datatype for ornaments can be
 defined which contains ornaments for both |ConDesc| and
-|DatDesc|. Like |ConOrn| of \fref{sec:simple-ornaments}, it contains
+|DatDesc|. Like |ConOrn| of \cref{sec:simple-ornaments}, it contains
 the starting context |Γ|, the result context |Δ| and an environment
 transformer |(u : Cxf Δ Γ)| as parameters. The indices are added in a
 similar way using a starting index |I|, result index |J| and a
@@ -416,7 +416,7 @@ ornaments, we need to know that |u j| gives the original |i|---|j|
 must lie in the \emph{inverse image} of |i| for the function |u|.
 
 Like McBride \cite{mcbride11}, we use a datatype to define the inverse
-image of a function (\Fref{lst:ext-inverseimage}). The only
+image of a function (\Cref{lst:ext-inverseimage}). The only
 constructor of |f ⁻¹ y| says that the index |y| must be |f x|, so a
 value of type |f ⁻¹ y| always contains an |x| such that |f x ≡ y|. The
 function |uninv| extracts the |x| from |inv|, to avoid having to
@@ -444,7 +444,7 @@ module _ {a b}{A : Set a}{B : Set b} where
   inv-eq (inv x) = refl
 \end{code}\end{codelst}
 
-In \fref{lst:ext-ornament} the new ornaments are defined. All the
+In \cref{lst:ext-ornament} the new ornaments are defined. All the
 constructors now fit in a single |Orn| datatype, and the contexts are
 now propagated in the |`0| and |_⊕_| ornaments as well.  The |rec_+⊗_|
 ornament gains a simple extension: an index |j| of type |⟦ J ⟧| can be
@@ -477,7 +477,7 @@ data Orn {I} J (u : Cxf J I)
     (x⁺ : Orn _ u _ c x) (xs⁺ : Orn _ u _ c xs) → Orn _ u _ c (x ⊕ xs)
 \end{code}\end{codelst}
 
-The semantics of ornaments is listed in \fref{lst:ext-orntodesc}. A
+The semantics of ornaments is listed in \cref{lst:ext-orntodesc}. A
 small nameless module is used to put the quantification over |I|, |J|
 and |u| outside of the |ornToDesc| function. Module parameters in Agda
 remain constant between calls within the module, so this emphasises
@@ -583,12 +583,12 @@ vec-to (x ∷ xs) = ⟨ 1 , _ , x , vec-to xs , refl ⟩
 
 The ornamental algebra is an extension of the ornamental algebras we
 have seen before. The full listing is given in
-\fref{lst:ext-forget}. The index types |I| and |J| and the index
+\cref{lst:ext-forget}. The index types |I| and |J| and the index
 transformer |u| are module parameters to emphasise that they remain
 the same between |forget|, |forgetAlg| and |forgetNT|.
 
 The type of |forgetNT| is similar to that of |conForgetNT| in
-\fref{sec:simple-ornaments}, in that they go from the functor |⟦
+\cref{sec:simple-ornaments}, in that they go from the functor |⟦
 ornToDesc o ⟧ δ| to the functor |⟦ D ⟧ (c δ)|. The \emph{ornamented}
 environment is passed as an argument to |forgetNT|, and the
 environment for the original type is obtained by applying the
@@ -705,7 +705,7 @@ for every recursive argument, which can contain the result of the
 algebra for that argument. The new arguments are used in the
 computation of the result indices in the way the algebra tells us to.
 
-Algebraic ornaments are implemented in \fref{lst:ext-algorn}. The
+Algebraic ornaments are implemented in \cref{lst:ext-algorn}. The
 implementation itself is in |algOrn′|, which has a slightly different
 type than |algOrn|. Because new arguments are being inserted, the
 recursive calls may have a changed context. The |algOrn′| function
@@ -870,7 +870,7 @@ nat→list : Orn ε id (ε ▷₁′ Set) (λ δ → tt) natDesc
 
 By applying |reornament| to |nat→list|, one obtains a ornament from
 natural numbers to |Vec|. Contrary to |list→vec₁| from
-\fref{sec:ext-algorn}, which added a |Nat| as an index, this one uses
+\cref{sec:ext-algorn}, which added a |Nat| as an index, this one uses
 a |μ natDesc tt tt|. These are isomorphic, so it should not be a
 problem.
 
@@ -1031,7 +1031,7 @@ the indices and internal contexts take the form of functions form |⟦ P
 parameters can be used to determine these contexts.
 
 Descriptions using such a separate parameter context are defined in
-\fref{lst:ext-sep-descriptions}. The |P| and |I| are module parameters
+\cref{lst:ext-sep-descriptions}. The |P| and |I| are module parameters
 because they stay constant within the whole description just like
 parameters and indices of real datatypes---For all practical purposes
 they work as if they were datatype parameters for both |ConDesc| and
@@ -1057,17 +1057,17 @@ module _ (P : Cx) (I : (p : ⟦ P ⟧) → Cx) where
 
 The |DatDesc| type does not pass a context around, but it starts every
 |ConDesc| off with an empty context (|const ε|). Note how similar this
-is to the descriptions of \fref{chap:simple}
-(\Fref{lst:simple-desc}). Once again, constructor descriptions have
+is to the descriptions of \cref{chap:simple}
+(\Cref{lst:simple-desc}). Once again, constructor descriptions have
 their own environments which datatype descriptions do not
 need and a full constructor is always closed, in the sense that |Γ| is
 |const ε|.
 
 
-The semantics in \fref{lst:ext-sep-semantics} show how descriptions
+The semantics in \cref{lst:ext-sep-semantics} show how descriptions
 with separate parameters are interpreted. It is a straightforward
-derivation from the semantics in \fref{lst:ext-semantics} and
-\fref{lst:simple-semantics}. While the interpretation of |ConDesc|
+derivation from the semantics in \cref{lst:ext-semantics} and
+\cref{lst:simple-semantics}. While the interpretation of |ConDesc|
 requires parameter values |(p : ⟦ P ⟧)| and a local environment |(γ :
 ⟦ Γ p ⟧)|, the interpretation of |DatDesc| does not need a local
 environment. Notice how both result in an endofunctor on |⟦ I p ⟧ →
@@ -1123,10 +1123,10 @@ from-eq ⟨ suc () , _ ⟩
 
 This way of encoding parameters separately from contexts seems to be a
 better approximation of Agda datatypes than the descriptions of
-\fref{lst:ext-desc}. This particular encoding was found in the late stages of
+\cref{lst:ext-desc}. This particular encoding was found in the late stages of
 writing this thesis, so no further efforts have been made regarding
 the implementation of ornaments and related functionality. For future
 research, this encoding might be promising. It would be interesting to
 see if everything works out, and if |reornament| might then be
 implemented in a way which allows parameters in the original
-description (see \fref{sec:ext-reornaments}).
+description (see \cref{sec:ext-reornaments}).

@@ -2,7 +2,7 @@
 
 \chapter{Ornaments on dependently typed descriptions}\label{chap:simple}
 
-The sum-of-products descriptions of \fref{chap:sop} can be extended to
+The sum-of-products descriptions of \cref{chap:sop} can be extended to
 support dependent types. In the |_⊗_| constructor we used a |Set| to
 indicate which type that argument has. To encode dependent types, we
 want to allow this type to depend on values and types in the
@@ -11,19 +11,19 @@ context. Let us first establish some terminology:
 \begin{itemize}
 \item The term \emph{context} will be used to indicate what variables
   are available and which types they have. Within the |List| datatype
-  for example (as defined in \fref{chap:usage}), the context consists
+  for example (as defined in \cref{chap:usage}), the context consists
   of at least the type parameter |A| of type |Set|. In the second
   argument of the |cons| constructor, the variable |x| of type |A| is
   also in the context, though it is not used. If cons had more
   arguments after that, |(xs : List A)| would be in the context as
   well. In this thesis, contexts are usually indicated by a |Γ|, with
   |Δ| as an alternative. Contexts have the type |Cx|, and are defined
-  in \fref{sec:simple-contexts}.
+  in \cref{sec:simple-contexts}.
 \item An \emph{environment} is a specific instantiation of a context,
   containing inhabitants of the types which were indicated by the
   context. Environments are written as |γ| of type |⟦ Γ ⟧| or |δ| of
   type |⟦ Δ ⟧|. The meaning of their types is explained in
-  \fref{sec:simple-contexts} as well.
+  \cref{sec:simple-contexts} as well.
 \end{itemize}
 
 In a description, the types of arguments were specified with a
@@ -111,9 +111,9 @@ for more complicated ones.
 
 In the next section, we will start by showing how environments are
 exactly implemented. Descriptions will be revised to support the
-propagation of environments in \fref{sec:simple-descriptions}. When
+propagation of environments in \cref{sec:simple-descriptions}. When
 descriptions support dependent types, ornaments must do so as
-well---they will be revised in \fref{sec:simple-ornaments}.
+well---they will be revised in \cref{sec:simple-ornaments}.
 
 \section{Contexts and environments}\label{sec:simple-contexts}
 
@@ -123,7 +123,7 @@ and each of those types should be able to use the values of the
 previous variables. For the purpose of building types of environments
 we define |_▶_|, which is a left-associative version of |Σ| where
 |fst| is renamed to |pop| and |snd| to |top|
-(\Fref{lst:simple-env}). The unit type |⊤′| can be used as the empty
+(\Cref{lst:simple-env}). The unit type |⊤′| can be used as the empty
 environment, and types are added to the right of it by using |_▶_|. In
 each type, an environment |γ| containing values for all variables to
 the left of it can be used. For example, if we want to write the type
@@ -148,7 +148,7 @@ The basic types |_▶_| and |⊤′| can contain an environment, but they
 can not be used for pattern matching. There is no way to inspect a
 value of type |Set| to see if it is a |_▶_| or |⊤′|. For this purpose
 a universe of contexts |Cx| is built. The |Cx| decodes to |_▶_|'s and
-|⊤′|'s. The definition is given in \fref{lst:simple-cx}. This is quite
+|⊤′|'s. The definition is given in \cref{lst:simple-cx}. This is quite
 a common approach to encode contexts \cite{danielsson07,
   mcbride10}. While we are at it, we also define |_▷′_| as a shortcut
 when a type does not need to use the environment. With these
@@ -188,7 +188,7 @@ the context. The context is chained through from left to right and
 whenever a |_⊗_| operator is encountered, the specified type is added
 to the context of the |ConDesc| which forms the tail.
 
-In \fref{lst:simple-desc} we see how this works. The |DatDesc|
+In \cref{lst:simple-desc} we see how this works. The |DatDesc|
 datatype specifies that each constructor starts with an empty context
 |ε|. In the type of |_⊗_| we see that a |S| of type |⟦ Γ ⟧ → Set| must
 be given. The value of |S| specifies a type which can depend on the
@@ -215,7 +215,7 @@ during the definition of |ConDesc|.\todo{discuss the lack of recursive
 
 The semantics of |ConDesc| now requires an environment before a
 pattern functor can be delivered. The new semantics is given in
-\fref{lst:simple-semantics}. For the |_⊗_| constructor, the
+\cref{lst:simple-semantics}. For the |_⊗_| constructor, the
 environment is applied to |S| to obtain the definitive type of that
 argument. The semantics of |DatDesc| is only changed slightly to pass
 the empty environment |tt| to |⟦_⟧conDesc|.
@@ -275,7 +275,7 @@ resulting in a description of dependent pairs.
 pairDesc A B = const A ⊗ B ∘ top ⊗ ι ⊕ `0
 \end{code}
 
-According to \fref{sec:sop-descriptions}, an isomorphism between |Σ A
+According to \cref{sec:sop-descriptions}, an isomorphism between |Σ A
 B| and |μ (pairDesc A B)| should be given to be certain that this is
 the right description. Doing that is straightforward, so we will only
 show that the definition is not \emph{entirely} wrong by giving one
@@ -289,7 +289,7 @@ pair-to (x , y) = ⟨ 0 , x , y , tt ⟩
 \end{example}
 
 In the previous chapter, |conDescmap| and |datDescmap|
-(\Fref{lst:sop-map}) were defined as the functorial map on the
+(\Cref{lst:sop-map}) were defined as the functorial map on the
 semantics of descriptions. For a given description |D| and a function
 from |X| to |Y|, they turned a |⟦ D ⟧ X| into a |⟦ D ⟧ Y|. With
 contexts built-in, the semantics of |ConDesc| requires an environment
@@ -360,7 +360,7 @@ ornament. In fact, the next chapter will show how indices can be
 implemented using the same components in a very similar way.
 
 The new definition of ornaments is given in full in
-\fref{lst:simple-ornament}. An ornament is always told from the
+\cref{lst:simple-ornament}. An ornament is always told from the
 outside what its environment transformer |c| is. This is seen in the
 |_⊕_| constructor, where |id| is used as the environment transformer
 for |ConOrn|. The first arguments to |_+⊗_| and |give-K| can both
@@ -375,7 +375,7 @@ extends the context with |S|, meaning that the tail ornament has to go
 from context |Γ| to |Δ ▷ S|. The tail ornament must be given an
 environment transformer of type |Cxf (Δ ▷ S) Γ|, while we already have
 |c| of type |Cxf Δ Γ|. This transformer is given by |cxf-forget| in
-\fref{lst:simple-cxf}. The other ornaments which update the context
+\cref{lst:simple-cxf}. The other ornaments which update the context
 use similar functions to produce environment transformers for their
 tails.
 
@@ -436,7 +436,7 @@ us to transform types within the context |Γ| to types with the context
 conOrnToDesc {c = c} (-⊗_ {S = S} xs⁺) = S ∘ c ⊗ conOrnToDesc xs⁺
 \end{code}
 
-We have seen in \fref{sec:sop-ornalgs} how the ornamental algebra for
+We have seen in \cref{sec:sop-ornalgs} how the ornamental algebra for
 an ornament |o| on a description |D| was built using a natural
 transformation from the pattern functor of |o| to the pattern functor
 of |D|. With contexts, an environment has to be provided before we get
