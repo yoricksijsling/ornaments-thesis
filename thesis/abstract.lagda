@@ -24,8 +24,8 @@
   create new description, which in turn can be converted back to a new
   datatype.
 
-  Our descriptions are unconvential, because they are carefully
-  designed to always be convertible to actual datatypes. They pass
+  Our descriptions are carefully designed to always be convertible to
+  actual datatypes, resulting in an unconventional design. They pass
   along a context internally to support dependent types and they can
   be used with multiple parameters and multiple indices.
 \end{abstract}

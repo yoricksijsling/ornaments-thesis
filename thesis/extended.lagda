@@ -4,9 +4,9 @@
 
 Datatype parameters and indices will be added to our descriptions in
 this chapter. They form the final components to be able to describe a
-large portion of Agda datatypes. Ornaments will again be updated to
-work with these descriptions. The addition of indices allows the
-implementation of some of the surrounding theory around ornaments.
+large portion of Agda datatypes. Ornaments will be revised once more
+to work with these descriptions. The addition of indices allows the
+implementation of some of the theory surrounding ornaments.
 
 Parameters are a natural extension of contexts within
 descriptions---the only difference is that a full type does not need
@@ -14,21 +14,22 @@ to be closed. Where we previously always started with an empty context
 |ε| for each constructor, now the whole datatype description can have
 a context. Within the constructors, the parameters are available as
 variables in the environment and they can be used with |top| and
-|pop|. Though the contexts are specified during the definition of a
-description, the transformation of a description into a |Set| requires
+|pop|. Though the contexts are declared during the definition of a
+description, the interpretation of a description to a |Set| requires
 the user to pass an environment containing the parameters. This is
-similar to how the parameters of an Agda datatype have to be
-instantiated before you get a |Set|.
+similar to how the parameters of an Agda datatype have to be declared
+during the declaration of the datatype, and they have to be applied
+before we get a |Set|.
 
 Indices are added to our descriptions as well. When indices are used,
-we are not just describing a single type but a family of types. A
-recursive call within a type can refer to any of the family members,
-so in every |rec_⊗_| we must specify an index to pick a type within
-the family. Additionally, every type must tell us which index it
-has. This is done by requiring an index to be specified in the |ι|
-constructor as well. The way we implement indices is a lot like
-McBride's approach \cite{mcbride11}, though we make use of our |Cx|
-datatype to allow multiple indices.
+we are not just describing a single type but an inductive family of
+types \cite{dybjer91}. A recursive call within a type can refer to any
+of the family members, so in every |rec_⊗_| we must specify an index
+to pick a type within the family. Additionally, every type (family
+member) must tell us which index it has. This is done by requiring an
+index to be specified in the |ι| constructor as well. The way we
+implement indices is a lot like McBride's approach \cite{mcbride11},
+though we make use of our |Cx| datatype to allow multiple indices.
 
 Parameters and indices will both be declared using a |Cx| as a
 parameter on the |DatDesc| type. A type like |Vec|, which has one
@@ -37,20 +38,19 @@ the type |DatDesc (ε ▷′ Nat) (ε ▷₁′ Set) 2|.
 
 \section{Descriptions}\label{sec:ext-descriptions}
 
-Descriptions of constructors where already parametrised by a |(Γ :
-Cx₁)|, now we also add a parameter |(I : Cx₀)|. Descriptions for
-datatypes are parametrised by |(Γ : Cx₁)| and |(I : Cx₀)| as well. The
-indices |I| stay constant across all constructors. The context |Γ| is
+Descriptions of constructors where already parameterised by a |(Γ :
+Cx₁)|, now we also add a parameter |(I : Cx₀)|. The declared indices
+|I| stay constant across all constructors. The context |Γ| is
 initially equal to the parameters, but can be extended within the
 constructors like in the previous chapter.
 
-\Cref{lst:ext-desc} shows the new definitions for |ConDesc|
-and |DatDesc|. The interesting changes are in the |ι| and |rec_⊗_|
+\Cref{lst:ext-desc} shows the new definitions for |ConDesc| and
+|DatDesc|. The interesting changes are in the |ι| and |rec_⊗_|
 constructors, which both have gained a new argument. In the |ι|
-constructor, the user must tell us an index of type |⟦ I ⟧|. They are
-allowed to use the local environment |(γ : ⟦ Γ ⟧)|. The |rec_⊗_|
-constructor also requires the specification of an index of type |⟦ I
-⟧|, and here too the local environment can be used.
+constructor, the user can use the local environment |(γ : ⟦ Γ ⟧)| to
+specify an index of type |⟦ I ⟧|. The |rec_⊗_| constructor also
+requires the specification of an index of type |⟦ I ⟧|, and here too
+the local environment can be used.
 
 \begin{codelst}{Descriptions of families of datatypes}{ext-desc}\begin{code}
 data ConDesc (I : Cx₀)(Γ : Cx₁) : Set₁ where
@@ -101,7 +101,7 @@ the idea of having a telescope of indices instead of just one. By
 interpreting the description as an endofunctor on |⟦ I ⟧ → Set|, the
 recursive positions are allowed to pick an index of type |⟦ I ⟧| in
 return for a |Set|. An environment for the current context has to be
-passed in as well, but this is not part of the functor. This results
+passed in as well, but this is not part of the endofunctor. This results
 in the following type:
 
 \begin{code}
@@ -638,23 +638,23 @@ module _ {I J u} where
 \end{code}\end{codelst}
 
 
-\begin{example}
-\todo{example bla bla}
-For
-example: we could consider a datatype which holds login information,
-where a value of this type contains a domain name, username and
-password:
+% \begin{example}
+% \todo{example bla bla}
+% For
+% example: we could consider a datatype which holds login information,
+% where a value of this type contains a domain name, username and
+% password:
 
-\begin{code}
-loginDesc : DatDesc 1
-loginDesc = Uri ⊗ Name ⊗ Password ⊗ ι ⊕ `0
-\end{code}
+% \begin{code}
+% loginDesc : DatDesc 1
+% loginDesc = Uri ⊗ Name ⊗ Password ⊗ ι ⊕ `0
+% \end{code}
 
-Say this is part of some personal password management system. One of
-the use cases is to find your login information for a given uri. Now
-what if some function always returns login information for the same
-uri?
-\end{example}
+% Say this is part of some personal password management system. One of
+% the use cases is to find your login information for a given uri. Now
+% what if some function always returns login information for the same
+% uri?
+% \end{example}
 
 \section{Algebraic ornaments}\label{sec:ext-algorn}
 

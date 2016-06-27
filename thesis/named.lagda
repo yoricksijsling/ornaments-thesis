@@ -716,7 +716,7 @@ everything just right, they will get errors which can not be
 understood without a deeper understanding of these descriptions and
 ornaments.
 
-\subsection{Embedding-projection instances}
+\subsection{Embedding-projection instances}\label{sec:named-ep-instances}
 
 The |HasDesc| record is indexed by the represented type |A|, this
 allows for easy instance searching \emph{by type}. When one has a
@@ -770,7 +770,8 @@ the current implementation, the result type |A| is used to find a
 all the equalities are required.
 
 A solution to this problem is to the |HasDesc| record into several
-records. \Cref{lst:named-altrecords} shows how that might work. The
+records. Time did not permit to implement this in the framework, but
+\cref{lst:named-altrecords} shows how it might work. The
 embedding-projection pair is in a separate record parameterised by
 |A|, |desc|, |γ| and |i|. The |Embeddable| record takes over the role
 of |HasDesc| and is suitable for instance search by type, while the

@@ -16,10 +16,13 @@ ways that build on the Σ-descriptions of \cref{sec:sop-Σdesc}. Indexed
 containers\cite{altenkirch09} can also be used, but for our purposes
 they have the same problems as Σ-descriptions: They can be used to
 define a lot of exotic types that do not correspond to an Agda
-datatype.
+datatype. Indexed Σ-descriptions and, even more so, indexed containers
+serve well as \emph{semantical} models of inductive families, but they
+do not provide an accurate \emph{syntactical} representation of Agda
+datatypes.
 
 
-\section{Detecting parameter use}
+\section{Explicit parameter use}\label{sec:discussion-params}
 
 In our descriptions, starting with those in \cref{chap:simple}, 'types
 within a context' were represented with a function of type |⟦ Γ ⟧ →
@@ -191,7 +194,7 @@ us back:
   parameter.
 \end{itemize}
 
-When the ability to describe as many types as possible is not
+When the ability to describe as many types as possible is less
 important, one could get rid of the old |⟦ Γ ⟧ → Set| arguments
 altogether. Instead, a language of types could be used like
 McBride's \cite{mcbride10}. McBride defines a type-is-representable
@@ -216,6 +219,113 @@ the constructor type is changed from |(S : ⟦ Γ ⟧ → Set) → ...| to |{S
 will work out with such descriptions.
 
 
+\section{Induction-recursion and strict positivity}\label{sec:discussion-ri}
+
+Our descriptions are able to describe a practical subset of the
+\emph{inductive types}. Dybjer and Setzer \cite{dybjer99} describe
+\emph{ordinary inductive definitions} of types with a finite number of
+constructors:
+
+\begin{code}
+conᵢ : Φᵢ U → U
+\end{code}
+
+The |Φᵢ| are strictly positive functors. If dependent types are
+allowed, strictly positive functors can be constructed by a number of
+rules (according to Dybjer and Setzer):
+
+\begin{itemize}
+\item |nil|: The constant functor |Φ X = ⊤| is strictly positive.
+\item |nonind|: If |A| is a type and |Ψₓ| is a strictly positive
+  functor depending on |(a : A)|, then |Φ X = Σ A λ a → Ψₐ X| is
+  strictly positive.
+\item |ind|: If |Ψ| is strictly positive, then |Φ X = X × Ψ X| is
+  strictly positive.
+\end{itemize}
+
+% We implement inductive types
+The rules |nil|, |nonind| and |ind| correspond exactly to the
+semantics of |ι|, |σ| and |rec-×_| of the Σ-descriptions in
+\cref{lst:sop-Σdesc} on \cpageref{lst:sop-Σdesc}, while the
+introduction rule |conᵢ : Φᵢ U → U| corresponds to the constructor of
+the fixpoint datatype |μΣ|. We have shown in
+\cref{tab:sop-Σ-comparison} (\cref{sec:sop-Σdesc}) that our
+|ConDesc|/|DatDesc| universe of that chapter can describe a subset of
+those Σ-descriptions, so by the rules stated above this means that
+that universe describes a subset of the ordinary inductive types.
+
+% Inductive families
+In later chapters we have extended the universe in several ways, but
+the same logic still holds. One can confirm that the semantics for
+families of datatypes in \cref{lst:ext-semantics} can be generated
+with similar rules as above, though slightly modified to allow
+indices. The |ConDesc|/|DatDesc| universes with indices describe
+inductive families.
+
+% No depending on inductive arguments
+Note that the |ind| rule does not allow later arguments to depend on
+the value of an inductive argument. So within a datatype |D|, an
+arguments in a constructor can not depend on earlier arguments of type
+|D|. Our |ConDesc|/|DatDesc| universes reflect this fact by not
+including the |S| of a |rec S × xs| in the context for |xs|. We know
+that Agda datatypes do not have such restrictions---They are not
+just inductive types.
+
+\emph{Inductive-recursive} types are a generalisation of inductive
+types, where a simultaneously defined recursive function of type |D →
+...| can be used within the definition of the type |D|. A simple
+example is our |Cx| type in \cref{lst:simple-cx} on
+\cpageref{lst:simple-cx}, which is mutually defined with
+|⟦_⟧Cx|. Dybjer and Setzer \cite{dybjer99} have given an
+axiomatisation of inductive-recursive types that can be implemented in
+Agda easily.
+
+Compared to inductive types, the pattern functors of
+inductive-recursive types can use an extra argument |T| that
+represents a recursively defined function\footnote{Actually, as Dybjer
+  and Setzer note, the functors are not really functors anymore in the
+  category theory sense of the word.}. Now in the case of an inductive
+argument |a|, later arguments can depend on |T a| (not on \emph{just}
+|a|). For example; when describing the type |Cx| the function |T|
+would represent |⟦_⟧Cx|. When |(Γ : Cx)| is an (inductive) argument,
+the rest of the arguments could depend on |⟦ Γ ⟧Cx|. This is
+sufficient to encode the |_▷_| constructor, which is of type |(Γ : Cx)
+→ (⟦ Γ ⟧Cx → Set) → Cx|.
+
+Separately from inductive-recursive types, ordinary inductive types
+can also be extended in another way--To \emph{generalised} inductive
+types. Generalised inductive types are the same as ordinary inductive
+types, but with the inclusion of an inductive premise in the |ind|
+rule, giving the following rule:
+
+\begin{itemize}
+\item |ind|: If |Ψ| is strictly positive and |A| is a type, then |Φ X
+  = (A → X) × Ψ X| is srictly positive. If one instantiates |A| to
+  |⊤|, one obtains the ordinary inductive types (up to isomorphism).
+\end{itemize}
+
+To summarise, there are three ways to expand on ordinary inductive
+types:
+
+\begin{itemize}
+\item By adding indices, so \emph{inductive families} can be
+  described. This was done for our universe in \cref{chap:extended}.
+\item By allowing inductive premises, to get \emph{generalised}
+  inductive types.
+\item By passing a recursive function to the pattern functors, to
+  implement \emph{inductive-recursive} types.
+\end{itemize}
+
+The |ConDesc|/|DatDesc| universe has not been adapted to implement the
+latter two, but this may well be possible. Dybjer and Setzer have
+presented \emph{indexed inductive-recursive} types\cite{dybjer01},
+combining the combination of these three expansions. Indexed
+inductive-recursive types are a good approximation of the datatypes
+that are implemented by Agda. It would be interesting to see if our
+universes, ornaments, and generic programming framework could be
+rebuilt with indexed inductive-recursive types as their foundation.
+
+
 % De |rec-⊗_| is nu ook erg beperkt, omdat het alleen directe recursieve
 % calls toestaat. Dit datatype kan nu niet:
 
@@ -234,11 +344,3 @@ will work out with such descriptions.
 % strict-positivity te ondersteunen wil je, net als de semantiek van
 % descs, een context-indexed pattern functor opleveren.
 
-\section{Other shortcomings}
-
-\todo{About rec}
-About why recs are not added to the context. Strict-positivity and
-stuff. Try to find a counter-example!
-
-\todo{About pi}
-About why we do not have pi-types (yet).

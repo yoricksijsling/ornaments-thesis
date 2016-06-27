@@ -207,11 +207,8 @@ data DatDesc : Nat → Set₁ where
 \end{code}\end{codelst}
 
 Ideally, we would also add recursive arguments to the context, but
-this is not possible with our current implementation. One would have
-to extend the context in the |rec-⊗_| constructor with the fix point of
-the whole description, but the whole description is not available at
-during the definition of |ConDesc|.\todo{discuss the lack of recursive
-  values in the context. Consequences and solutions?}
+this is fundamentally impossible with our current implementation. This
+problem will be discussed in \cref{sec:discussion-ri}.
 
 The semantics of |ConDesc| now requires an environment before a
 pattern functor can be delivered. The new semantics is given in

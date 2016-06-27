@@ -736,8 +736,7 @@ too. Additionally, because the tail description |xs| of a |σ| is a
 function of type |S → DescΣ| the full computational power of functions
 can be used. This results in the ability to encode rather exotic
 types. For instance a type which takes a number |n| and then an |n|
-amount of |Bool|'s: \todo{Remove this example? Doesn't really add
-  much..}
+amount of |Bool|'s:
 
 \begin{code}
 boolsDescΣ : DescΣ
