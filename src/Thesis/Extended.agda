@@ -158,43 +158,6 @@ test-list→vec₁ = refl
 
 
 --------------------
--- Reornament
-
-{-
-postulate
-  reornament′ : ∀{I J u Δ Γ}{c : Cxf Δ Γ}{#c}{D : DatDesc I Γ #c} →
-    (o : Orn J u Δ c D) → Orn (J ▷ μ D (c {!!}) ∘ u) (u ∘ pop) Δ c D
--}
-
-natDesc : DatDesc ε ε 2
-natDesc = ι (λ _ → tt)
-  ⊕ rec (λ _ → tt) ⊗ ι (λ _ → tt)
-  ⊕ `0
-natDesc-zero : μ natDesc tt tt
-natDesc-zero = ⟨ 0 , refl ⟩
-natDesc-suc : μ natDesc tt tt → μ natDesc tt tt
-natDesc-suc n = ⟨ 1 , n , refl ⟩
-
-nat→list : Orn ε id (ε ▷₁′ Set) (λ δ → tt) natDesc
-nat→list = ι (λ δ → inv tt)
-  ⊕ top +⊗ rec (λ δ → inv tt) ⊗ ι (λ δ → inv tt)
-  ⊕ `0
-
-nat→vec₂ : Orn (ε ▷′ μ natDesc tt tt) (λ j → tt) (ε ▷₁′ Set) (λ δ → tt) natDesc
-nat→vec₂ = reornament nat→list
-
-vecDesc₂ : DatDesc (ε ▷′ μ natDesc tt tt) (ε ▷₁′ Set) 2
-vecDesc₂ = ι (const (tt , natDesc-zero))
-  ⊕ top
-  ⊗ const (μ natDesc tt tt)
-  ⊗ rec (λ γ → tt , top γ)
-  ⊗ ι (λ γ → tt , natDesc-suc (top γ))
-  ⊕ `0
-
-test-nat→vec : ornToDesc nat→vec₂ ≡ vecDesc₂
-test-nat→vec = refl
-
---------------------
 -- Discussion
 
 data Foo (n : Nat) : Fin n → Set where

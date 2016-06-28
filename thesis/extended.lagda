@@ -783,121 +783,6 @@ test-list→vec₁ = refl
 \end{code}
 \end{example}
 
-\section{Reornaments}\label{sec:ext-reornaments}
-
-\emph{Reornaments} are another interesting class of ornaments which
-can be defined now that indices are supported. These are the result of
-building an algebraic ornament using the ornamental algebra of an
-ornament \cite{mcbride11}. A typical example is the reornament of the
-|nat→list| ornament. The ornamental algebra of that ornament is
-effectively the length algebra, so the reornament of |nat→list| gives
-an ornament from |Nat| to |Vec|.
-
-A reornament is an ornament |o| followed by the algebraic ornament of
-the ornamental algebra of |o|. \emph{Ornament composition} is defined
-as |_>>⁺_| to help with the definition of reornaments. The function
-|_>>⁺_| takes two ornaments and results in a new ornament which
-combines the two:
-
-\begin{code}
-module _ {I J J′}{u : Cxf J I}{v : Cxf J′ J} where
-  _>>⁺_ : ∀{Γ Δ Δ′ c d dt} {D : Desc I Γ dt} →
-    (o : Orn J u Δ c D) → Orn J′ v Δ′ d (ornToDesc o) →
-    Orn J′ (u ∘ v) Δ′ (c ∘ d) D
-\end{code}
-
-The full definition of composition is very straightforward, so it is
-not listed here. To prove that composition of ornaments is correctly
-defined, |>>⁺-coherence| says that |ornToDesc| of the composed
-ornament is the same as |ornToDesc| of the second ornament, which in
-turn is an ornament on |ornToDesc| of the first ornament. The
-descriptions contain higher order terms (terms depending on
-environments) which are not intensionally equal. We can however prove
-that they are pointwise equal, for each environment they give the same
-result. A small module is used wherein the extensionality axiom (|(∀ x
-→ f x ≡ g x) → f ≡ g|) is available, effectively making the normal
-equality |_≡_| extensional (within the module).
-
-\begin{code}
-  module _ (ext : ∀{a b} → Extensionality a b) where
-    >>⁺-coherence : ∀{Γ Δ Δ′ c d dt} {D : Desc I Γ dt} →
-      (o : Orn J u Δ c D) → (p : Orn J′ v Δ′ d (ornToDesc o)) →
-      (ornToDesc (o >>⁺ p)) ≡ ornToDesc p
-\end{code}
-
-The |reornament| function implements reornamentation using composition
-and the algebraic ornament of the ornamental algebra. An index is
-added which can contain elements of the original description (|μ D tt
-(u j)|). No parameters are allowed for the original description, so
-the environment can be instantiated with |tt|.
-
-\begin{code}
-reornament : ∀{I J u Δ}{c : Cxf Δ ε}{#c}{D : DatDesc I ε #c} →
-  (o : Orn J u Δ c D) → Orn (J ▷ μ D tt ∘ u) (u ∘ pop) Δ c D
-reornament o = o >>⁺ (algOrn _ (λ {δ} → forgetAlg o {δ}))
-\end{code}
-
-With the current descriptions, reornaments on descriptions with
-parameters can not be supported in general. While writing a type for a
-|reornament'| operation which does support it, we get stuck when
-trying to give the environment for the index. The hole |?0| is of type
-|⟦ Γ ⟧|, an environment for the original description. Such an
-environment could be built using the ornamented environment of type |⟦
-Δ ⟧| and the environment transformer |c|, but there is no |⟦ Δ ⟧|
-available in the place of the hole. The problem lies in the fact that
-descriptions do not allow indices to be dependent on parameters, as is
-discussed in the next section. This is a fundamental problem of our
-descriptions, so |reornament| can not work around it.
-
-\begin{code}
-  reornament′ : ∀{I J u Δ Γ}{c : Cxf Δ Γ}{#c}{D : DatDesc I Γ #c} →
-    (o : Orn J u Δ c D) → Orn (J ▷ μ D ?0 ∘ u) (u ∘ pop) Δ c D
-\end{code}
-
-\begin{example}
-The reornament of |nat→list| was already mentioned. Let us assume that
-we have the following definitions for the description of natural
-numbers, the constructors for that description, and the ornament from
-natural numbers to lists:
-
-\begin{code}
-natDesc : DatDesc ε ε 2
-
-natDesc-zero : μ natDesc tt tt
-natDesc-suc : μ natDesc tt tt → μ natDesc tt tt
-
-nat→list : Orn ε id (ε ▷₁′ Set) (λ δ → tt) natDesc
-\end{code}
-
-By applying |reornament| to |nat→list|, one obtains a ornament from
-natural numbers to |Vec|. Contrary to |list→vec₁| from
-\cref{sec:ext-algorn}, which added a |Nat| as an index, this one uses
-a |μ natDesc tt tt|. These are isomorphic, so it should not be a
-problem.
-
-\begin{code}
-nat→vec₂ : Orn (ε ▷′ μ natDesc tt tt) (λ j → tt) (ε ▷₁′ Set) (λ δ → tt) natDesc
-nat→vec₂ = reornament nat→list
-\end{code}
-
-The resulting description is very similar to the one created by
-|algOrn lengthAlg|. The only differences are that |Nat| has been
-replaced with |μ natDesc tt tt|, |0| with |natDesc-zero| and |suc|
-with |natDesc-suc|.
-
-\begin{code}
-vecDesc₂ : DatDesc (ε ▷′ μ natDesc tt tt) (ε ▷₁′ Set) 2
-vecDesc₂ = ι (const (tt , natDesc-zero))
-  ⊕ top
-  ⊗ const (μ natDesc tt tt)
-  ⊗ rec (λ γ → tt , top γ)
-  ⊗ ι (λ γ → tt , natDesc-suc (top γ))
-  ⊕ `0
-
-test-nat→vec : ornToDesc nat→vec₂ ≡ vecDesc₂
-test-nat→vec = refl
-\end{code}
-\end{example}
 
 \section{Discussion}
 
@@ -907,8 +792,7 @@ a fairly simple addition, but indices required some rethinking of what
 the types of our functors had to be (the change from |Set| to |⟦ I ⟧ →
 Set|). Existing literature on ornaments adapts well to this universe,
 and most importantly we were able to implement the ornamental
-algebra. Additionally algebraic ornaments, ornament composition and
-reornaments were implemented.
+algebra. Additionally, algebraic ornaments were implemented.
 
 Some interesting functionality from McBride's \cite{mcbride11} work
 relating to algebraic ornaments has not yet been implemented due to a
@@ -1130,6 +1014,4 @@ better approximation of Agda datatypes than the descriptions of
 writing this thesis, so no further efforts have been made regarding
 the implementation of ornaments and related functionality. For future
 research, this encoding might be promising. It would be interesting to
-see if everything works out, and if |reornament| might then be
-implemented in a way which allows parameters in the original
-description (see \cref{sec:ext-reornaments}).
+see if everything works out.

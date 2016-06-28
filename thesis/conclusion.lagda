@@ -46,9 +46,10 @@ ornamentation that requires only a limited understanding of ornaments.
 Datatypes can be quoted to descriptions, and descriptions can be
 unquoted to datatypes. This allows users to obtain descriptions
 without having to write them, and to use descriptions without having
-to work without having to use representations of values like |⟨ 1 , x
-, xs , refl ⟩|. Generic programming frameworks like Haskell's generic
-deriving have already shown the strength of approaches like these.
+to work without having to use representations of values such as |⟨ 1 ,
+x , xs , refl ⟩|. Generic programming frameworks like Haskell's
+generic deriving have already shown the strength of approaches like
+these.
 
 \section{Future work}
 
@@ -59,22 +60,22 @@ fundamental changes to how the descriptions and their ornaments
 work. Others are more practically oriented, to make the library easier
 to use.
 
-The separation of parameters from local contexts, explained in
+The \emph{separation of parameters from local contexts}, explained in
 \cref{sec:ext-separateparams}, is an obvious candidate for
 implementation. We already know that the descriptions themselves can
 be implemented in this way. This would make it possible to implement
 reornaments on descriptions with parameters
-(\cref{sec:ext-reornaments}) and the |addParameterArg| function of
+(\cref{sec:named-reornaments}) and the |addParameterArg| function of
 \cref{sec:named-moreornaments} could add the parameter argument in
 other places than at the front of a constructor.
 
-Ornaments on inductive-recursive types are not well researched
+Ornaments on \emph{inductive-recursive} types are not well researched
 yet. We do not know whether ornaments, quoting and unquoting work for
 inductive-recursive types. If one wishes to support all types that can
 be represented by Agda datatypes, this would certainly need to be
 researched further.
 
-Mutually recursive datatypes usually fall under the inductive
+\emph{Mutually recursive datatypes} usually fall under the inductive
 families, because inductive arguments can use indices to indicate
 which of the types is being referred to. Our |ConDesc|/|DatDesc|
 descriptions do not support mutually recursive types, but there does
@@ -91,11 +92,11 @@ operations. In \cref{sec:discussion-params} we show how parameter use
 can be made explicit, so functions like |flatten| or |sum| could be
 implemented generically. The same idea of making the meaning of
 arguments more explicit can be expanded upon, to the point of
-implementing a full language describing dependent types (a la McBride
-\cite{mcbride10}). Quoting and unquoting of arguments to/from such a
-representation is a whole new issue.
+implementing a full \emph{language describing dependent types} (a la
+McBride \cite{mcbride10}). Quoting and unquoting of arguments to/from
+such a representation is a whole new issue.
 
-The unquoting of datatypes is not entirely automatic yet
+The \emph{unquoting of datatypes} is not entirely automatic yet
 (\cref{sec:named-unquoting}). We did solve all the problems regarding
 the unquoting of the \emph{types of} the constructors and of the
 datatype itself. It would be nice if Agda supported the unquoting of

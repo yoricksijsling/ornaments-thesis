@@ -544,7 +544,7 @@ unquoteDecl quotedFin FinHasDesc Fin zero suc =
   finDesc Fin (zero ∷ suc ∷ [])
 \end{code}
 
-\section{Building more ornaments}\label{sec:named-moreornaments}
+\section{Higher-level ornaments}\label{sec:named-moreornaments}
 
 Writing ornaments with the |Orn| datatypes is verbose and requires a
 decent understanding of how descriptions work. The ornaments do not do
@@ -566,10 +566,13 @@ The |Orn| datatype provides a good low-level language which guarantees
 that the ornament induces a |forget| function. For actual programming,
 higher-level abstractions may be easier to work with. These
 abstractions take the form of functions that generate ornaments, and
-we have already seen some examples: algebraic ornaments, ornament
-composition with |>>⁺| and reornamentation. In this section we give
-some more examples of operations like that. We try to bring ornaments
-closer to how programmers think about the relations between datatypes.
+we have already seen algebraic ornaments as an example. In this
+section we give some more examples of operations like that. We try to
+bring ornaments closer to how programmers think about the relations
+between datatypes.
+
+
+\subsection{Structure-preserving ornaments}
 
 To start with, we will talk about ornaments which preserve the
 \emph{structure} of the description. That is, it keeps all the |ι|'s,
@@ -612,6 +615,56 @@ reparam = reCx inv
 idOrn : ∀{I Γ dt}{D : Desc I Γ dt} → Orn I id Γ id D
 idOrn = reCx inv
 \end{code}
+
+
+\subsection{Ornament composition}
+
+\emph{Ornament composition} is defined as |_>>⁺_|. The function
+|_>>⁺_| takes two ornaments and results in a new ornament which
+combines the two:
+
+\begin{code}
+module _ {I J J′}{u : Cxf J I}{v : Cxf J′ J} where
+  _>>⁺_ : ∀{Γ Δ Δ′ c d dt} {D : Desc I Γ dt} →
+    (o : Orn J u Δ c D) → Orn J′ v Δ′ d (ornToDesc o) →
+    Orn J′ (u ∘ v) Δ′ (c ∘ d) D
+\end{code}
+
+For the definition of |_>>⁺_|, a case split is done on both
+ornaments. The first ornament |o| determines what the input for the
+second ornament is, which limits the number of cases to a workable
+amount. For instance, if |o| is a |ι| copy ornament, the input for the
+second ornament must be a |ι| so only another |ι| copy ornament or an
+insertion ornament can occur:
+
+\begin{code}
+  _>>⁺_ (ι j) (ι k) = ι (λ _ → inv-∘ (j _) (k _))
+  _>>⁺_ (ι j) (nm / T +⊗ ys⁺) = nm / T +⊗ (_>>⁺_ (ι j) ys⁺)
+  _>>⁺_ (ι j) (nm /rec k +⊗ ys⁺) = nm /rec k +⊗ (_>>⁺_ (ι j) ys⁺)
+\end{code}
+
+The full definition of composition is quite long and very
+straightforward, so it is not listed here. To prove that composition
+of ornaments is correctly defined, |>>⁺-coherence| says that
+|ornToDesc| of the composed ornament is the same as |ornToDesc| of the
+second ornament, which in turn is an ornament on |ornToDesc| of the
+first ornament. The descriptions contain higher order terms (terms
+depending on environments) which are not intensionally equal. We can
+however prove that they are pointwise equal, for each environment they
+give the same result. A small module is used wherein the
+extensionality axiom (|(∀ x → f x ≡ g x) → f ≡ g|) is available,
+effectively making the normal equality |_≡_| extensional (within the
+module).
+
+\begin{code}
+  module _ (ext : ∀{a b} → Extensionality a b) where
+    >>⁺-coherence : ∀{Γ Δ Δ′ c d dt} {D : Desc I Γ dt} →
+      (o : Orn J u Δ c D) → (p : Orn J′ v Δ′ d (ornToDesc o)) →
+      (ornToDesc (o >>⁺ p)) ≡ ornToDesc p
+\end{code}
+
+
+\subsection{More ornaments}
 
 Programmers may only want to ornament one of the constructors of a
 datatype. This idea is expressed by |updateConstructor|. The
@@ -704,6 +757,96 @@ nat→list″ = reparam
   (reparam >>⁺ conRenameArguments (just "xs" ∷ []))
   ⊕ `0
 \end{code}
+
+
+\subsection{Reornaments}\label{sec:named-reornaments}
+
+The \emph{ornamental algebra} of an ornament is an algebra that
+forgets the extra information introduced by the ornament. So the
+|nat→list| ornament induced a length algebra. \emph{Algebraic
+  ornaments} (\cref{sec:ext-algorn}) used an algebra to create an
+ornament that added the results of the algebra as an index. For
+instance, the length algebra for lists could be used to obtain
+vectors. The first creates an algebra from an ornament, while the
+second creates an ornament from an algebra. These can be combined to
+create \emph{reornaments}\cite{mcbride11}.
+
+The |reornament| function implements reornamentation using composition
+and the algebraic ornament of the ornamental algebra. An index is
+added which can contain elements of the original description (|μ D tt
+(u j)|). No parameters are allowed for the original description, so
+the environment can be instantiated with |tt|.
+
+\begin{code}
+reornament : ∀{I J u Δ}{c : Cxf Δ ε}{#c}{D : DatDesc I ε #c} →
+  (o : Orn J u Δ c D) → Orn (J ▷ μ D tt ∘ u) (u ∘ pop) Δ c D
+reornament o = o >>⁺ (algOrn _ (λ {δ} → forgetAlg o {δ}))
+\end{code}
+
+\begin{example}
+We will construct the reornament of |nat→list|. Let us assume that we
+have the following definitions for the description of natural numbers,
+the constructors for that description, and the ornament from natural
+numbers to lists:
+
+\begin{code}
+natDesc : DatDesc ε ε 2
+
+natDesc-zero : μ natDesc tt tt
+natDesc-suc : μ natDesc tt tt → μ natDesc tt tt
+
+nat→list : Orn ε id (ε ▷₁′ Set) (λ δ → tt) natDesc
+\end{code}
+
+By applying |reornament| to |nat→list|, one obtains a ornament from
+natural numbers to |Vec|. Contrary to |list→vec| from
+\cref{sec:named-generic}, which added a |Nat| as an index, this one
+uses a |μ natDesc tt tt|. These are isomorphic, so it should not be a
+problem.
+
+\begin{code}
+nat→vecᵣ : Orn (ε ▷′ μ natDesc tt tt) (λ j → tt) (ε ▷₁′ Set) (λ δ → tt) natDesc
+nat→vecᵣ = reornament nat→list
+\end{code}
+
+The resulting description is very similar to the one created by
+|algOrn lengthAlg|. The only differences are that |Nat| has been
+replaced with |μ natDesc tt tt|, |0| with |natDesc-zero| and |suc|
+with |natDesc-suc|.
+
+\begin{code}
+vecDescᵣ : DatDesc (ε ▷′ μ natDesc tt tt) (ε ▷₁′ Set) 2
+vecDescᵣ = ι (const (tt , natDesc-zero))
+  ⊕ "x" / top
+  ⊗ "_" / const (μ natDesc tt tt)
+  ⊗ "xs" /rec (λ γ → tt , top γ)
+  ⊗ ι (λ γ → tt , natDesc-suc (top γ))
+  ⊕ `0
+
+test-nat→vec : ornToDesc nat→vecᵣ ≡ vecDescᵣ
+test-nat→vec = refl
+\end{code}
+\end{example}
+
+With the current descriptions, reornaments on descriptions with
+parameters can not be supported in general. While writing a type for a
+|reornament'| operation which does support it, we get stuck when
+trying to give the environment for the index. The hole |?0| is of type
+|⟦ Γ ⟧|, an environment for the original description. Such an
+environment could be built using the ornamented environment of type |⟦
+Δ ⟧| and the environment transformer |c|, but there is no |⟦ Δ ⟧|
+available in the place of the hole.
+
+\begin{code}
+  reornament′ : ∀{I J u Δ Γ}{c : Cxf Δ Γ}{#c}{D : DatDesc I Γ #c} →
+    (o : Orn J u Δ c D) → Orn (J ▷ μ D ?0 ∘ u) (u ∘ pop) Δ c D
+\end{code}
+
+The problem lies in the fact that descriptions do not allow indices to
+be dependent on parameters, as was discussed in
+\cref{sec:ext-separateparams}. Right now, |reornament| can not work
+around it, but this may be possible if the solution proposed in that
+section was implemented.
 
 
 \section{Discussion}\label{sec:named-discussion}
@@ -823,6 +966,8 @@ the result types of |to| and |from| can be inferred.
     μ desc γ i → A _R
   from ⦃ mk A ep ⦄ = from′ ep
 \end{code}\end{codelst}
+
+\filbreak % better to page break here than after the next paragraph
 
 The signature of the generic forget function becomes a lot
 simpler. The embedding-projection pair of the result is obtained by

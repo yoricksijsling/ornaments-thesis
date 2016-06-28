@@ -132,7 +132,8 @@ real trees into represented trees.
 data Tree (A : Set) : Set where
   leaf : A → Tree A
   node : Tree A → Tree A → Tree A
-
+\end{code}
+\begin{code}
 treeDesc : Desc (ε ▷′ Set)
 treeDesc = par top′ ⊕ rec ⊗ rec
 

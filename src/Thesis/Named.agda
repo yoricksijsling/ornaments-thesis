@@ -182,6 +182,41 @@ list-rename₁ = ι (λ δ → inv tt)
     ι (λ δ → inv tt)
   ⊕ `0
 
+--------------------
+-- Reornament
+
+{-
+postulate
+  reornament′ : ∀{I J u Δ Γ}{c : Cxf Δ Γ}{#c}{D : DatDesc I Γ #c} →
+    (o : Orn J u Δ c D) → Orn (J ▷ μ D (c {!!}) ∘ u) (u ∘ pop) Δ c D
+-}
+
+natDesc′ : DatDesc ε ε 2
+natDesc′ = natDesc
+natDesc-zero : μ natDesc tt tt
+natDesc-zero = ⟨ 0 , refl ⟩
+natDesc-suc : μ natDesc tt tt → μ natDesc tt tt
+natDesc-suc n = ⟨ 1 , n , refl ⟩
+
+-- nat→list : Orn ε id (ε ▷₁′ Set) (λ δ → tt) natDesc
+-- nat→list = ι (λ δ → inv tt)
+--   ⊕ top +⊗ rec (λ δ → inv tt) ⊗ ι (λ δ → inv tt)
+--   ⊕ `0
+
+nat→vecᵣ : Orn (ε ▷′ μ natDesc tt tt) (λ j → tt) (ε ▷₁′ Set) (λ δ → tt) natDesc
+nat→vecᵣ = reornament nat→list
+
+vecDescᵣ : DatDesc (ε ▷′ μ natDesc tt tt) (ε ▷₁′ Set) 2
+vecDescᵣ = ι (const (tt , natDesc-zero))
+  ⊕ "x" / top
+  ⊗ "_" / const (μ natDesc tt tt)
+  ⊗ "xs" /rec (λ γ → tt , top γ)
+  ⊗ ι (λ γ → tt , natDesc-suc (top γ))
+  ⊕ `0
+
+test-nat→vec : ornToDesc nat→vecᵣ ≡ vecDescᵣ
+test-nat→vec = refl
+
 
 ----------------------------------------
 -- Discussion

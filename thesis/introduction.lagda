@@ -205,7 +205,7 @@ datatypes. This thesis makes the following contributions:
   parameters and refinement of indices. Many ornament-related concepts
   are translated to our universe, including ornamental algebras,
   algebraic ornaments (section \ref{sec:ext-algorn}) and reornaments
-  (section \ref{sec:ext-reornaments}). Some high-level operations are
+  (section \ref{sec:named-reornaments}). Some high-level operations are
   defined which can be used to modify descriptions without having deep
   knowledge of our implementation (\cref{sec:named-moreornaments}).
 \item We implement a framework which uses reflection to derive
