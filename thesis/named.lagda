@@ -15,12 +15,12 @@ One of the major goals of this thesis is to allow quoting of
 datatypes. We use the term \emph{quoting} in general for the
 conversion of \emph{code} to \emph{data}. More concretely, actual
 definitions and terms in your Agda program may be \emph{quoted} to
-representations using datatypes. In the case of the quoting of
-datatypes, it primarily means that a description is being calculated
-for a user-defined datatype.
+representations. In the case of the quoting of datatypes, it primarily
+means that a description is being calculated for a user-defined
+datatype.
 
 % Deriving
-Once a datatype has been quoted, one will want to derive an
+Once a datatype has been quoted, you may want to derive an
 embedding-projection pair to translate between the original type and
 the representation. The term 'derive' is used in the way that it is in
 Haskell, where certain record instances like |Show|, |Read| and
@@ -33,17 +33,17 @@ deriveHasDesc : (`quotedDesc `hasDesc `dt : Name) → TC ⊤
 \end{code}
 
 % TC
-The result of |deriveHasDesc| is a computation in the |TC| monad. This
-monad is built into Agda, and can be run by using keywords like
-|unquoteDecl|. The |TC| computation can access types in the context,
-define new functions, perform unification of types, normalise types,
-and more. Essentially, it is a way to directly control the
-type-checker. A |TC| computation is run during the type-checking at
-the exact point where it was called, and type-checking will only
-continue once the result has been computed. Type errors can occur
-during the execution, for instance because one tries to unify two
-types which can not be unified, or because an error is thrown
-manually.
+The result of |deriveHasDesc| is a \emph{meta-program}, contained in
+the |TC| monad. The |TC| monad is built into Agda, and meta-programs
+within |TC| can be run by using keywords like |unquoteDecl|. The
+meta-program can access types in the context, define new functions,
+perform unification of types, normalise types, and more. Essentially,
+it is a way to directly control the type-checker. A meta-program is
+run during the type-checking at the exact point where it was called,
+and type-checking will only continue once the result has been
+computed. Type errors can occur during the execution, for instance
+because one tries to unify two types which can not be unified, or
+because an error is thrown manually.
 
 % Names
 The |deriveHasDesc| function requires three values of the |Name|
@@ -59,7 +59,8 @@ makes sure that this is always the case\footnote{Within a |TC|
 \begin{itemize}
 \item With the |quote| keyword, a |Name| is given for an existing
   definition. So the expression |quote Vec| results in a |Name| which
-  refers to the |Vec| datatype.
+  refers to the |Vec| datatype. The same notation with the |quote|
+  keyword is used to \emph{show} names as well.
 \item A statement like |unquoteDecl x_1 x_2 ⋯ x_n = m|. The expression
   |m| must be of type |TC ⊤|, and \emph{must} declare functions with
   the names |x_1 ⋯ x_n|. Within |m|, these names are of type
@@ -91,11 +92,11 @@ data Vec (A : Set) : Nat → Set where
 \end{remark}
 
 % Using deriveHasDesc
-We use |deriveHasDesc| on the |Vec| datatype and run the |TC|
-computation by using |unquoteDecl|. This process defines two functions
-for us: |quotedVec| and |VecHasDesc|. If the name does not match a
-datatype, or if the datatype can not be described by our descriptions,
-a type error is thrown.
+We use |deriveHasDesc| on the |Vec| datatype and run the meta-program
+by using |unquoteDecl|. This process defines two functions for us:
+|quotedVec| and |VecHasDesc|. If the name does not match a datatype,
+or if the datatype can not be described by our descriptions, a type
+error is thrown.
 
 \begin{code}
 -- Quote the |Vec| datatype
@@ -119,7 +120,7 @@ called \emph{the quoting of |Dt|}. So when we talk about 'after |Vec|
 has been quoted', we mean after |deriveHasDesc| has been executed by
 |unquoteDecl| like in the code above. By convention, we will always
 use names like |quotedDt| and |DtHasVec| for the results of the
-quoting of |Dt|.
+quoting of a specific datatype |Dt|.
 
 \section{Descriptions and ornaments}\label{sec:named-descriptions}
 
@@ -224,10 +225,7 @@ this means that |`datatypeName| is connected to a real datatype, and
 each of the |`constructorNames| is tied to a real
 constructor\footnote{Strictly speaking, these names could be connected
   to any definition. So |`datatypeName| could just as well be the name
-  of a function.}. If we wish to display a name, we will write it with
-the |quote| keyword: The name for the |Vec| datatype, for instance, is
-|quote Vec|. The name for the |zero| constructor is |quote zero|, or
-if that is ambiguous |quote Vec.zero|.
+  of a function.}.
 
 % Difference datatype/constructor names and argument names
 One may note that datatype/constructor names and argument names are
@@ -319,13 +317,15 @@ instance
   VecHasDesc : ∀{A n} → HasDesc (Vec A n)
 \end{code}
 
-This is exactly the signature of the definition which is generated by
+This is exactly the signature of the definition that is generated by
 the quoting of |Vec|. The |instance| keyword allows the |VecHasDesc|
-definition to be used for instance searching. That is, if a function
-requires a n instance argument |⦃ r : HasDesc B ⦄|, Agda will try to
-use |VecHasDesc| to build a record of type |HasDesc B|. Of course,
-|VecHasDesc| will only be able to return a result if |B| is |Vec A n|
-for some |A| and |n|.
+definition to be used for instance searching. We are effectively
+treating |HasDesc| as a Haskell typeclass \cite{devriese11}, and
+|VecHasDesc| provides a |HasDesc| instance for |Vec A n|. If a
+function requires an instance argument |⦃ r : HasDesc B ⦄|, Agda will
+consider |VecHasDesc| when trying to build a record of type |HasDesc
+B|.  Of course, |VecHasDesc| will only be able to return a result of
+the right type if |B| is |Vec A n| for some |A| and |n|.
 
 Outside of the record, |HasDesc.to′| and |HasDesc.from′| are of type
 |{A : Set} (r : HasDesc A) → ...|. They require a |HasDesc| record to
@@ -501,16 +501,25 @@ data Fin : unquoteDat finDesc where
   suc : unquoteCon finDesc 1 Fin
 \end{code}
 
+\begin{figure}[ht]
+\centering
+\includegraphics[width=\textwidth]{../img/quoting_unquoting.pdf}
+\caption{The process of quoting and unquoting}
+\label{fig:quoting_unquoting}
+\end{figure}
+
 Now we have the |Fin| datatype and a description |finDesc|, but no
-|QuotedDesc| and |HasDesc| records connecting the two. The usual
-quoting operation |deriveHasDesc| also calculates a description, so it
-is not the best option when a description is already available. For
-this purpose, |deriveHasDescExisting| has been implemented. It is
+|HasDesc| record connecting the two. There is no |QuotedDesc| record
+for this datatype either. The usual quoting operation |deriveHasDesc|
+can create these records, but it calculates a description as well. We
+want to make use of the description that is already available, and for
+this purpose |deriveHasDescExisting| has been implemented. It is
 similar to |deriveHasDesc|, but takes an additional description and
 will ensure that it matches with the generated description. If it does
-not, an error will occur. After the following call to
+not, an error will occur. \Cref{fig:quoting_unquoting} shows how
+|deriveHasDescExisting| fits in. After the following call to
 |deriveHasDescExisting|, the |quotedFin| and |FinHasDesc| functions
-will be defined.
+will be defined:
 
 \begin{code}
 unquoteDecl quotedFin FinHasDesc =
@@ -521,11 +530,12 @@ unquoteDecl quotedFin FinHasDesc =
 We have now used a description to first unquote a datatype
 semi-automatically. After that, we derived the |QuotedDesc| and
 |HasDesc| records. Ideally, one would merge these operations into a
-single call, but that is not possible in the current version of Agda
-(2.5.1). Even if the definition of datatypes were possible, one would
+single call (it would make \cref{fig:quoting_unquoting} a lot
+prettier), but that is not possible in the current version of Agda
+(2.5.1). Even if the unquoting of datatypes were possible, one would
 still need to give the names for all the constructors. If tactics
-would support the definition of datatypes, but the existing |unquoteDecl|
-would have to be used, it might look as follows:
+would support the definition of datatypes, but the existing
+|unquoteDecl| would have to be used, it might look as follows:
 
 \begin{code}
 -- Speculative:
@@ -552,15 +562,14 @@ list-rename₁ = ι (λ δ → inv tt)
   ⊕ `0
 \end{code}
 
-The |Orn| datatype provides a good low-level language which
-guarantees that there the ornament induces a |forget| function. For
-actual programming, higher-level abstractions may be easier to work
-with. These abstractions take the form of functions that generate
-ornaments, and we have already seen some examples: algebraic
-ornaments, ornament composition with |>>⁺| and reornamentation. In
-this section we give some more examples of operations like that. We
-try to bring ornaments closer to how programmers think about
-the relatedness of datatypes.
+The |Orn| datatype provides a good low-level language which guarantees
+that the ornament induces a |forget| function. For actual programming,
+higher-level abstractions may be easier to work with. These
+abstractions take the form of functions that generate ornaments, and
+we have already seen some examples: algebraic ornaments, ornament
+composition with |>>⁺| and reornamentation. In this section we give
+some more examples of operations like that. We try to bring ornaments
+closer to how programmers think about the relations between datatypes.
 
 To start with, we will talk about ornaments which preserve the
 \emph{structure} of the description. That is, it keeps all the |ι|'s,
@@ -641,7 +650,9 @@ addParameterArg k str = reparam
 \end{code}
 
 Another common operation when ornamenting datatypes is the renaming of
-arguments. This is done for a specific constructor by the
+arguments. While the names do not influence the functioning of a
+datatype, they will be visible when a datatype is unquoted. The
+renaming of arguments in a specific constructor is done by the
 |renameArguments| function. The user picks a constructor with |(k :
 Fin #c)| and gives a list of |Maybe String|'s, one for each argument
 in the constructor. If a |Nothing| is given for an argument, the old
@@ -659,7 +670,7 @@ conRenameArguments : ∀{I Γ}{D : ConDesc I Γ} →
   Orn I id Γ id D
 \end{code}
 
-These are some examples of functions which create ornaments. Small
+These are some examples of functions that create ornaments. Small
 components like |idOrn|, |reparam|, |reindex|, |reCx|,
 |renameArguments| and |updateConstructor| can be combined
 easily. \Cref{chap:usage} already showed an example of what |nat→list|
@@ -671,8 +682,8 @@ nat→list′ = renameArguments 1 (just "xs" ∷ [])
   >>⁺ addParameterArg 1 "x"
 \end{code}
 
-This definitely does a better job at communicating the essence of the
-changes than the original ornament:
+This definitely does a better job at communicating the meaning of the
+changes than the low-level ornament:
 
 \begin{code}
 nat→list : Orn ε id (ε ▷₁′ Set) (λ _ → tt) natDesc

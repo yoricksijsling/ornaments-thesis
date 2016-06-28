@@ -68,11 +68,15 @@ take a slight detour. In previous chapters many functions for
 |ConDesc| and |DatDesc| were defined separately. Now that |ConDesc|
 and |DatDesc| have some overlapping parameters, it will become
 bothersome to have to write many of the same function signatures for
-both of them. This is circumvented by defining a small universe in
+both of them. Writing the same thing twice is a bad programming habit,
+so this is circumvented by defining a small universe in
 \cref{lst:ext-desctag}. Using |DescTag| and |Desc|, we can refer to
 |ConDesc I Γ| as |Desc I Γ isCon| and to |DatDesc I Γ #c| as |Desc I Γ
 (isDat #c)|. Functions which have to be defined on both |ConDesc| and
-|DatDesc| can now be defined on |Desc dt| for all |dt|.
+|DatDesc| can now be defined on |Desc dt| for all |dt|. All functions
+that use |DescTag| can also be defined as one or more functions that
+do not use it, but the homogeneous treatment of all descriptions will
+provide some benefit later.
 
 \begin{codelst}{Definition of |DescTag| and |Desc|}{ext-desctag}\begin{code}
 data DescTag : Set₂ where
@@ -200,13 +204,14 @@ finDesc = const Nat ⊗ ι ?1
 
 All the open holes happen to have a local context where just one |Nat|
 exists, so they all require a term of type |⟦ ε ▷′ Nat ⟧ → ⟦ ε ▷′ Nat
-⟧|. The |⟦ ε ▷′ Nat ⟧| that goes in is the environement, while the |⟦
-ε ▷′ Nat ⟧| contains the index of type |Nat|. This situation is
-comparable to what we would get if we defined |Fin| using one
-parameter of type |⟦ ε ⟧| and one index of type |⟦ ε ▷′ Nat ⟧|. In the
-following alternative definition of |Fin|, all the holes have |(A : ⟦
-ε ⟧)| and |(n : Nat)| in the context, and have to be of type |⟦ ε ▷′
-Nat ⟧|.
+⟧|. The |⟦ ε ▷′ Nat ⟧| that goes in is the environment, while the
+returned |⟦ ε ▷′ Nat ⟧| contains the index of the type being
+constructed (for the |ι|'s) or of the type that is required (for
+|rec|). This situation is comparable to what we would get if we
+defined |Fin| using one parameter of type |⟦ ε ⟧| and one index of
+type |⟦ ε ▷′ Nat ⟧|. In the following alternative definition of |Fin|,
+all the holes have |(A : ⟦ ε ⟧)| and |(n : Nat)| in the context, and
+have to be of type |⟦ ε ▷′ Nat ⟧|.
 
 \begin{code}
 data FinTT (A : ⟦ ε ⟧) : ⟦ ε ▷′ Nat ⟧ → Set where
@@ -283,14 +288,13 @@ descmap {dt = isDat _} f xs (k , v) = k , descmap f (lookupCtor xs k) v
 The definitions of the |Alg| and |fold| in \cref{lst:ext-fold} are
 lifted to the |⟦ I ⟧ → Set| category in a similar way, by replacing
 some of the arrows |_→_| with |_→ⁱ_|. An environment |⟦ Γ ⟧| has to be
-passed to |Alg|, because an algebra may only work for a specific
+passed to |Alg|, because an algebra might only work for a specific
 environment. For example; an algebra to calculate the sum of a list
-would be of type |Alg listDesc (tt , Nat) (const Nat)|, where the
-|Nat| is passed in the environment to instantiate the parameter. Other
-algebras like the one to calculate the length will work for any
-parameter, so it will have the type |∀{A} → Alg listDesc (tt , A)
-(const Nat)|. The code below demonstrates how these algebras can be
-defined:
+would be of type |Alg listDesc (tt , Nat) (const Nat)|, where |(tt ,
+Nat)| instantiates the parameter of type |Set| to |Nat|. An algebra
+like the one to calculate the length will work for any parameter, so
+it will have the type |∀{A} → Alg listDesc (tt , A) (const Nat)|. The
+code below demonstrates how these algebras can be defined:
 
 \begin{codelst}{Generic fold}{ext-fold}\begin{code}
 Alg : ∀{I Γ dt} → Desc I Γ dt → ⟦ Γ ⟧ → (⟦ I ⟧ → Set) → Set
@@ -315,7 +319,7 @@ lengthAlg (suc (suc ()) , _)
 \begin{example}
 An algebra can be used to define the |raise| function for |Fin|. It
 takes a natural |m| and lifts a |Fin n| into |Fin (n + m)| while the
-represented value stays the same. It has the following type:
+represented number stays the same. It has the following type:
 
 \begin{code}
 raise : ∀{n} → (m : Nat) → Fin n → Fin (n + m)
@@ -343,10 +347,20 @@ raiseAlg m (suc zero , n , k , refl) = ⟨ 1 , n + m , k , refl ⟩
 raiseAlg m (suc (suc ()) , _)
 \end{code}
 
-To complete the definition of |raise|, we use the embedding-projection
-pair as defined below with |fin-to| and |fin-from|. The |raise|
-function converts a real |Fin| to a |μ finDesc|, folds |raiseAlg m|
-over it, and converts it back to a |Fin|.
+By folding |raiseAlg m| we get a function that takes a representation
+of a |Fin n| to a representation of a |Fin (n + m)|. The |top i| in
+the type of the algebra is correctly translated to the index |n| of
+the |Fin n| that goes in.
+
+\begin{code}
+`raise : ∀{n} → (m : Nat) → μ finDesc tt (tt , n) → μ finDesc tt (tt , n + m)
+`raise m = fold {D = finDesc} (raiseAlg m)
+\end{code}
+
+If we want to, the |`raise| function can be adapted to work on real
+|Fin|s by using the embedding-projection pair defined below. The
+|raise| function simply chains the |fin-to|, |`raise| and |fin-from|
+together.
 
 \begin{code}
 fin-to : ∀{n} → Fin n → μ finDesc tt (tt , n)
@@ -358,23 +372,8 @@ fin-from ⟨ zero , _ , refl ⟩ = zero
 fin-from ⟨ suc zero , _ , k , refl ⟩ = suc (fin-from k)
 fin-from ⟨ suc (suc ()) , _ ⟩
 
-raise : ∀{n} → (m : Nat) → Fin n → Fin (n + m) 
-raise m = fin-from ∘ fold (raiseAlg m) ∘ fin-to
-\end{code}
-
-The |raise| function is verified to work by creating a |Fin 5| with
-the value 2 and raising it with 4. The result is a |Fin 9| with the
-value 2, as expected.
-
-\begin{code}
-f2<5 : Fin 5
-f2<5 = suc (suc zero)
-
-f2<9 : Fin 9
-f2<9 = raise 4 f2<5
-
-check-f2<9 : f2<9 ≡ suc (suc zero)
-check-f2<9 = refl
+raise : ∀{n} → (m : Nat) → Fin n → Fin (n + m)
+raise m = fin-from ∘ `raise m ∘ fin-to
 \end{code}
 \end{example}
 
@@ -453,7 +452,7 @@ chosen by making use of the ornamented environment |δ|.
 In the |ι| and |rec_⊗_| copy ornaments, a new index must be given
 which---for the function |u|---lies in the inverse image of the
 original index. The ornamented environment |δ| may be used to
-determine this index. The orinal index |i| can only be determined
+determine this index. The original index |i| can only be determined
 using the original environment, which is reconstructed by applying the
 environment transformer |c| to the ornamented environment |δ|.
 
@@ -670,12 +669,13 @@ dt| to a |Desc (I ▷ R) Γ dt|.
            ({γ : ⟦ Γ ⟧} → Alg D γ R) → Orn (I ▷ R) pop Γ id D
 \end{code}
 
-Interestingly, algebraic ornaments only work when the Algebra is
-polymorphic in the datatype parameters. During the definition of an
-ornament we do not know which environment will be used, so it should
-work for any environment. To produce an index of type |R| for any
-environment, the algebra must work for any environment. One quickly
-gets stuck when trying to define |algOrn| for a fixed environment.
+Interestingly, algebraic ornaments only work when the algebra is
+polymorphic in the datatype parameters. So |lengthAlg| for lists could
+be used, but |sumAlg| could not. During the definition of an ornament
+we do not know which environment will be used, so it should work for
+any environment. To produce an index of type |R| for any environment,
+the algebra must work for any environment. One quickly gets stuck when
+trying to define |algOrn| for a fixed environment.
 
 What exactly should an algebraic ornament do? Consider the |Vec|
 datatype. We would like to get a descriptions of |Vec| by using the
@@ -687,7 +687,7 @@ of |lengthAlg|. In an algebra, every recursive argument is matched
 with the result of the algebra on that argument; this can be used to
 write the right hand side. In the resulting datatype (|Vec|) the
 result for the recursive argument |xs| is kept in a new argument
-|n|.
+|n|. We will call |n| the index-holding argument for |xs|.
 
 \begin{code}
 data Vec (A : Set) : Nat → Set where
@@ -700,15 +700,16 @@ lengthAlg (suc zero , x , n , refl) = suc n
 lengthAlg (suc (suc ()) , _)
 \end{code}
 
-The way to build an algebraic ornament is by inserting a new argument
-for every recursive argument, which can contain the result of the
-algebra for that argument. The new arguments are used in the
-computation of the result indices in the way the algebra tells us to.
+We will generalise the observations on vectors to get the formula for
+building algebraic ornaments: For every \emph{recursive} argument, the
+result of the algebra will be held in a new index-holding argument
+that is inserted right before it. The index-holding arguments are
+passed to the algebra to compute the result indices.
 
 Algebraic ornaments are implemented in \cref{lst:ext-algorn}. The
 implementation itself is in |algOrn′|, which has a slightly different
 type than |algOrn|. Because new arguments are being inserted, the
-recursive calls may have a changed context. The |algOrn′| function
+recursive calls may have a modified context. The |algOrn′| function
 supports context changes by having two additional arguments |Δ| and
 |c|. The type of |algOrn| is a bit more convenient to use in
 practice---It helps with some type inference.
@@ -723,16 +724,16 @@ _ → Alg xs _ _|. The |top γ| is of the correct type |S _|, so with
 |curry α (top γ)| we get an algebra which works for the tail of the
 description |xs|.
 
-The case for |rec i ⊗ xs| shows how a new argument |R ∘ i ∘ c| is
-inserted. Here |c| transforms the ornamented environment of type |⟦ Δ
-⟧| into an environment of type |⟦ Γ ⟧|, |i| tells us the index which
-was used for the recursive argument under that environment, and |R|
-gives the type of the result under that index. The recursive argument
-is copied, but with a new index consisting of two parts: |i (c (pop
-δ))| and |top δ|. The first part is effectively the old index, but
-calculated by using the |pop δ| environment (the ornamented
-environment excluding the newly inserted argument). The second
-part |top δ| is the value of the newly inserted argument.
+The case for |rec i ⊗ xs| shows how the index-holding argument |R ∘ i
+∘ c| is inserted. Here |c| transforms the ornamented environment of
+type |⟦ Δ ⟧| into an environment of type |⟦ Γ ⟧|, |i| tells us the
+index that was used for the recursive argument under that environment,
+and |R| gives the type of the result under that index. The recursive
+argument is copied, but with a new index consisting of two parts: |i
+(c (pop δ))| and |top δ|. The first part is effectively the old index,
+but calculated by using the |pop δ| environment (the ornamented
+environment excluding the newly inserted argument). The second part
+|top δ| is the value of the newly inserted argument.
 
 \begin{codelst}{Algebraic ornaments}{ext-algorn}\begin{code}
 module _ {I R} where
@@ -904,19 +905,19 @@ This chapter has shown how descriptions the descriptions with contexts
 can be extended to support both parameters and indices. Parameters are
 a fairly simple addition, but indices required some rethinking of what
 the types of our functors had to be (the change from |Set| to |⟦ I ⟧ →
-Set|. Existing literature on ornaments adapts well to this universe,
-and most importantly we were able to implement ornamental
-algebras. Additionally algebraic ornaments, ornament composition and
+Set|). Existing literature on ornaments adapts well to this universe,
+and most importantly we were able to implement the ornamental
+algebra. Additionally algebraic ornaments, ornament composition and
 reornaments were implemented.
 
 Some interesting functionality from McBride's \cite{mcbride11} work
-relating to algebraic ornaments has not yet been implemented. One is
-the |remember| function, which is the inverse of |forget| for
-algebraic ornaments. For example; if one has a list and its length
-algebra, it may be used to convert lists to |Vec|s. The type will be
-stated here, but it has not been implemented. McBride uses a general
-induction principle to define |remember|, which has not (yet) been
-implemented either.
+relating to algebraic ornaments has not yet been implemented due to a
+lack of time. One is the |remember| function, which is the inverse of
+|forget| for algebraic ornaments. For example, if one has a list and
+its length algebra, it may be used to convert lists to |Vec|s. The
+type will be stated here, but it has not been implemented. McBride
+uses a general induction principle to define |remember|, which has not
+(yet) been implemented either.
 
 \begin{code}
     remember : ∀{I R Γ #c}(D : DatDesc I Γ #c) →
@@ -1008,20 +1009,21 @@ values for the datatype parameters and for other variables in the
 constructor. If indices could depend on the parameters, the result
 type (currently |⟦ I ⟧|) should depend on the parameter part of
 |γ|. Other local variables must not be used to determine the index
-type, because the types of the indices in datatype are declared in the
+type, because the types of the indices in datatypes are declared in the
 signature (before the |where|) where only the parameters can be
 used. Right now, there is no way to just take the parameter part of an
 environment.
 
 The fundamental problem here is that parameter types are in the same
-|Cx| as the internal contexts, while internal contexts can not be used
-everywhere where the parameter types can be used. The author did not
-succeed in obtaining subsets of environments, so this is not a trivial
-problem. The choice to have internal contexts build upon the |Cx| from
-the parameters seemed reasonable at the time because it allows the
-local parts of the contexts (i.e. arguments) to use the
-parameters. For many purposes it works well, but this approach is not
-suited when indices must depend on parameters.
+|Cx| as the \emph{internal} contexts that contain earlier arguments in
+the current constructor. Internal contexts can not be used everywhere
+where the parameter types can be used, but obtaining subsets of
+environments is not a trivial problem. The choice to have internal
+contexts build upon the |Cx| from the parameters seemed reasonable at
+the time because it allows the local parts of the contexts
+(i.e. arguments) to use the parameters. For many purposes it works
+well, but this approach is not suited when indices must depend on
+parameters.
 
 There is a promising solution to this problem. Descriptions can have a
 separate |Cx| just for the parameters, let us call it |(P : Cx)|, and
@@ -1032,12 +1034,13 @@ parameters can be used to determine these contexts.
 
 Descriptions using such a separate parameter context are defined in
 \cref{lst:ext-sep-descriptions}. The |P| and |I| are module parameters
-because they stay constant within the whole description just like
-parameters and indices of real datatypes---For all practical purposes
-they work as if they were datatype parameters for both |ConDesc| and
-|DatDesc|. Places where an internal environment could be used (the
-functions which had |(γ : ⟦ Γ ⟧)| as input) can now use both the
-parameter values |(p : ⟦ P ⟧)| and the environment |(γ : ⟦ Γ p
+because they stay constant within the whole description, consistent
+with how the declared parameters and indices of real datatypes are the
+same throughout the datatype definition. For all practical purposes
+|P| and |I| work as if they were datatype parameters for both
+|ConDesc| and |DatDesc|. Places where an internal environment could be
+used (the functions which had |(γ : ⟦ Γ ⟧)| as input) can now use both
+the parameter values |(p : ⟦ P ⟧)| and the environment |(γ : ⟦ Γ p
 ⟧)|. When an index has to be specified, the type to be given is |⟦ I p
 ⟧|, so the type of the indices can depend on the parameter values.
 

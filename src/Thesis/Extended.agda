@@ -93,8 +93,11 @@ raiseAlg m (zero , n , refl) = ⟨ 0 , n + m , refl ⟩
 raiseAlg m (suc zero , n , k , refl) = ⟨ 1 , n + m , k , refl ⟩
 raiseAlg m (suc (suc ()) , _)
 
+`raise : ∀{n} → (m : Nat) → μ finDesc tt (tt , n) → μ finDesc tt (tt , n + m)
+`raise m = fold {D = finDesc} (raiseAlg m)
+
 raise : ∀{n} → (m : Nat) → Fin n → Fin (n + m)
-raise m = fin-from ∘ fold (raiseAlg m) ∘ fin-to
+raise m = fin-from ∘ `raise m ∘ fin-to
 
 f2<5 : Fin 5
 f2<5 = suc (suc zero)

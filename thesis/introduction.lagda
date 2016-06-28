@@ -6,10 +6,10 @@ One of the strong points of functional programming languages like
 Haskell and Agda is that they allow very precise types. The type |List
 A| not only tells us that it is a list, but also that every element in
 the list is of type |A|. This is already a lot more static information
-than many popular programming languages, and allows programmers to
-adopt an 'if it type checks it works' mentality. But how precise
-should we make our types? Consider the |take| function, which takes a
-number of elements from the front of a list:
+than untyped or dynamically typed programming languages, and allows
+programmers to adopt an 'if it type checks it works' mentality. But
+how precise should we make our types? Consider the |take| function,
+which takes a number of elements from the front of a list:
 
 \begin{code}
 data List (A : Set) : Set where
@@ -92,19 +92,6 @@ find_s [] P = nothing
 find_s (x ∷ xs) P = if (P x) then (just x) else (find_s xs P)
 \end{code}
 
-Another example is found in the modeling of the simply-typed lambda
-calculus. The datatype which describes the terms can be indexed by
-their types\footnote{A |Nat| index can be used if only scoping rules
-  have to be enforced.}, allowing the static enforcement of typing
-rules. For this same datatype, it might also be useful to add the
-evaluation result as an index to simplify reasoning about the
-preservation of behavior during the mutation of terms \cite{mcbride11,
-  dagand14-transporting}. The typing semantics and the evaluation
-semantics both induce useful indices for the datatype. With and
-without both of these indices, we can define four variants of the
-datatype which can all be used under different circumstances. \todo{Is
-  this paragraph still interesting?}
-
 Maybe it would be useful if Agda knew about the relatedness of all
 these different variants of datatypes. Conor McBride \cite{mcbride11}
 has presented \emph{ornaments} as a way to express relations between
@@ -165,8 +152,8 @@ bool-from (right tt) = true
 
 %Ornaments
 By choosing more advanced descriptions, more of Agda's datatypes can
-be described. One may add support for recursion (with self-reference
-as in naturals and lists), for datatype parameters, or for
+be described. One may add support for inductive datatypes (such as
+natural numbers and lists), for datatype parameters, or for
 indices. Descriptions can be used as a foundation to define
 ornaments. An ornament is written as a patch for an existing
 description, and can be applied to get a new description. In this way,
@@ -182,11 +169,11 @@ availability of this feature puts some unique constraints on the
 definition of descriptions, because every description must be
 convertible to a real datatype. We have to be careful that the sums
 and products in our descriptions can never occur in the wrong
-places---For instance, a description |(`1 ⊕ `1) ⊗ (`1 ⊕ `1)| can
-describe a pair of booleans, but is not isomorphic to just one
-datatype. At least two datatypes (the product type and |Bool| for
-example) have to be used to get a type that is isomorphic to |⟦ (`1 ⊕
-`1) ⊗ (`1 ⊕ `1) ⟧desc|.
+places---For instance, a description |(`1 ⊕ `1) ⊗ (`1 ⊕ `1)| describes
+a pair of booleans, but is not a sum-of-products and can therefore not
+be written as just one datatype. At least two datatypes (the product
+type and |Bool| for example) have to be used to get a type that is
+isomorphic to |⟦ (`1 ⊕ `1) ⊗ (`1 ⊕ `1) ⟧desc|.
 
 Agda provides a \emph{reflection} mechanism which can be leveraged to
 build the generic deriving and declaring framework. With reflection,
@@ -199,7 +186,7 @@ types for the individual constructors.
 
 In this thesis we combine reflection, generics and ornaments to build
 a library with which we can perform operations on user defined Agda
-datatypes. The following contributions are made:
+datatypes. This thesis makes the following contributions:
 
 \begin{enumerate}
 \item A universe of descriptions is built to encode datatypes. The
@@ -218,7 +205,7 @@ datatypes. The following contributions are made:
   parameters and refinement of indices. Many ornament-related concepts
   are translated to our universe, including ornamental algebras,
   algebraic ornaments (section \ref{sec:ext-algorn}) and reornaments
-  (section \ref{sec:ext-reornaments}. Some high-level operations are
+  (section \ref{sec:ext-reornaments}). Some high-level operations are
   defined which can be used to modify descriptions without having deep
   knowledge of our implementation (\cref{sec:named-moreornaments}).
 \item We implement a framework which uses reflection to derive

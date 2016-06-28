@@ -8,11 +8,11 @@
   duplication will occur because the language does not recognise that
   similarly-structured datatypes with slightly different
   program-specific restrictions can be related. Some functions will be
-  copy-pasted for lists, vecs, sorted lists and bounded lists.
+  copy-pasted for lists, vectors, sorted lists and bounded lists.
 
-  Ornaments specify the exact relatedness of different datatypes and
-  may be a path towards a solution. It is a first step in structuring
-  the design space of datatypes in dependently typed
+  Ornaments specify the exact relation between of different datatypes
+  and may be a path towards a solution. It is a first step in
+  structuring the design space of datatypes in dependently typed
   languages. Literature has shown how ornaments can produce conversion
   functions between types, and how they can help to recover code reuse
   by transporting functions across ornaments.
