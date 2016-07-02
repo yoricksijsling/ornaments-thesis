@@ -1,4 +1,11 @@
 
+Thesis
+---
+
+This is the source code for my master thesis 'Generic programming with
+ornaments and dependent types'. The compiled pdf's can be found at my
+website [sijsling.com](http://sijsling.com/msc-thesis).
+
 Agda sources
 ---
 
