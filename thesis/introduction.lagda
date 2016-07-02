@@ -48,11 +48,11 @@ takeᵥ zero _ = []
 takeᵥ (suc n) (x ∷ xs) = x ∷ takeᵥ n xs
 \end{code}
 
-By adding the proper indices, logic of the program can be encoded
+By adding the proper indices, properties of the data can be encoded
 within a datatype. One could build trees that are always sorted, trees
 bounded by a minimum and maximum value, red-black trees or trees that
 are always balanced. Building datatypes such that they precisely match
-the logic of the program is an essential aspect of writing
+the required properties of the data is an essential aspect of writing
 correct-by-construction programs in functional programming
 languages. This specialization of datatypes can however be an obstacle
 to code reuse. For example; one may have defined a function to find
@@ -92,7 +92,7 @@ find_s [] P = nothing
 find_s (x ∷ xs) P = if (P x) then (just x) else (find_s xs P)
 \end{code}
 
-Maybe it would be useful if Agda knew about the relatedness of all
+Maybe it would be useful if Agda knew about the relations between all
 these different variants of datatypes. Conor McBride \cite{mcbride11}
 has presented \emph{ornaments} as a way to express relations between
 datatypes. Loosely speaking, one type can be said to be an ornament of
@@ -223,3 +223,15 @@ used for experimentation with ornaments, as well as a practical
 example of how ornaments can be integrated into a language. Along the
 way a library for the reflection of datatypes has been built which, to
 our knowledge, does not yet exist for Agda.
+
+All the code in this thesis is developed in Agda 2.5.1 and all is
+based on Ulf Norell's Agda Prelude (the prelude is better for general
+purpose and meta programming, while the standard library is more
+focussed on proving things). If we assume that the reader knows about
+basic definitions like |_x_|, |Either| or |Σ|, the prelude probably
+defines it. Every chapter will be treated as a module that is
+internally consistent without overlapping names.  Some definitions
+will be shared between chapters and some will be redefined implicitly,
+but if they are explicitly defined they will not cause conflict with
+other explicit definitions within the chapter. All the source code is
+available at \url{http://sijsling.com/}.

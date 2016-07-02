@@ -2,13 +2,14 @@
 
 \chapter{Usage}\label{chap:usage}
 
-In this section we provide a short overview of how the our
-ornamentation library works. It is meant to show how the different
-components fit together, so not all implementation details will be
-presented here. We focus on how an end-user with minimal knowledge
-about ornaments or generics would use our library. The interested
-reader is asked to suspend their curiosity---the rest of this thesis
-explains how the library is implemented.
+In this section we provide a short overview of how the generic
+programming and ornamentation library works. It is meant to show how
+the different components fit together, so not all implementation
+details will be presented here. We focus on how an end-user with
+minimal knowledge about ornaments or generics would use our
+library. The interested reader is asked to suspend their
+curiosity---the rest of this thesis explains how the library is
+implemented.
 
 To start with, we apply the |deriveHasDesc| function to the |Nat|
 datatype. This performs all kinds of meta-programming magic to
@@ -143,7 +144,7 @@ that |ornToDesc nat→list| results in a description which is exactly
 the same as |listDesc|:
 
 \begin{code}
-nat→list : Orn _ _ _ _natDesc
+nat→list : Orn _ _ _ _ natDesc
 nat→list = renameArguments 1 (just "xs" ∷ [])
   >>⁺ addParameterArg 1 "x"
 
@@ -155,7 +156,7 @@ Datatype indices can be used to \emph{refine} datatypes. Such a
 refinement can ensure that values can only be built if they adhere to
 a certain invariant. For instance, a length index can be added to
 lists to ensure that only lists of the specified length are
-allowed. One class of ornaments which inserts indices is that of
+allowed. One class of ornaments that inserts indices is that of
 \emph{algebraic ornaments}. These use an algebra on the original
 datatype to calculate the values of the indices. By folding the
 algebra |depthAlg listDesc| we were able to calculate the length of a
@@ -196,6 +197,8 @@ unquoteDecl quotedVec VecHasDesc =
   deriveHasDescExisting quotedVec VecHasDesc (quote Vec) vecDesc
 \end{code}
 
+\filbreak
+
 An essential property of ornaments is that each element of the
 ornamented type can be transformed back to an element of the original
 type. The generic operation |gforget| does that for a given
@@ -214,5 +217,3 @@ the actual descriptions and ornaments which are used internally. In
 the rest of this thesis we will be taking a better look on how these
 descriptions and ornaments have to be defined and how meta-programming
 can be used to connect the descriptions to actual datatypes.
-
-\todo{Make the usage chapter longer to make the pages look nicer?}

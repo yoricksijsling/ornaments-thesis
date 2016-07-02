@@ -27,6 +27,9 @@
   \AddEverypageHook{\makebox(0,0){Draft \today}}
 }{
   \newcommand{\todo}[1]{}
+
+  % \usepackage{everypage}
+  % \AddEverypageHook{\makebox(0,0){Draft \today}}
 }
 
 % Theorem styles
@@ -146,16 +149,7 @@
 , BoldFont = DejaVuSansMono-Bold.ttf
 , BoldItalicFont = DejaVuSansMono-BoldOblique.ttf]{DejaVuSansMono.ttf}
 
-\newfontfamily{\xitsfont}[Scale=MatchLowercase]{xits-regular.otf}
-
-\DeclareTextFontCommand{\textxits}{\xitsfont}
-
-\usepackage{newunicodechar}
-
-% \newunicodechar{●}{\textxits{•}}
-% \newunicodechar{⌷}{\textxits{$\vrectangle$}}
-% \newunicodechar{▱}{\textxits{\rotatebox[origin=c]{105}{▱}}}
-% \newunicodechar{⊎}{\textxits{⊎}}
+% \newfontfamily\scshape[Letters=SmallCaps]{lmromancaps10-regular.otf}
 
 \hyphenation{data-type}
 \hyphenation{data-types}

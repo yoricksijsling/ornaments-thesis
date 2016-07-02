@@ -68,7 +68,7 @@
 %format pairDesc₃ = pairDesc _3
 
 % Descriptions and ornaments
-%format _/ = __ "\V{/}"
+%format _/ = __ /
 %format ⊕ = "\V{\Large\raisebox{-.15ex}{⊕}}"
 %format _⊕_ = __ "\V{\large\raisebox{-.1ex}{⊕}}" __
 %format ⊗ = "\V{\large\raisebox{-.1ex}{⊗}}"
@@ -80,7 +80,8 @@
 %format rec-⊗ = rec "\Vlight{-}" ⊗
 %format rec-⊗_ = rec-⊗ __
 %format rec_⊗_ = rec __ ⊗ __
-%format _/rec_⊗_ = _/ "\kern.1em" rec_⊗_
+%format /rec = / "\kern-.1em" rec
+%format _/rec_⊗_ = __ /rec _⊗_
 %format -⊗ = "\Vlight{\textendash}\kern.2em" ⊗
 %format -⊗_ = "\Vlight{\textendash}\kern.1em" ⊗ __
 %format _/-⊗_ = _/ -⊗_

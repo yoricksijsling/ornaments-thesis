@@ -71,6 +71,13 @@ data Desc : Set where
 ⟦ A ⊕ B ⟧desc = Either ⟦ A ⟧desc ⟦ B ⟧desc
 ⟦ A ⊗ B ⟧desc = ⟦ A ⟧desc × ⟦ B ⟧desc
 
+boolDesc : Desc
+boolDesc = `1 ⊕ `1
+
+checkBoolDesc : (⟦ `1 ⊕ `1 ⟧desc ≡ Either ⟦ `1 ⟧desc ⟦ `1 ⟧desc)
+  × (Either ⟦ `1 ⟧desc ⟦ `1 ⟧desc ≡ Either ⊤ ⊤)
+checkBoolDesc = refl , refl
+
 bool-to : Bool → ⟦ `1 ⊕ `1 ⟧desc
 bool-to false = left tt
 bool-to true = right tt
@@ -78,3 +85,9 @@ bool-to true = right tt
 bool-from : ⟦ `1 ⊕ `1 ⟧desc → Bool
 bool-from (left tt) = false
 bool-from (right tt) = true
+
+pairOfBoolsDesc : Desc
+pairOfBoolsDesc = (`1 ⊕ `1) ⊗ (`1 ⊕ `1)
+
+pairOfBools : Set
+pairOfBools = Bool × Bool

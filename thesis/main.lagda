@@ -10,23 +10,35 @@
 
 %--------------------------------------------------
 
-\title{Implementing Ornaments}
+\title{Generic programming with ornaments and dependent types}
 \date{\today}
 \author{Yorick Sijsling}
 
 \begin{document}
 
-% \maketitle
+% \input{presentationstuff.tex}
 
-% \begin{flushright}
-% \emph{Supervised by} Wouter Swierstra\\
-% \emph{Second examiner} Johan Jeuring
-% \end{flushright}
+\begin{titlepage}
+\fontspec[ItalicFont = lmroman10-italic.otf
+, BoldFont = lmroman10-bold.otf
+, SmallCapsFont = lmromancaps10-regular.otf]{lmroman10-regular.otf}
+\center
+\textsc{\LARGE Utrecht University}\\[0.4cm]
+\textsc{\Large Master Thesis Computing Science}\\[4.0cm]
+{\Huge Generic programming with ornaments and dependent types}\\[1.5cm]
+\large
+% {\bfseries Yorick Sijsling}\\[4.0cm]
+{\bfseries Yorick Sijsling}\\[4.0cm]
+{\bfseries Supervisors}\\[0.1cm]
+dr. Wouter Swierstra\\
+prof. dr. Johan Jeuring\\
+\vfill
+\today
+\end{titlepage}
 
 \ifdraft{\listoftodos}{}
 \input{abstract.tex}
 \tableofcontents
-% \input{presentationstuff.tex}
 \input{introduction.tex}
 \input{usage.tex}
 \input{sop.tex}
@@ -38,8 +50,6 @@
 \input{conclusion.tex}
 
 \bibliographystyle{plain}
-% \bibliographystyle{alpha}
-% \bibliographystyle{apa}
 \bibliography{main}
 
 \end{document}
